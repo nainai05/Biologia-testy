@@ -516,7 +516,7 @@ function buildQuiz(onlyIndices = null){
 
     const title = document.createElement('div');
     title.className = 'q-title';
-    title.textContent = item.q;
+    title.textContent = `${qi + 1}. ${item.q.replace(/^\d+\.\s*/, '')}`;
     wrap.appendChild(title);
 
     const ansDiv = document.createElement('div');
@@ -684,3 +684,4 @@ document.getElementById('btn-reset').addEventListener('click', resetAll);
 </script>
 </body>
 </html>
+
