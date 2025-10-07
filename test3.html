@@ -3,108 +3,67 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>4. Organely eukaryotickej bunky</title>
+<title>3. Biomembrány, transport látok a medzibunková komunikácia. Receptory</title>
 <style>
   :root{
-    --bg:#f6f8fa;
-    --card:#ffffff;
-    --primary:#0b63d6;
-    --ok:#c8f2c8;
-    --bad:#f8caca;
-    --muted:#666;
-    --shadow: 0 2px 8px rgba(15,15,15,0.06);
+    --bg:#f7f9fb;
+    --card:#fff;
+    --accent:#0b63d6;
+    --ok:#dff7d9;
+    --bad:#ffdddd;
+    --muted:#6b7280;
+    --shadow: 0 2px 10px rgba(12,30,60,0.06);
   }
-  body{
-    font-family: Arial, Helvetica, sans-serif;
-    background:var(--bg);
-    margin:0;
-    padding:20px;
-    color:#111;
-  }
-  header{
-    text-align:center;
-    margin-bottom:18px;
-  }
-  h1{
-    margin:6px 0 2px;
-    font-size:22px;
-  }
+  body{ background:var(--bg); font-family:Arial, Helvetica, sans-serif; margin:0; padding:20px; color:#111; }
+  header{ text-align:center; margin-bottom:18px; }
+  h1{ margin:6px 0; font-size:20px; }
   p.lead{ margin:0; color:var(--muted); }
 
-  .controls{
-    text-align:center;
-    margin:14px 0 22px;
-  }
-  button{
-    background:var(--primary);
-    color:white;
-    border:none;
-    padding:8px 12px;
-    margin:6px;
-    border-radius:6px;
-    cursor:pointer;
-    font-size:14px;
-  }
-  button.secondary{ background:#666; }
-  button.ghost{ background:transparent; color:var(--primary); border:1px solid var(--primary); }
-  .result{
-    text-align:center;
-    margin-top:12px;
-    font-weight:600;
-  }
+  .controls{ text-align:center; margin:14px 0 22px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  button{ background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:14px; }
+  button.secondary{ background:#6b7280; }
+  button.light{ background:transparent; color:var(--accent); border:1px solid var(--accent); }
+  .result{ text-align:center; margin-top:10px; font-weight:700; }
 
   #quiz{ max-width:980px; margin:0 auto; }
-
-  .question{
-    background:var(--card);
-    padding:12px 14px;
-    border-radius:8px;
-    box-shadow:var(--shadow);
-    margin-bottom:12px;
-  }
-  .q-title{ font-weight:700; margin:0 0 8px; }
-  .q-text{ margin:0 0 10px; white-space:normal; }
-  .answers label{
-    display:block;
-    padding:6px 8px;
-    border-radius:6px;
-    margin:4px 0;
-    cursor:pointer;
-  }
-  .answers input{ margin-right:8px; }
+  .question{ background:var(--card); padding:12px 14px; border-radius:8px; box-shadow:var(--shadow); margin-bottom:12px; }
+  .q-title{ font-weight:700; margin:0 0 8px; white-space:pre-wrap; }
+  .answers label{ display:block; padding:6px 8px; border-radius:6px; margin:4px 0; cursor:pointer; }
+  .answers input{ margin-right:10px; transform:translateY(1px); }
   .answers label.correct{ background:var(--ok); }
   .answers label.incorrect{ background:var(--bad); }
   .q-actions{ margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .q-actions button{ padding:6px 10px; font-size:13px; }
   .hidden{ display:none !important; }
-  .small{ font-size:13px; color:var(--muted); }
-  footer{ max-width:980px; margin:18px auto; text-align:center; color:var(--muted); font-size:13px; }
+  .small{ font-size:13px; color:var(--muted); margin-top:6px; }
+  footer{ max-width:980px; margin:22px auto 40px; text-align:center; color:var(--muted); font-size:13px; }
 </style>
 </head>
 <body>
 <header>
-  <h1>4. Organely eukaryotickej bunky</h1>
+  <h1>3. Biomembrány, transport látok a medzibunková komunikácia. Receptory</h1>
   <p class="lead"></p>
 </header>
 
 <div class="controls">
-  <button onclick="vyhodnot()">Vyhodnotiť všetko</button>
-  <button onclick="zobrazSpravneVsetky()">Zobraziť všetky správne odpovede</button>
-  <button onclick="zobrazChybne()">Zobraziť len chybné otázky</button>
-  <button class="secondary" onclick="zobrazVsetky()">Zobraziť všetky otázky</button>
-  <button onclick="zamiesajOtazky()">Zamiešať otázky</button>
-  <button class="ghost" onclick="obnov()">Obnoviť test</button>
-  <div id="vysledok" class="result"></div>
+  <button id="btn-eval">Vyhodnotiť všetko</button>
+  <button id="btn-show-all">Zobraziť všetky správne odpovede</button>
+  <button id="btn-show-wrong">Zobraziť len chybné otázky</button>
+  <button id="btn-retry-wrong" class="secondary">Spustiť znovu len s chybnými</button>
+  <button id="btn-reset" class="light">Obnoviť test</button>
 </div>
+
+<div id="vysledok" class="result"></div>
 
 <div id="quiz"></div>
 
 <footer>
-  Ulož súbor ako test.html a otvor v prehliadači. Otázky obsahujú presné texty a odpovede tak, ako boli poskytnuté.
+  Ulož súbor a otvor v prehliadači. Po vyhodnotení sa správne položky zafarbia zeleno, tvoje nesprávne výbery červeno. Môžeš zobraziť len chybné otázky a niektoré z nich spustiť znova.
 </footer>
 
 <script>
-/* ====== KĽÚČ SPRÁVNYCH ODPOVEDÍ (S / N) ====== */
+/* ===== KĽÚČ SPRÁVNYCH ODPOVEDÍ (S = správna, N = nesprávna) =====
+   Počet otázok: 60 */
 const kluc = [
 "SNSN","NNSN","NSSS","SNSS","NSNS","NSSS","SNSS","SSNS","NSSN","NSNS",
 "SSSS","SSNN","NSNN","NNNS","NNSN","SNSN","SNSS","NNNS","SSSN","NSNN",
@@ -114,7 +73,7 @@ const kluc = [
 "SNSS","SNSN","SNSS","NNSN","NSSN","NSSN","NNSS","NSSN","SSNN","SSNN"
 ];
 
-/* ====== OTÁZKY ====== */
+/* ===== OTÁZKY A PRESNÉ ODPOVEDE - znenie presne ako zadala používateľka ====== */
 const questions = [
 { q: "1. Aké organely sú typické pre všetky eukaryotické bunky?",
   a: [
@@ -223,8 +182,8 @@ const questions = [
   ]},
 { q: "16. Ktoré tvrdenia o centrozóme sú správne?",
   a: [
-    "a) centrozóm sa skladá z dvoch na seba kolmých centriolov, pričom každý tvorí deväť trojíc\n   tubulínových vlákien",
-    "b) kinetochorové mikrofilamenty sa viažu na centroméru chromozómov a umožňujú ich pohyb\n   v mitóze",
+    "a) centrozóm sa skladá z dvoch na seba kolmých centriolov, pričom každý tvorí deväť trojíc\ntubulínových vlákien",
+    "b) kinetochorové mikrofilamenty sa viažu na centroméru chromozómov a umožňujú ich pohyb\nv mitóze",
     "c) nekinetochorové mikrotubuly sa podieľajú na posúvaní centrozómov na póly bunky",
     "d) centrozóm sa počas interfázy nachádza vždy v jadre bunky"
   ]},
@@ -233,14 +192,14 @@ const questions = [
     "a) mikrotubuly sa podieľajú na transporte mechúrikov a tvorbe deliaceho vretienka",
     "b) mikrofilamenty sú tvorené tubulínom a zabezpečujú pohyb chromozómov",
     "c) intermediárne filamenty poskytujú bunke odolnosť voči ťahu a tlaku",
-    "d) kinetochor je bielkovinový komplex, ktorý sa počas delenia pripája na centroméru\n   chromozómov"
+    "d) kinetochor je bielkovinový komplex, ktorý sa počas delenia pripája na centroméru\nchromozómov"
   ]},
 { q: "18. Ktoré tvrdenie o mitochondriách je pravdivé?",
   a: [
     "a) 80S ribozómy sú poskladané v cytoplazme a následne sú trasnportované do mitochondrií",
-    "b) mitochondrie majú vlastnú genetickú informáciu, ale tá nie je exprimovaná, je to len\n   rudiment",
+    "b) mitochondrie majú vlastnú genetickú informáciu, ale tá nie je exprimovaná, je to len\nrudiment",
     "c) mitochodnriálna DNA má rovnakú štruktúru ako DNA v eukaryotickom jadre",
-    "d) pre správne fungovanie mitochondrií je potrebná interakcia produktov jadrových aj\n   mitochondriálnych génov"
+    "d) pre správne fungovanie mitochondrií je potrebná interakcia produktov jadrových aj\nmitochondriálnych génov"
   ]},
 { q: "19. Ktoré tvrdenie správne popisuje jednotlivé druhy vlákien cytoskeletu?",
   a: [
@@ -435,8 +394,8 @@ const questions = [
   a: [
     "a) oddeľuje bunku od extracelulárneho prostredia",
     "b) je tvorený dvoma biologickými membránami",
-    "c) vonkajšia membrána jadrového obalu je v kontakte s endoplazmatickým retikulom a s\n   cytoplazmou",
-    "d) vnútorná membrána jadrového obalu je v kontakte s endoplazmatickým retikulom a s\n   cytoplazmou"
+    "c) vonkajšia membrána jadrového obalu je v kontakte s endoplazmatickým retikulom a s\ncytoplazmou",
+    "d) vnútorná membrána jadrového obalu je v kontakte s endoplazmatickým retikulom a s\ncytoplazmou"
   ]},
 { q: "47. Jedno „poschodie“ 30 nm chromatínového vlákna sa nazýva:",
   a: [
@@ -538,19 +497,26 @@ const questions = [
   ]}
 ];
 
+/* ===== sanity check ===== */
+if(kluc.length !== questions.length){
+  console.warn("Upozornenie: počet položiek v kľúči a v otázkach sa nezhoduje:", kluc.length, questions.length);
+}
+
+/* ===== VYGENERUJ HTML OTÁZOK ===== */
 const quizDiv = document.getElementById('quiz');
 
-function renderQuiz(qList){
-  quizDiv.innerHTML = "";
-  qList.forEach((item, qi) => {
+function buildQuiz(onlyIndices = null){
+  quizDiv.innerHTML = '';
+  const idxList = onlyIndices ? onlyIndices : questions.map((_,i)=>i);
+  idxList.forEach(qi => {
+    const item = questions[qi];
     const wrap = document.createElement('div');
     wrap.className = 'question';
-    wrap.id = 'q' + qi;
+    wrap.id = 'q'+qi;
 
     const title = document.createElement('div');
     title.className = 'q-title';
-    // Dynamické číslovanie
-    title.textContent = `${qi + 1}. ${item.q.replace(/^\d+\.\s*/, '')}`;
+    title.textContent = item.q;
     wrap.appendChild(title);
 
     const ansDiv = document.createElement('div');
@@ -572,110 +538,149 @@ function renderQuiz(qList){
     const clearBtn = document.createElement('button');
     clearBtn.textContent = 'Vymazať výbery';
     clearBtn.className = 'secondary';
-    clearBtn.onclick = (e)=>{
-      e.preventDefault();
-      const boxes = wrap.querySelectorAll('input[type="checkbox"]');
-      boxes.forEach(b=>b.checked=false);
-      wrap.querySelectorAll('label').forEach(l=> l.classList.remove('correct','incorrect'));
-    };
+    clearBtn.onclick = (e)=>{ e.preventDefault(); clearQuestion(qi); };
     actions.appendChild(clearBtn);
-    wrap.appendChild(actions);
 
+    wrap.appendChild(actions);
     quizDiv.appendChild(wrap);
   });
 }
 
-renderQuiz(questions);
+/* initial build */
+buildQuiz();
 
-/* ====== UTIL ====== */
-function spravnyArray(idx){ return kluc[idx].split('').map(ch => ch === 'S'); }
-
-/* ====== ZAMIEŠAŤ OTÁZKY ====== */
-function zamiesajOtazky(){
-  const indices = questions.map((_,i)=>i);
-  for(let i=indices.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [indices[i], indices[j]] = [indices[j], indices[i]];
-  }
-  // vytvoríme nové pole otázok aj s kľúčom
-  const shuffledQ = indices.map(i=>questions[i]);
-  const shuffledK = indices.map(i=>kluc[i]);
-  // prepíšeme pôvodné
-  questions.splice(0,questions.length,...shuffledQ);
-  kluc.splice(0,kluc.length,...shuffledK);
-  renderQuiz(questions);
+/* ===== utility: convert key string to boolean array ===== */
+function rightArray(idx){
+  if(!kluc[idx]) return [false,false,false,false];
+  return kluc[idx].split('').map(ch => ch === 'S');
 }
 
-/* ====== Zvyšné funkcie vyhodnotenia ostávajú nezmenené ====== */
+/* ===== clear question highlights and selections ===== */
+function clearQuestion(qi){
+  const wrap = document.getElementById('q'+qi);
+  if(!wrap) return;
+  wrap.querySelectorAll('input[type="checkbox"]').forEach(b=>b.checked=false);
+  wrap.querySelectorAll('label').forEach(l=>{ l.classList.remove('correct','incorrect'); });
+}
+
+/* ===== vyhodnotenie celeho (aktualne zobrazeného) quizu ===== */
 function vyhodnot(){
-  let correctQuestions=0;
-  const total=questions.length;
-  for(let qi=0; qi<total; qi++){
-    const wrap=document.getElementById('q'+qi);
-    const boxes=wrap.querySelectorAll('input[type="checkbox"]');
-    const selected=Array.from(boxes).map(b=>b.checked);
-    const right=spravnyArray(qi);
-    const labels=wrap.querySelectorAll('label');
-    labels.forEach((lab,idx)=>{
+  const ques = document.querySelectorAll('.question');
+  let correctCount = 0;
+  const totalQuestions = ques.length;
+
+  ques.forEach(wrap => {
+    const qid = parseInt(wrap.id.slice(1),10);
+    const boxes = wrap.querySelectorAll('input[type="checkbox"]');
+    const selected = Array.from(boxes).map(b => b.checked);
+    const right = rightArray(qid);
+    // mark each label
+    const labs = wrap.querySelectorAll('label');
+    labs.forEach((lab, i)=>{
       lab.classList.remove('correct','incorrect');
-      if(right[idx]) lab.classList.add('correct');
-      if(selected[idx] && !right[idx]) lab.classList.add('incorrect');
+      if(right[i]) lab.classList.add('correct');
+      if(selected[i] && !right[i]) lab.classList.add('incorrect');
     });
-    let match=true;
-    for(let k=0;k<4;k++){ if(selected[k]!==right[k]){ match=false; break; } }
-    wrap.dataset.chybna=match?"false":"true";
-    if(match) correctQuestions++;
-  }
-  const percent=Math.round((correctQuestions/total)*100);
-  document.getElementById('vysledok').innerHTML=`Správnych otázok: ${correctQuestions} z ${total} — <span style="color:${percent>=60?'green':'#b33'}">${percent}%</span>`;
+    // check full-match
+    let match = true;
+    for(let k=0;k<4;k++){
+      if(selected[k] !== right[k]){ match = false; break; }
+    }
+    wrap.dataset.chybna = match ? "false" : "true";
+    if(match) correctCount++;
+  });
+
+  const percent = Math.round((correctCount / totalQuestions) * 100);
+  document.getElementById('vysledok').innerHTML = `Správnych otázok: ${correctCount} z ${totalQuestions} — <span style="color:${percent>=60?'green':'#b33'}">${percent}%</span>`;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+/* ===== zobraz správne pre jednu otázku ===== */
 function zobrazSpravneJednu(qi){
-  const wrap=document.getElementById('q'+qi);
-  const boxes=wrap.querySelectorAll('input[type="checkbox"]');
-  const right=spravnyArray(qi);
-  const labels=wrap.querySelectorAll('label');
-  labels.forEach((lab,idx)=>{
+  const wrap = document.getElementById('q'+qi);
+  if(!wrap) return;
+  const boxes = wrap.querySelectorAll('input[type="checkbox"]');
+  const right = rightArray(qi);
+  const labs = wrap.querySelectorAll('label');
+  labs.forEach((lab, i)=>{
     lab.classList.remove('correct','incorrect');
-    if(right[idx]) lab.classList.add('correct');
-    if(boxes[idx].checked && !right[idx]) lab.classList.add('incorrect');
+    if(right[i]) lab.classList.add('correct');
+    if(boxes[i].checked && !right[i]) lab.classList.add('incorrect');
   });
 }
+
+/* ===== zobraz všetky správne (bez prerátania percent) ===== */
 function zobrazSpravneVsetky(){
-  for(let qi=0;qi<questions.length;qi++){
-    const wrap=document.getElementById('q'+qi);
-    const labels=wrap.querySelectorAll('label');
-    const right=spravnyArray(qi);
-    labels.forEach((lab,idx)=>{
+  document.querySelectorAll('.question').forEach(wrap=>{
+    const qid = parseInt(wrap.id.slice(1),10);
+    const right = rightArray(qid);
+    const labs = wrap.querySelectorAll('label');
+    labs.forEach((lab,i)=>{
       lab.classList.remove('correct','incorrect');
-      if(right[idx]) lab.classList.add('correct');
-      const box=wrap.querySelector(`input[value="${idx}"]`);
-      if(box && box.checked && !right[idx]) lab.classList.add('incorrect');
+      if(right[i]) lab.classList.add('correct');
+      const box = wrap.querySelectorAll('input[type="checkbox"]')[i];
+      if(box && box.checked && !right[i]) lab.classList.add('incorrect');
     });
-  }
-  document.getElementById('vysledok').textContent='';
-}
-function zobrazChybne(){
-  if(!Array.from(document.querySelectorAll('.question')).some(q=>q.dataset.chybna)){
-    vyhodnot();
-  }
-  const all=document.querySelectorAll('.question');
-  all.forEach(q=>{ if(q.dataset.chybna==="true") q.classList.remove('hidden'); else q.classList.add('hidden'); });
-  const first=document.querySelector('.question:not(.hidden)');
-  if(first) first.scrollIntoView({behavior:'smooth',block:'center'});
-}
-function zobrazVsetky(){ document.querySelectorAll('.question').forEach(q=>q.classList.remove('hidden')); }
-function obnov(){
-  document.querySelectorAll('.question').forEach(q=>{
-    q.dataset.chybna="";
-    q.querySelectorAll('input[type="checkbox"]').forEach(b=>b.checked=false);
-    q.querySelectorAll('label').forEach(l=> l.classList.remove('correct','incorrect'));
-    q.classList.remove('hidden');
   });
-  document.getElementById('vysledok').textContent='';
-  window.scrollTo({ top:0,behavior:'smooth' });
+  document.getElementById('vysledok').textContent = '';
 }
+
+/* ===== zobraz len chybne otázky (podľa posledného vyhodnotenia; ak nevyhodnotené, vyhodnotí) ===== */
+function zobrazChybne(){
+  // if none have dataset.chybna, call vyhodnot
+  const anyFlagged = Array.from(document.querySelectorAll('.question')).some(q=>q.dataset.chybna);
+  if(!anyFlagged) vyhodnot();
+
+  document.querySelectorAll('.question').forEach(wrap=>{
+    if(wrap.dataset.chybna === "true") wrap.classList.remove('hidden');
+    else wrap.classList.add('hidden');
+  });
+  const first = document.querySelector('.question:not(.hidden)');
+  if(first) first.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+/* ===== spusti znovu len s chybnými - ponechá len chybné otázky a resetuje ich výbery ===== */
+function retryWrong(){
+  // ensure vyhodnot called
+  const anyFlagged = Array.from(document.querySelectorAll('.question')).some(q=>q.dataset.chybna);
+  if(!anyFlagged) vyhodnot();
+
+  const wrongIndices = Array.from(document.querySelectorAll('.question'))
+    .filter(q => q.dataset.chybna === "true")
+    .map(q => parseInt(q.id.slice(1),10));
+
+  if(wrongIndices.length === 0){
+    alert("Nemáš žiadne chyby — všetky otázky sú správne. Nie je čo spúšťať znovu.");
+    return;
+  }
+
+  // rebuild quiz len s chybnými
+  buildQuiz(wrongIndices);
+  document.getElementById('vysledok').textContent = `Opakuješ len ${wrongIndices.length} chybných otázok.`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ===== zobraz všetky otázky (reset skrytých) ===== */
+function showAll(){
+  buildQuiz(); // rebuild full quiz (nezachováva stavy)
+  document.getElementById('vysledok').textContent = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ===== obnoviť celý test (vymaže všetko, ako pri prvom načítaní) ===== */
+function resetAll(){
+  buildQuiz();
+  document.getElementById('vysledok').textContent = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ===== priradenie tlačidiel ===== */
+document.getElementById('btn-eval').addEventListener('click', vyhodnot);
+document.getElementById('btn-show-all').addEventListener('click', zobrazSpravneVsetky);
+document.getElementById('btn-show-wrong').addEventListener('click', zobrazChybne);
+document.getElementById('btn-retry-wrong').addEventListener('click', retryWrong);
+document.getElementById('btn-reset').addEventListener('click', resetAll);
+
 </script>
 </body>
 </html>

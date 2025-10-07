@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Prokaryotická a eukaryotická bunka. Molekuly v bunkách a organizmoch.</title>
+  <style>
+    :root{
+      --bg:#f7f9fc;
+      --card:#ffffff;
+      --accent:#0b63d6;
+      --ok:#dff7d9;
+      --bad:#ffdede;
+      --muted:#555;
+      --shadow: 0 2px 8px rgba(10,20,40,0.06);
+    }
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      background:var(--bg);
+      margin:0;
+      padding:20px;
+      color:#0b1720;
+    }
+    header{ text-align:center; margin-bottom:18px; }
+    h1{ margin:6px 0 2px; font-size:20px; color:var(--accent); }
+    p.lead{ margin:0; color:var(--muted); }
+
+    .controls{
+      text-align:center;
+      margin:14px 0 22px;
+      display:flex;
+      justify-content:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    button{
+      background:var(--accent);
+      color:white;
+      border:none;
+      padding:8px 12px;
+      border-radius:6px;
+      cursor:pointer;
+      font-size:14px;
+    }
+    button.secondary{ background:#6b7280; }
+    button.ghost{ background:transparent; color:var(--accent); border:1px solid var(--accent); }
+    .result{ text-align:center; margin-top:12px; font-weight:700; }
+
+    #quiz{ max-width:980px; margin:0 auto; }
+
+    .question{
+      background:var(--card);
+      padding:12px 14px;
+      border-radius:8px;
+      box-shadow:var(--shadow);
+      margin-bottom:12px;
+    }
+    .q-title{ font-weight:700; margin:0 0 8px; white-space:pre-wrap; }
+    .answers label{
+      display:block;
+      padding:6px 8px;
+      border-radius:6px;
+      margin:4px 0;
+      cursor:pointer;
+      transition: background .12s;
+    }
+    .answers input{ margin-right:8px; transform:translateY(1px); }
+    .answers label.correct{ background:var(--ok); }
+    .answers label.incorrect{ background:var(--bad); }
+    .q-actions{ margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .q-actions button{ padding:6px 10px; font-size:13px; }
+    .hidden{ display:none !important; }
+    .small{ font-size:13px; color:var(--muted); }
+    footer{ max-width:980px; margin:18px auto; text-align:center; color:var(--muted); font-size:13px; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Prokaryotická a eukaryotická bunka. Molekuly v bunkách a organizmoch.</h1>
+  <p class="lead"></p>
+</header>
+
+<div class="controls">
+  <button id="btn-eval">Vyhodnotiť všetko</button>
+  <button id="btn-show-all">Zobraziť všetky správne odpovede</button>
+  <button id="btn-show-wrong">Zobraziť len chybné otázky</button>
+  <button id="btn-retry-wrong" class="secondary">Spustiť znovu len s chybnými</button>
+  <button id="btn-reset" class="ghost">Obnoviť test</button>
+</div>
+
+<div id="vysledok" class="result"></div>
+
+<div id="quiz"></div>
+
+<footer>
+  Ulož súbor ako <b>test2.html</b> a otvor v prehliadači. Po vyhodnotení sa správne položky zafarbia zeleno, tvoje nesprávne výbery červeno. Môžeš zobraziť len chybné otázky a zopakovať ich.
+</footer>
+
+<script>
+/* ===== KĽÚČ SPRÁVNYCH ODPOVEDÍ (S = správna, N = nesprávna) =====
+   1..55 položiek (podľa tvojho kľúča) */
+const kluc = [
+"NSSN","SNNN","SSSS","SSSS","NNSN","NSNN","SSNN","SSNN","NSNN","NNNS",
+"NSSN","SSNN","NSNS","SSSS","NSNS","NNNS","NSNN","SSNN","NNSN","SSSS",
+"SSNS","NSSN","SSSS","SNNN","NSNN","SSNS","SNNS","NSSN","SNSN","SSNN",
+"NNNS","NNSN","SNSN","SNNN","NSNN","NSNN","NSNN","NSNN","NSNN","NNSN",
+"NNSN","NNSN","NNSN","NSNN","NSNN","NSNN","NNSN","SNNN","SNNN","NNSN",
+"SNNN"
+]; // length should equal questions.length (55)
+
+/* ===== OTÁZKY A PRESNÉ ODPOVEDE ====== */
+const questions = [
+{ q: "1. Ak majú periférne proteíny:",
+  a: ["a) záporný náboj, pripájajú sa na membránu priamo","b) záporný náboj, pripájajú sa na membránu prostredníctvom Ca2+ iónov","c) kladný náboj, pripájajú sa na membránu priamo","d) kladný náboj, pripájajú sa na membránu prostredníctvom Ca2+ iónov"]},
+{ q: "2. Aká je hlavná úloha receptorov v bunkách?",
+  a: ["a) prenášať signály z vonkajšieho prostredia do bunky","b) regulovať hladinu ATP v bunke","c) ovládať pohyb buniek","d) umožniť syntézu proteínov"]},
+{ q: "3. Aké látky/molekuly sú transportované vezikulárnym transportom?",
+  a: ["a) veľké častice – napr. fragmenty organel","b) makromolekuly","c) tekutiny","d) všetko vyššie spomenuté"]},
+{ q: "4. Aké sú vlastnosti bunkovej membrány?",
+  a: ["a) ochrana","b) polopriepustnosť","c) semipermeabilita","d) oddeľuje bunku od okolia"]},
+{ q: "5. Ako sa nazýva jav praskania červených krviniek?",
+  a: ["a) hemoptýza, prebieha v hypertonickom prostredí","b) hemolýza, prebieha v izoosmotickom prostredí","c) hemolýza, prebieha v hypotonickom prostredí","d) plazmolýza, prebieha v hypertonickom prostredí"]},
+{ q: "6. Ako sa nazýva prostredie, keď je osmotická hodnota prostredia menšia ako osmotická hodnotou bunky?",
+  a: ["a) hypetronické","b) hypotonické","c) izoosmotické","d) izotonické"]},
+{ q: "7. Ako sa nazýva prostredie, keď je osmotická hodnota prostredia väčsia ako osmotická hodnotou bunky?",
+  a: ["a) hypertonické","b) hyperosmotické","c) izotonické","d) hypotonické"]},
+{ q: "8. Ako sa nazýva prostredie, keď sa osmotická hodnota prostredia zhoduje s osmotickou hodnotou bunky?",
+  a: ["a) izotonické","b) izoosmotické","c) hypetronické","d) hypotonické"]},
+{ q: "9. Ako sa nazýva schopnosť bunky pohlcovať mikroorganizmy?",
+  a: ["a) difúzia","b) fagocytóza","c) osmóza","d) pinocytóza"]},
+{ q: "10. Ako sa nazýva všeobecný mechanizmus výdaja látok z buniek?",
+  a: ["a) pinocytóza","b) difúzia","c) osmóza","d) exocytóza"]},
+{ q: "11. Aktívny transport je:",
+  a: ["a) difúzia a osmóza","b) prenos látok proti ich koncentračnému gradientu","c) prenos látky, na ktorý je potrebná energia","d) plazmolýza a cytolýza"]},
+{ q: "12. Biologická membrána je:",
+  a: ["a) zložená z fosfolipidov a bielkovín","b) základom membránových organel, napr. mitochondrií a chloroplastov","c) súčasťou bunkovej steny","d) základom membránových organel, napr. ribozómov"]},
+{ q: "13. Biologická membrána:",
+  a: ["a) sa nachádza len v eukaryotických bunkách","b) je zložená z bimolekulového filmu fosfolipidov a z bielkovín","c) v živočíšnych bunkách neobsahuje cholesterol","d) plní rôzne funkcie, napr. príjem látok, vzájomné interakcie, rozpoznávanie signálov, atď."]},
+{ q: "14. Biologické membrány obsahujú:",
+  a: ["a) fosfolipidy","b) cholesterol","c) periférne a integrálne proteíny","d) polárne lipidy"]},
+{ q: "15. Medzi bunkové spojenia patrí:",
+  a: ["a) macula occludens","b) dezmozóm","c) G proteíny","d) zonula adhaerrens"]},
+{ q: "16. Bunkové spojenia sú:",
+  a: ["a) cornea occludens","b) dezmatozóm","c) G proteíny","d) zonula adhaerrens a dezmozóm"]},
+{ q: "17. Ako sa nazývajú proteíny, ktoré sú vnorené do fosfolipidovej dvojvrstvy alebo ju úplne prestupujú?",
+  a: ["a) periférne proteíny","b) integrálne proteíny","c) glykoproteíny","d) lipidové rafty"]},
+{ q: "18. Čo je to osmotická lýza bunky?",
+  a: ["a) jav keď bunka príjmom vody zväčšuje svoj objem až praská","b) jav, ktorý nastane po umiestnení živočíšnej bunky v hypotonickom prostredí","c) jav keď bunka príjmom vody zmenšuje objem","d) jav keď bunka príjmom vody nezmení svoj objem"]},
+{ q: "19. Facilitovaná difúzia:",
+  a: ["a) je transport látok sprostredkovaný lipidovými kvapôčkami","b) je najčastejšia forma transportu látok do jadierka","c) prebieha bez spotreby energie v smere koncentračného gradientu","d) spotrebováva energiu vo forme ATP"]},
+{ q: "20. Facilitovaná difúzia:",
+  a: ["a) je transport látok sprostredkovaný bielkovinami plazmatickej membrány","b) prebieha bez spotreby energie","c) prebieha v smere koncentračného gradientu","d) prebieha tak, že látka sa naviaže na transportný proteín na povrchu bunky, ten zmení svoju konformáciu a látka sa uvoľní do cytoplazmy"]},
+{ q: "21. K typom látkovej komunikácie patria:",
+  a: ["a) endokrinná","b) parakrinná","c) motokrinná","d) autokrinná"]},
+{ q: "22. Ktoré deje patria medzi endocytózu:",
+  a: ["a) difúzia","b) pinocytóza,","c) fagocytóza","d) osmóza"]},
+{ q: "23. Ktoré látky môžu vstupovať do buniek voľnou difúziou:",
+  a: ["a) plyny","b) močovina","c) etanol","d) kyslík"]},
+{ q: "24. Ktorý typ receptora je zodpovedný za sprostredkovanie účinkov inzulínu?",
+  a: ["a) tyrozínkinázový receptor","b) jadrový receptor","c) iónový kanál","d) receptor spriahnutý s G proteínmi"]},
+{ q: "25. Ktorý z nasledujúcich mechanizmov je najviac typický pre receptory spojené s tyrozínkinázou?",
+  a: ["a) zmena priepustnosti iónov cez membránu","b) dimerizácia receptoru","c) aktivácia cyklického AMP (cAMP)","d) aktivácia kinázy cAMP"]},
+{ q: "26. Membránové receptory rozdeľujeme na:",
+  a: ["a) receptory, ktoré sú súčasťou iónových kanálov","b) mechanoreceptory","c) receptory spriahnuté s G proteínmi","d) receptory s enzýmovou aktivitou"]},
+{ q: "27. Na čo využíva bunka osmotickú energiu?",
+  a: ["a) na prenos látok cez bunkové membrány","b) na prenos látok pri proteosyntéze","c) na prenos látok pri fotosyntéze","d) na prenos osmoticky aktívnych látok"]},
+{ q: "28. O polarite povrchu biologickej membrány sú pravdivé tvrdenia:",
+  a: ["a) biologická membrána je nepolárna","b) biologická membrána je polárna","c) na povrchu membrány je záporný náboj","d) na povrchu membrány je kladný náboj"]},
+{ q: "29. Osmóza je proces, pri ktorom voda prechádza cez cytoplazmatickú membránu z prostredia:",
+  a: ["a) s nižšou koncentráciou do prostredia s vyššou koncentráciu","b) s vyššou koncentráciou do prostredia s nižšou koncentráciou","c) z hypotonického do hypertonického prostredia","d) hypertonického do hypotonického prostredia"]},
+{ q: "30. Presun molekúl proti koncentračnému gradientu:",
+  a: ["a) vyžaduje energiu, napr. vo forme ATP","b) je aktívny transport","c) prebieha kým sa nevyrovná koncentrácia na obidvoch stranách membrány","d) je pasívny transport"]},
+{ q: "31. Receptory spriahnuté s G proteínmi:",
+  a: ["a) sa nenachádzajú v cytoplazmatickej membráne eukaryotických buniek","b) sú zložené z polynukleotidových reťazcov, ktoré prechádzajú membránou","c) nemajú extracelulárnu doménu","d) predstavujú najpočetnejšiu skupinu membránových receptorov"]},
+{ q: "32. Úloha cholesterolu v biologickej membráne je:",
+  a: ["a) je to významný receptor","b) zvyšuje jej pružnosť","c) spevňuje ju","d) dáva jej kladný náboj"]},
+{ q: "33. Z čoho sa skladajú biomembrány?",
+  a: ["a) dvoch vrstiev molekúl fosfolipidov a molekúl bielkovín","b) dvoch vrstiev molekúl fosfolipidov a RNA","c) fosfolipidovej dvojvrstvy","d) z jednej vrstvy fosfolipidov"]},
+{ q: "34. Základné zložky cytoplazmatickej membrány sú:",
+  a: ["a) fosfolipidy, cholesterol, proteíny, glykolipidy","b) vápnik, cholesterol, cerebrozidy, gangliozidy","c) hormóny, proteíny, ATP, fosfolipidy","d) peptidoglykány, chitín, celulóza, glykoproteíny"]},
+{ q: "35. Ktorá časť membránového receptora sprostredkuje odpoveď bunky?",
+  a: ["a) extracelulárna doména","b) intracelulárna doména","c) transmembránová časť","d) lipidová dvojvrstva"]},
+{ q: "36. Aká je typická funkcia receptorov tvoriacich iónové kanály?",
+  a: ["a) fosforylácia proteínov","b) zmena priepustnosti iónov cez membránu","c) aktivácia G proteínov","d) spustenie apoptózy"]},
+{ q: "37. Ktoré tvrdenie o receptoroch s enzýmovou aktivitou je správne?",
+  a: ["a) obsahujú 7 transmembránových helixov","b) najčastejšie katalyzujú fosforyláciu","c) aktivujú sa väzbou GTP","d) sú typickými receptormi pre neurotransmitery GABA a glycín"]},
+{ q: "38. Ktorý z uvedených receptorov je príkladom iónového kanálového receptora?",
+  a: ["a) inzulínový receptor","b) nikotínový acetylcholínový receptor","c) β–adrenergný receptor","d) receptor pre epidermálny rastový faktor (EGFR)"]},
+{ q: "39. Akú hlavnú úlohu zohrávajú druhí poslovia v bunkovej signalizácii?",
+  a: ["a) prenášajú signál z extracelulárneho prostredia priamo na DNA","b) zosilňujú a sprostredkujú signál medzi receptorom a intracelulárnymi efektormi","c) slúžia ako receptory pre neurotransmitery","d) tvoria primárnu väzbovú doménu membránových receptorov"]},
+{ q: "40. Aký význam majú lipidové rafty v bunkovej signalizácii a imunitných procesoch?",
+  a: ["a) slúžia ako sklad cholesterolu a mastných kyselín","b) zabezpečujú degradáciu poškodených proteínov v membráne","c) koncentrujú receptory a signálne molekuly, čím umožňujú efektívnejšiu aktiváciu signálnych dráh (napr. pri imunitnej odpovedi)","d) znižujú fluiditu membrány a tým bránia prenosu signálov"]},
+{ q: "41. Kde sa nachádzajú glykolipidy v biomembráne a aká je ich hlavná funkcia?",
+  a: ["a) na cytoplazmatickej strane; katalýza biochemických reakcií","b) v jadrovej membráne; regulácia transkripcie","c) na extracelulárnej strane; rozpoznávanie buniek a antigénne determinanty","d) v mitochondriách; prenos elektrónov"]},
+{ q: "42. Čo platí o type a počte membránových proteínov?",
+  a: ["a) sú vždy rovnaké vo všetkých bunkách","b) menia sa len počas apoptózy","c) sú variabilné a závisia od diferenciácie a fázy bunkového cyklu","d) závisia len od množstva cholesterolu v membráne"]},
+{ q: "43. Aký je význam komunikácie cez medzibunkové spojenia (gap junctions alebo plazmodezmy)?",
+  a: ["a) prenos hormónov na veľké vzdialenosti","b) aktivácia génovej expresie v jadre","c) priamy prenos iónov a malých molekúl medzi susednými bunkami","d) zamedzenie akejkoľvek výmeny medzi bunkami"]},
+{ q: "44. Aký je hlavný mechanizmus, ktorým receptory sprostredkujú bunkovú odpoveď?",
+  a: ["a) oxidácia mastných kyselín","b) aktivácia alebo inaktivácia proteínov fosforyláciou","c) tvorba DNA v jadre","d) pasívna difúzia vody"]},
+{ q: "45. Ktorý enzým katalyzuje prenos fosfátovej skupiny z ATP na proteín?",
+  a: ["a) fosfatáza","b) proteínkináza","c) DNA–polymeráza","d) telomeráza"]},
+{ q: "46. Ktoré bunkové spojenia zabezpečujú najsilnejšie mechanické ukotvenie medzi bunkami?",
+  a: ["a) gap junctions","b) dezmozómy (macula adhaerens)","c) zonula occludens","d) zonula adhaerens"]},
+{ q: "47. Ktoré typy komunikácie patria medzi látkovú (humorálnu) signalizáciu?",
+  a: ["a) endokrinná","b) parakrinná","c) synaptická","d) autokrinná"]},
+{ q: "48. Ktorý typ receptorov má 7 transmembránových helixov a využíva druhých poslov?",
+  a: ["a) receptory s enzýmovou aktivitou","b) receptory tvoriace iónové kanály","c) receptory spriahnuté s G proteínmi","d) receptory pre antigény"]},
+{ q: "49. Čo je typickou funkciou receptorov s enzýmovou aktivitou?",
+  a: ["a) katalyzovanie fosforylačných reakcií","b) otváranie iónových kanálov","c) viazanie protilátok","d) transport glukózy"]},
+{ q: "50. Ktorý príklad patrí medzi receptory tvoriace iónové kanály?",
+  a: ["a) nikotínový acetylcholínový receptor","b) inzulínový receptor","c) receptor pre rastový faktor EGF","d) receptor spriahnutý s G proteínom"]},
+{ q: "51. Ktoré bunkové spojenie umožňuje priamy prenos malých molekúl medzi susednými bunkami?",
+  a: ["a) dezmozómy","b) zonula occludens","c) gap junctions","d) zonula adhaerens"]},
+{ q: "52. Ktoré tri časti obsahuje typický membránový receptor?",
+  a: ["a) extracelulárna doména, transmembránová časť, intracelulárna doména","b) ribozómová jednotka, cytoskelet, fosfolipid","c) DNA jadra, nukleozóm, histón","d) cytoplazma, jadro, mitochondria"]},
+{ q: "53. Čo sa stane po naviazaní ligandu na receptor?",
+  a: ["a) receptor sa degraduje okamžite","b) dôjde k zmene konformácie proteínu a spusteniu signálnej kaskády","c) DNA sa okamžite replikuje","d) receptor sa transportuje do jadra"]},
+{ q: "54. Aká je funkcia extracelulárnej domény receptora?",
+  a: ["a) viaže ligand","b) sprostredkuje fosforyláciu","c) ukotvuje receptor v lipidovej dvojvrstve","d) prenáša signál do jadra"]},
+{ q: "55. Aká je funkcia intracelulárnej domény receptora?",
+  a: ["a) viaže ligand","b) ukotvuje receptor v membráne","c) sprostredkuje bunkovú odpoveď","d) produkuje ATP"]}
+];
+
+/* sanity check */
+if(kluc.length !== questions.length){
+  console.warn("Upozornenie: kľúč a počet otázok sa nezhodujú:", kluc.length, questions.length);
+}
+
+/* ===== VYGENERUJ HTML PRE OTÁZKY ===== */
+const quizDiv = document.getElementById('quiz');
+
+function buildQuiz(indices = null){
+  quizDiv.innerHTML = '';
+  const idxList = indices ? indices : questions.map((_,i)=>i);
+  idxList.forEach(qi => {
+    const item = questions[qi];
+    const wrap = document.createElement('div');
+    wrap.className = 'question';
+    wrap.id = 'q'+qi;
+
+    const title = document.createElement('div');
+    title.className = 'q-title';
+    title.textContent = item.q;
+    wrap.appendChild(title);
+
+    const ansDiv = document.createElement('div');
+    ansDiv.className = 'answers';
+    for(let i=0;i<4;i++){
+      const lab = document.createElement('label');
+      lab.innerHTML = `<input type="checkbox" name="q${qi}" value="${i}"> ${item.a[i]}`;
+      ansDiv.appendChild(lab);
+    }
+    wrap.appendChild(ansDiv);
+
+    const actions = document.createElement('div');
+    actions.className = 'q-actions';
+    const showBtn = document.createElement('button');
+    showBtn.textContent = 'Zobraziť správne';
+    showBtn.onclick = (e) => { e.preventDefault(); showCorrectOne(qi); };
+    actions.appendChild(showBtn);
+
+    const clearBtn = document.createElement('button');
+    clearBtn.textContent = 'Vymazať výbery';
+    clearBtn.className = 'secondary';
+    clearBtn.onclick = (e) => { e.preventDefault(); clearQuestion(qi); };
+    actions.appendChild(clearBtn);
+
+    wrap.appendChild(actions);
+    quizDiv.appendChild(wrap);
+  });
+}
+
+/* initial build */
+buildQuiz();
+
+/* ===== pomocné funkcie ===== */
+function rightArray(idx){
+  if(!kluc[idx]) return [false,false,false,false];
+  return kluc[idx].split('').map(ch => ch === 'S');
+}
+
+function clearQuestion(qi){
+  const wrap = document.getElementById('q'+qi);
+  if(!wrap) return;
+  wrap.querySelectorAll('input[type="checkbox"]').forEach(b=>b.checked=false);
+  wrap.querySelectorAll('label').forEach(l=> l.classList.remove('correct','incorrect'));
+}
+
+/* ===== vyhodnotenie celeho zobrazenia ===== */
+function evaluate(){
+  const ques = document.querySelectorAll('.question');
+  let correctCount = 0;
+  const total = ques.length;
+
+  ques.forEach(wrap => {
+    const qid = parseInt(wrap.id.slice(1),10);
+    const boxes = wrap.querySelectorAll('input[type="checkbox"]');
+    const selected = Array.from(boxes).map(b => b.checked);
+    const right = rightArray(qid);
+    const labs = wrap.querySelectorAll('label');
+
+    labs.forEach((lab,i)=>{
+      lab.classList.remove('correct','incorrect');
+      if(right[i]) lab.classList.add('correct');
+      if(selected[i] && !right[i]) lab.classList.add('incorrect');
+    });
+
+    // exact match?
+    let match = true;
+    for(let k=0;k<4;k++){
+      if(selected[k] !== right[k]){ match = false; break; }
+    }
+    wrap.dataset.chybna = match ? "false" : "true";
+    if(match) correctCount++;
+  });
+
+  const percent = Math.round((correctCount / total) * 100);
+  document.getElementById('vysledok').innerHTML = `Správnych otázok: ${correctCount} z ${total} — <span style="color:${percent>=60?'green':'#b33'}">${percent}%</span>`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ===== zobraz správne pre jednu otázku ===== */
+function showCorrectOne(qi){
+  const wrap = document.getElementById('q'+qi);
+  if(!wrap) return;
+  const right = rightArray(qi);
+  const boxes = wrap.querySelectorAll('input[type="checkbox"]');
+  const labs = wrap.querySelectorAll('label');
+  labs.forEach((lab,i)=>{
+    lab.classList.remove('correct','incorrect');
+    if(right[i]) lab.classList.add('correct');
+    if(boxes[i].checked && !right[i]) lab.classList.add('incorrect');
+  });
+}
+
+/* ===== zobraz všetky správne odpovede (bez prepísania dataset) ===== */
+function showAllCorrect(){
+  document.querySelectorAll('.question').forEach(wrap=>{
+    const qid = parseInt(wrap.id.slice(1),10);
+    const right = rightArray(qid);
+    const boxes = wrap.querySelectorAll('input[type="checkbox"]');
+    const labs = wrap.querySelectorAll('label');
+    labs.forEach((lab,i)=>{
+      lab.classList.remove('correct','incorrect');
+      if(right[i]) lab.classList.add('correct');
+      if(boxes[i].checked && !right[i]) lab.classList.add('incorrect');
+    });
+  });
+  document.getElementById('vysledok').textContent = '';
+}
+
+/* ===== zobraz len chybne otázky (po evaluate) ===== */
+function showOnlyWrong(){
+  // ensure evaluate called
+  const anyFlagged = Array.from(document.querySelectorAll('.question')).some(q=>q.dataset.chybna);
+  if(!anyFlagged) evaluate();
+
+  document.querySelectorAll('.question').forEach(wrap=>{
+    if(wrap.dataset.chybna === "true") wrap.classList.remove('hidden');
+    else wrap.classList.add('hidden');
+  });
+  const first = document.querySelector('.question:not(.hidden)');
+  if(first) first.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+/* ===== retry only wrong ===== */
+function retryWrong(){
+  // ensure evaluate called
+  const anyFlagged = Array.from(document.querySelectorAll('.question')).some(q=>q.dataset.chybna);
+  if(!anyFlagged) evaluate();
+
+  const wrongIndices = Array.from(document.querySelectorAll('.question'))
+    .filter(q => q.dataset.chybna === "true")
+    .map(q => parseInt(q.id.slice(1),10));
+
+  if(wrongIndices.length === 0){
+    alert("Nemáš žiadne chyby — všetky otázky sú správne. Nie je čo spúštať znovu.");
+    return;
+  }
+
+  buildQuiz(wrongIndices);
+  document.getElementById('vysledok').textContent = `Opakuješ len ${wrongIndices.length} chybných otázok.`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ===== reset / zobraz všetky ===== */
+function resetAll(){
+  buildQuiz();
+  document.getElementById('vysledok').textContent = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ===== priradenie tlačidiel ===== */
+document.getElementById('btn-eval').addEventListener('click', evaluate);
+document.getElementById('btn-show-all').addEventListener('click', showAllCorrect);
+document.getElementById('btn-show-wrong').addEventListener('click', showOnlyWrong);
+document.getElementById('btn-retry-wrong').addEventListener('click', retryWrong);
+document.getElementById('btn-reset').addEventListener('click', resetAll);
+
+</script>
+</body>
+</html>
