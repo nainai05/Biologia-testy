@@ -266,26 +266,6 @@ function vyhodnot(){
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function evaluate(){
-  const quizDiv = document.getElementById('quiz');
-  const questionsDivs = quizDiv.querySelectorAll('.question');
-  let correctCount = 0;
-  wrongQuestions = [];
-  questionsDivs.forEach(qDiv=>{
-    const num = qDiv.dataset.index;
-    const checked = [...qDiv.querySelectorAll('input:checked')].map(i=>parseInt(i.value));
-    const correctAnswers = correctMap[num];
-    const allCorrect = arraysEqual(new Set(checked), new Set(correctAnswers));
-    if(allCorrect){
-      correctCount++;
-    }else{
-      wrongQuestions.push(originalQuestions[num-1]);
-    }
-  });
-  const percent = ((correctCount / questionsDivs.length) * 100).toFixed(2);
-  document.getElementById('result').innerText = `Úspešnosť: ${percent}% (${correctCount}/${questionsDivs.length})`;
-}
-
 function showOnlyWrong(){
   renderQuiz(wrongQuestions.map((q)=>({...q})));
 }
@@ -334,3 +314,4 @@ renderQuiz(originalQuestions);
 </script>
 </body>
 </html>
+
