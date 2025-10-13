@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>5. Reprodukcia buniek</title>
+<style>
+  :root{
+    --card-bg: #e9f5ff;
+    --accent: #007bff;
+    --good: #c8f7d0;
+    --bad: #ffd6d6;
+    --card-radius: 14px;
+  }
+  body{
+    margin:0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: #ffffff;
+    color:#111;
+    padding:30px 16px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{
+    width:100%;
+    max-width:1100px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  h1{
+    margin:0;
+    font-size:22px;
+  }
+  .top-controls{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  button{
+    background:var(--accent);
+    color:white;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  button.secondary{
+    background:#6c757d;
+  }
+  .center-controls{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:14px;
+  }
+  #quiz{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    align-items:center;
+  }
+  .card{
+    width:100%;
+    max-width:980px;
+    background:var(--card-bg);
+    border-radius:var(--card-radius);
+    padding:16px 18px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    display:block;
+    box-sizing:border-box;
+    position:relative;
+  }
+  .q-header{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .q-number{
+    font-weight:700;
+    min-width:34px;
+  }
+  .q-text{
+    font-weight:700;
+    flex:1;
+  }
+  .q-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .star{
+    font-size:20px;
+    cursor:pointer;
+    user-select:none;
+    color:rgba(0,0,0,0.25);
+  }
+  .star.active{ color: gold; text-shadow: 0 0 6px rgba(255,215,0,0.4); }
+  .answers{
+    margin-top:10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  label.ans{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    padding:8px;
+    border-radius:8px;
+  }
+  label.ans input{ transform:scale(1.05); }
+  .btn-small{
+    padding:6px 10px;
+    font-size:13px;
+    border-radius:8px;
+    background:#0b84ff;
+  }
+  .btn-show{
+    background:#0b84ff;
+    color:white;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+  }
+  .meta{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    font-size:13px;
+    margin-top:10px;
+    color:#333;
+  }
+  .result{
+    text-align:center;
+    margin-top:18px;
+    font-weight:700;
+    font-size:16px;
+  }
+  .controls-bottom{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .hidden{ display:none; }
+  /* coloring for showCorrect */
+  .correct { background: var(--good) !important; }
+  .incorrect { background: var(--bad) !important; }
+  /* small responsive */
+  @media (max-width:640px){
+    body { padding:14px; }
+    .card{ padding:12px; }
+    .q-number{ min-width:28px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>5. Reprodukcia buniek</h1>
+    <div class="top-controls">
+      <button id="btnFavorites">Obľúbené</button>
+      <button id="btnShuffle">Zamiešať otázky</button>
+      <button id="btnShowAll" title="Zobraziť všetky správne odpovede">Zobraziť všetky správne odpovede</button>
+    </div>
+  </header>
+
+  <div class="center-controls">
+    <span style="color:#555">Filtrovať zobrazenie:</span>
+    <button id="btnShowAllQ" class="secondary">Zobraziť všetky</button>
+    <button id="btnShowWrongOnly" class="secondary">Zobraziť len chybné</button>
+    <button id="btnShowFavOnly" class="secondary">Zobraziť len obľúbené</button>
+  </div>
+
+  <div id="quiz"></div>
+
+  <div class="controls-bottom">
+    <button id="btnEvaluate">Vyhodnotiť všetko</button>
+    <button id="btnShowWrong">Zobraziť len chybné otázky</button>
+    <button id="btnRetryWrong">Opakovať len chybné</button>
+    <button id="btnReset">Obnoviť test</button>
+  </div>
+
+  <div class="result" id="resultText"></div>
+</div>
+
+<script>
+/* ------------------ QUESTIONS (1..85) - exact texts as user provided ------------------ */
+const questions = [
+{ q: "Amitóza je:", a:["priame delenie","nepriame delenie","redukčné delenie","diferenciácia buniek"]},
+{ q: "Mitóza je:", a:["priame delenie","nepriame delenie","redukčné delenie","diferenciácia buniek"]},
+{ q: "Meióza je:", a:["priame delenie","nepriame delenie","redukčné delenie","diferenciácia buniek"]},
+{ q: "Amitóza je typickým spôsobom delenia sa:", a:["prokaryotických buniek","eukaryotických buniek","gamét","rastlín"]},
+{ q: "Meióza je typickým spôsobom vytvárania:", a:["prokaryotických buniek","eukaryotických buniek","gamét","rastlín"]},
+{ q: "Bunkový cyklus sa skladá z:", a:["interfázy a M fázy (mitózy)","profázy a metafázy","anafázy a telofázy","cytokinézy a karyokinézy"]},
+{ q: "Do interfázy patrí:", a:["G1 fáza","G2 fáza","S fáza","M fáza"]},
+{ q: "G1 fáza je charakterizovaná:", a:["intenzívnou syntézou bielkovín","replikáciou DNA","zdvojením centrozómu","diferenciáciou bunky"]},
+{ q: "G0 fáza je charakterizovaná:", a:["intenzívnou syntézou bielkovín","replikáciou DNA","zdvojením centrozómu","diferenciáciou bunky"]},
+{ q: "G2 fáza je charakterizovaná:", a:["intenzívnou syntézou bielkovín","replikáciou DNA","zdvojením centrozómu","diferenciáciou bunky"]},
+{ q: "S fáza je charakterizovaná:", a:["intenzívnou syntézou bielkovín","replikáciou DNA","zdvojením centrozómu","diferenciáciou bunky"]},
+{ q: "Hlavné kontrolné uzly bunkového cyklu sú v:", a:["G1 fáze","G2/M fáze","S fáze","metafáze"]},
+{ q: "Pri mitóze:", a:["vznikajú dve dcérske bunky, z ktorých každá má rovnaký počet chromozómov ako rodičovská bunka","vznikajú štyri dcérske bunky, z ktorých každá má rovnaký počet chromozómov ako rodičovské bunky","vznikajú dve dcérske bunky, každá má polovičný počet chromozómov ako rodičovské bunky","vznikajú štyri dcérske bunky, z ktorých každá má polovičný počet chromozómov ako rodičovské bunky"]},
+{ q: "Pri meióze sa počet chromozómov:", a:["redukuje na polovicu","ostáva nezmenený","zdvojnásobí","strojnásobí"]},
+{ q: "K rozdeleniu jadra dochádza:", a:["procesom cytokinézy","v rámci mitózy a meiózy","v procese interfázy","karyokinézou"]},
+{ q: "Bunkový cyklus:", a:["je súbor procesov, ktorých výsledkom je vznik dcérskych buniek","sa nemôže opakovať podľa potrieb organizmu","je názov pre proces vzniku DNA","je proces replikácie chromozómov"]},
+{ q: "Ako sa môžu rozmnožovať bunky?", a:["delením","pucaním","mitózou","meiózou"]},
+{ q: "Bunkový cyklus možno rozdeliť na:", a:["profázu, prometafázu, metafázu, anafázu a telofázu","interfázu a samotné delenie","G1 fázu, S fázu, G2 fázu a M fázu","G1 fázu, S fázu, G2 fázu a interfázu"]},
+{ q: "K typom bunkových delení (podľa priebehu bunkového cyklu) patrí:", a:["priame delenie – mitóza","nepriame delenie – mitóza","meióza","priame delenie – amitóza"]},
+{ q: "Za akých podmienok dochádza k zastaveniu bunkového delenia?", a:["pri nedostatku živín","pri nevhodnej teplote","pri nahromadení škodlivých látok","pri nevhodných podmienkach vonkajšieho prostredia"]},
+{ q: "Bunka má 46 chromozómov počas G1 fázy bunkového cyklu. Koľko sesterských chromatíd má počas profázy I?", a:["10","23","46","92"]},
+{ q: "K fázam bunkového cyklu, ktoré majú priamy vzťah k rozdeleniu bunky patrí:", a:["M fáza","G1 fáza a G2 fáza","G1 fáza a M fáza","S fáza"]},
+{ q: "Ako sa nazýva fáza bunkového cyklu, v ktorej prebieha replikácia jadrovej DNA a zdvojenie jadrových chromozómov?", a:["S fáza","syntetická fáza","M fáza","mitóza"]},
+{ q: "Eukaryotické jadrové chromozómy sú tvorené:", a:["chromatínom","DNA","histónovými proteínmi","nehistónovými proteínmi"]},
+{ q: "Do interfázy bunkového cyklu patria fázy:", a:["G1","M","S","G2"]},
+{ q: "Fázy samotnej mitózy v správnom poradí sú:", a:["profáza, prometafáza, metafáza, anafáza, telofáza","telofáza, profáza, prometafáza, metafáza, anafáza","profáza, prometafáza, metafáza, telofáza, anafáza","profáza, prometafáza, anafáza, metafáza, telofáza"]},
+{ q: "V profáze dochádza ku:", a:["kondenzácii chromatínu","zániku jadrového obalu","zoradeniu chromozómov do ekvatoriálnej roviny","vzniku nového jadra"]},
+{ q: "Jadierka zanikajú v:", a:["profáze","metafáze","anafáze","telofáze"]},
+{ q: "Včasné deliace vretienko zložené z nekinetochorových mikrotubulov sa vytvára v:", a:["profáze","metafáze","anafáze","telofáze"]},
+{ q: "Centrozómy sa od seba oddelia v:", a:["profáze","metafáze","anafáze","telofáze"]},
+{ q: "V prometafáze dochádza ku:", a:["ukončeniu kondenzácie chromatínu","zániku jadrového obalu","zoradeniu chromozómov do ekvatoriálnej roviny","vzniku nového jadra"]},
+{ q: "Prometafáza mitózy je pre bunku dôležitá, lebo:", a:["sa rozpadá jadrová membrána","nekinetochórové mikrotubuly deliaceho vretienka sa musia správne napojiť na kohezín chromatídy","kinetochórové mikrotubuly deliaceho vretienka sa musia správne napojiť na kinetochór oboch chromatíd","každý chromozóm má dva kinetochóry umiestnené na centrozóme chromatídy"]},
+{ q: "Metafázový chromozóm:", a:["je tvorený jedným chromatidom","je tvorený dvomi chromatidmi","má tvar písmena Y","má tvar písmena X"]},
+{ q: "V metafáze mitózy dochádza k:", a:["rozpadu jadrovej membrány","k usporiadaniu chromozómov do ekvatoriálnej roviny","k maximálnej kondenzácii chromozómov","k dekondenzácii chromozómov"]},
+{ q: "Chromozómy sú maximálne kondenzované na:", a:["konci metafázy","konci anafázy","konci telofázy","začiatku profázy"]},
+{ q: "Anafázu promujúci komplex sa aktivuje v:", a:["profáze","metafáze","anafáze","telofáze"]},
+{ q: "V anafáze A sa:", a:["depolymerizáciou skracujú kinetochorové mikrotubuly","polymerizujú nekinetochorové mikrotubuly","rozdeľuje jadro","rozdeľuje cytoplazma"]},
+{ q: "V anafáze B sa:", a:["depolymerizáciou skracujú kinetochorové mikrotubuly","polymerizujú nekinetochorové mikrotubuly","rozdeľuje jadro","rozdeľuje cytoplazma"]},
+{ q: "Pri karyokinéze sa:", a:["depolymerizáciou skracujú kinetochorové mikrotubuly","polymerizujú nekinetochorové mikrotubuly","rozdeľuje jadro","rozdeľuje cytoplazma"]},
+{ q: "Pri cytokinéze sa:", a:["depolymerizáciou skracujú kinetochorové mikrotubuly","polymerizujú nekinetochorové mikrotubuly","rozdeľuje jadro","rozdeľuje cytoplazma"]},
+{ q: "V telofáze dochádza ku:", a:["kondenzácii chromatínu","zániku jadrového obalu","zoradeniu chromozómov do ekvatoriálnej roviny","vzniku nového jadra"]},
+{ q: "Počas telofázy mitotického delenia:", a:["prebieha dekondenzácia chromozómov","ukončí sa karyokinéza","vytvárajú sa nové jadrové obaly","prebieha kondenzácia chromozómov"]},
+{ q: "Ktorá z nasledujúcich udalostí nastáva počas telofázy?", a:["aktín – myozínový kontrakčný prstenec iniciuje tvorbu štiepnej brázdy","sesterské chromatidy sa oddelia a sú vytiahnuté na opačné konce bunky","mikrotubuly sa viažu na kinetochórne proteíny na chromozómoch","jadrová membrána sa rozpadá"]},
+{ q: "Anafáza je proces, ktorý:", a:["môžeme rozdeliť na anafázu bunky eukaryotickej a prokaryotickej","prebieha po telofáze","prebieha pred telofázou","môžeme rozdeliť na anafázu A a anafázu B"]},
+{ q: "V priebehu anafázy mitotického delenia:", a:["sa kinetochorové mikrotubuly deliaceho vretienka depolymerizujú","jednochromatidové chromozómy sú ťahané k centrozómom","kinetochorové mikrotubuly sa polymerizáciou skracujú","dvojchromatidové chromozómy sú ťahané k centrioméram"]},
+{ q: "Motorické proteíny sú:", a:["dyneíny","kinezíny","kohezíny","separázy"]},
+{ q: "Rýchlemu postupu chromozómov k centrozómom pomáhajú:", a:["dyneíny","kinezíny","polymerizácia kinetochorových mikrotubulov","depolymerizácia kinetochorových mikrotubulov"]},
+{ q: "Ak zlyhá likvidácia sekurínu na konci metafázy:", a:["separáza rozdelí kohezíny aj z vnútornej strany centromér","separáza nerozdelí kohezíny aj z vnútornej strany centromér","nastane disjunkcia sesterských chromatídov","nastane nondisjunkcia sesterských chromatídov"]},
+{ q: "Bielkovina chrániaca kohezíny pred rozpojením:", a:["sa volá separáza","sa volá shugoshin","je odstránená ubikvitináciou","je odstránená acetyláciou"]},
+{ q: "Čo je miestom pripevnenia vretienkových vlákien k sesterským chromatídam počas mitózy.", a:["centrozóm","centriola","centroméra","kinetochór"]},
+{ q: "Výsledkom 1. meiotického delenia je vznik buniek s:", a:["haploidným počtom zdvojených chromozómov","haploidným počtom chromozómov","diploidným počtom zdvojených chromozómov","diploidným počtom chromozómov"]},
+{ q: "Výsledkom 2. meiotického delenia je vznik buniek s:", a:["haploidným počtom zdvojených chromozómov","haploidným počtom chromozómov","diploidným počtom zdvojených chromozómov","diploidným počtom chromozómov"]},
+{ q: "Výsledkom meiotického delenia je vznik:", a:["jednej bunky","dvoch buniek","troch buniek","štyroch buniek"]},
+{ q: "Pri amitóze sa počet chromozómov:", a:["zachováva","znižuje na polovicu","zdvojnásobuje","náhodne mení podľa typu bunky"]},
+{ q: "Koľko buniek je výsledkom prvého meiotického delenia?", a:["1","2","3","4"]},
+{ q: "V ktorej fáze meiózy sa párujú homologické chromozómy a dochádza ku crossing–overu? A v ktorej fáze meiózy dochádza k rozdeleniu chromatíd?", a:["v profáze I a v anafáze II","v anafáze I a v profáze I","v profáze II a v anafáze I","v anafáze II a v profáze II"]},
+{ q: "K duplikácii chromozómov v meióze:", a:["nedochádza","dochádza pred prvým meiotickým delením","dochádza pred druhým meiotickým delením","dochádza pred prvým aj druhým meiotickým delením"]},
+{ q: "Prvé meiotické delenie sa nazýva aj:", a:["redukčné","ekvačné","heterotypické","homeotypické"]},
+{ q: "Druhé meiotické delenie sa nazýva aj:", a:["redukčné","ekvačné","heterotypické","homeotypické"]},
+{ q: "Prvé meiotické delenie sa skladá z fáz:", a:["profáza, metafáza, anafáza, telofáza","profáza I, metafáza I, anafáza I, telofáza I","profáza II, metafáza II, anafáza II, telofáza II","proleptoténne, leptoténne, zygoténne, pachyténne, diploténne, diakinéza"]},
+{ q: "Druhé meiotické delenie sa skladá z fáz:", a:["profáza, metafáza, anafáza, telofáza","profáza I, metafáza I, anafáza I, telofáza I","profáza II, metafáza II, anafáza II, telofáza II","proleptoténne, leptoténne, zygoténne, pachyténne, diploténne, diakinéza"]},
+{ q: "Štádiá profázy prvého meiotického delenia v správnom poradí sú:", a:["leptoténne, zygoténne, pachyténne, diploténne, diakinéza","proleptoténne, leptoténne, pachyténne, diploténne, diakinéza","proleptoténne, leptoténne, zygoténne, diploténne, diakinéza","proleptoténne, leptoténne, zygoténne, pachyténne, diploténne, diakinéza"]},
+{ q: "Ku kondenzácii chromozómov začína dochádzať v meióze v štádiu:", a:["proleptoténne","zygoténne","pachyténne","diploténne"]},
+{ q: "Ku synapsii homologických chromozómov dochádza v štádiu:", a:["proleptoténne","zygoténne","pachyténne","diploténne"]},
+{ q: "Ku crossing– overu dochádza v štádiu:", a:["proleptoténne","zygoténne","pachyténne","diploténne"]},
+{ q: "Ku vzniku rekombinovaných chromatidov dochádza v štádiu:", a:["proleptoténne","zygoténne","pachyténne","diploténne"]},
+{ q: "K rozpadu jadrových obalov a vymiznutiu jadierka dochádza v meióze v štádiu:", a:["proleptoténne","zygoténne","pachyténne","diakinéze"]},
+{ q: "Synaptonemálne komplexy v meióze vymiznú v štádiu:", a:["proleptoténne","zygoténne","pachyténne","diploténne"]},
+{ q: "Diakinéza je charakterizovaná:", a:["kondenzáciou chromatidov","terminalizáciou chiazmat","rozpadom jadrových obalov","vymiznutím jadierka"]},
+{ q: "Koľko chromozómových sád má za normálnych okolností telová bunka človeka?", a:["jednu","dve","tri","štyri"]},
+{ q: "Koľko chromozómov obsahuje normálna ľudská spermia?", a:["22","23","45","46"]},
+{ q: "Hlavný rozdiel medzi mitózou a amitózou je:", a:["pri mitóze prebieha karyokinéza a cytokinéza, pri amitóze nie","mitóza zachováva genetickú stabilitu, amitóza ju môže narušiť","mitóza sa vyskytuje u prokaryotov, amitóza u eukaryotov","pri amitóze sa vždy vytvárajú haploidné bunky"]},
+{ q: "Počas meiózy sa počet chromozómov:", a:["zdvojnásobí a potom rozdelí na štvrtiny","rozdelí na štvrtiny","zdvojnásobí a potom rozdelí na polovicu","rozdelí na polovicu"]},
+{ q: "Nondisjunkcia je:", a:["chyba v separácii homologických chromozómov alebo sesterských chromatíd","chyba v migrácii chromozómu","delécia DNA segmentu na jednej chromatide","duplikácia DNA segmentu na druhej chromatide"]},
+{ q: "Anafázové zaostávanie je:", a:["chyba v separácii homologických chromozómov alebo sesterských chromatíd","chyba v migrácii chromozómu","delécia DNA segmentu na jednej chromatide","duplikácia DNA segmentu na druhej chromatide"]},
+{ q: "Medzi poruchy meiózy patrí:", a:["senescencia","apoptóza","nondisjunkcia","nerovnomerný crossing– over"]},
+{ q: "Telomeráza je:", a:["koncová časť chromozómu","enzým, ktorý predlžuje teloméry","enzým, ktorý skracuje teloméry","aktívna v embryonálnych bunkách"]},
+{ q: "Každý chromozóm v interfázovom jadre má:", a:["svoj sektor","ľubovoľné umiestnenie","premenlivé umiestnenie","svoju určitú polohu zabezpečenú jeho väzbou s jadrovou laminou"]},
+{ q: "Ktoré bunky patria medzi haploidné?", a:["zygoty","gaméty","pohlavné bunky","vajíčka a spermie"]},
+{ q: "Ako sa nazývajú identické kópie chromatínu, ktoré drží pohromade kohézín v centromére?", a:["hístóny","nukleozómy","chromatín","sesterské chromatidy"]},
+{ q: "Čo platí pre fázu G0 bunkového cyklu?", a:["predstavuje trvalé zastavenie cyklu u všetkých buniek","bunka môže dočasne vystúpiť z cyklu","je spojená s diferenciáciou buniek","vždy prebieha bezprostredne po mitóze"]},
+{ q: "Ktoré procesy charakterizujú S– fázu bunkového cyklu?", a:["semikonzervatívna replikácia DNA","syntéza tubulínu a centrozómov","vznik sesterských chromatíd spojených kohezínmi","rozdelenie cytoplazmy"]},
+{ q: "Čo kontroluje G2/M kontrolný bod?", a:["rovnomerné pripojenie chromozómov na mikrotubuly","správnu replikáciu DNA","poškodenie DNA a jej opravu","prítomnosť dostatočných živín pre bunku"]},
+{ q: "Čo kontroluje G1/S kontrolný bod?", a:["veľkosť bunky","správne pripojenie kinetochorov na mikrotubuly","prítomnosť živín","rovnomerné rozdelenie chromozómov"]},
+{ q: "Ktoré tvrdenia vystihujú metafázový kontrolný bod?", a:["kontroluje pripojenie všetkých kinetochorov na mikrotubuly","rozhoduje o vstupe do mitózy","zabezpečuje rovnomerné rozdelenie chromozómov","hodnotí veľkosť bunky a prítomnosť živín"]},
+];
+
+/* ------------------ ANSWER KEY (strings of 4 S/N per question 1..85) ------------------ */
+/* Kľúč podľa tvojho znenia (1..85) */
+const kluc = [
+"SNNN","NSNN","NNSN","SNNN","NNSN","SNNN","SSSN","SNNN","NNNS","NNSN",
+"NSNN","SSNS","SNNN","SNNN","NSNS","SNNN","SSSS","NSSN","NSSS","SSSS",
+"NNNS","SNNN","SSNN","SSSS","SNSS","SNNN","SNNN","SNNN","SNNN","SNNN",
+"NSNN","SNSN","NSNS","NSSN","SNNN","NSNN","SNNN","NSNN","NNSN","NNNS",
+"NNNS","SSSN","SNNN","NNSS","SSNN","SSNN","SSNS","NSNS","NSSN","NNNS",
+"SNNN","NSNN","NNNS","SNNN","NSNN","SNNN","NSNN","SNSN","NSNS","NSNN",
+"NNSN","NNNS","SNNN","NSNN","NNSN","NNNS","NNNS","NNNS","NNSS","NSNN",
+"NSNN","SSNN","NNNS","SNNN","NSNN","NNSS","NSNS","SNNS","NSSS","NNNS",
+"NSSN","SNSN","NSSN","SNSN","SNSN"
+];
+
+/* ------------------ State ------------------ */
+let state = {
+  questions: [], // will hold questions with original index and randomized answers
+  filter: 'all', // 'all', 'wrong', 'favorites'
+  favorites: new Set(),
+  lastWrongSet: [], // store wrong questions for retry
+};
+
+/* Initialize questions with originalIndex and random answer order */
+function initQuestions(){
+  state.questions = questions.map((q,i)=>{
+    const originalIndex = i; // 0-based
+    const answers = q.a.map((txt, idx)=>({txt, idx}));
+    return { originalIndex, qtext: q.q, answers };
+  });
+  renderQuestions();
+}
+
+/* Utility shuffle */
+function shuffleArr(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/* Render current state.questions according to filter */
+function renderQuestions(){
+  const container = document.getElementById('quiz');
+  container.innerHTML = '';
+  let toRender = state.questions.slice();
+
+  // apply filter
+  if(state.filter === 'favorites'){
+    toRender = toRender.filter(item => state.favorites.has(item.originalIndex));
+  } else if(state.filter === 'wrong'){
+    toRender = toRender.filter(item => state.lastWrongSet.includes(item.originalIndex));
+  }
+
+  if(toRender.length === 0){
+    const info = document.createElement('div');
+    info.style.textAlign='center';
+    info.style.color='#555';
+    info.style.margin='18px';
+    info.textContent = 'Žiadne otázky na zobrazenie.';
+    container.appendChild(info);
+    document.getElementById('resultText').textContent = '';
+    return;
+  }
+
+  toRender.forEach((item, displayIdx)=>{
+    // build card
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.orig = item.originalIndex;
+
+    // header
+    const header = document.createElement('div');
+    header.className = 'q-header';
+
+    const num = document.createElement('div');
+    num.className = 'q-number';
+    num.textContent = (displayIdx+1)+'.';
+
+    const text = document.createElement('div');
+    text.className = 'q-text';
+    text.textContent = item.qtext;
+
+    const actions = document.createElement('div');
+    actions.className = 'q-actions';
+
+    // star favorite
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.title = 'Označiť ako obľúbené';
+    star.innerHTML = state.favorites.has(item.originalIndex) ? '★' : '☆';
+    if(state.favorites.has(item.originalIndex)) star.classList.add('active');
+    star.addEventListener('click', ()=>{
+      if(state.favorites.has(item.originalIndex)){
+        state.favorites.delete(item.originalIndex);
+        star.classList.remove('active');
+        star.innerHTML = '☆';
+      } else {
+        state.favorites.add(item.originalIndex);
+        star.classList.add('active');
+        star.innerHTML = '★';
+      }
+    });
+
+    // show correct button
+    const btnShow = document.createElement('button');
+    btnShow.className = 'btn-small btn-show';
+    btnShow.textContent = 'Zobraziť správne';
+    btnShow.addEventListener('click', ()=> showCorrectForCard(card, item.originalIndex));
+
+    actions.appendChild(star);
+    actions.appendChild(btnShow);
+
+    header.appendChild(num);
+    header.appendChild(text);
+    header.appendChild(actions);
+
+    card.appendChild(header);
+
+    // randomize answer order for display (store mapping)
+    const randomized = item.answers.slice();
+    // If answers not yet shuffled for this render, shuffle them each render
+    const shuffledAnswers = shuffleArr(randomized);
+    card._shuffled = shuffledAnswers.map(a=>a.idx); // store original idx order
+
+    // answers block
+    const answersDiv = document.createElement('div');
+    answersDiv.className = 'answers';
+
+    shuffledAnswers.forEach((ansObj, ansPos)=>{
+      const label = document.createElement('label');
+      label.className = 'ans';
+      label.dataset.origAnswerIdx = ansObj.idx; // 0..3 original index
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.name = `q_${item.originalIndex}`;
+      checkbox.value = ansObj.idx;
+      label.appendChild(checkbox);
+      const span = document.createElement('span');
+      span.textContent = ansObj.txt;
+      label.appendChild(span);
+      answersDiv.appendChild(label);
+    });
+
+    card.appendChild(answersDiv);
+
+    // optional meta area: show original question number
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const origLabel = document.createElement('div');
+    origLabel.textContent = `#${item.originalIndex+1}`;
+    meta.appendChild(origLabel);
+    card.appendChild(meta);
+
+    container.appendChild(card);
+  });
+
+  // clear previous result
+  document.getElementById('resultText').textContent = '';
+}
+
+/* show correct for one card */
+function showCorrectForCard(cardEl, origIndex){
+  const key = kluc[origIndex]; // string like 'SNNN'
+  const labels = [...cardEl.querySelectorAll('label.ans')];
+  // Determine which shuffled labels correspond to which original index
+  labels.forEach(label=>{
+    const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10); // 0..3
+    const isCorrect = key[origAnsIdx] === 'S';
+    const input = label.querySelector('input');
+    const checked = input.checked;
+    // Reset classes first
+    label.classList.remove('correct','incorrect');
+    if(isCorrect && checked) {
+      label.classList.add('correct');
+    } else if(isCorrect && !checked){
+      // correct but not selected -> mark red (as requested)
+      label.classList.add('incorrect');
+    } else if(!isCorrect && checked){
+      // wrong selected -> red
+      label.classList.add('incorrect');
+    }
+    // else not correct and not selected -> keep default
+  });
+}
+
+/* show all correct answers globally */
+function showAllCorrect(){
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    showCorrectForCard(card, origIndex);
+  });
+}
+
+/* evaluate current shown questions */
+function evaluateAll(){
+  const cards = document.querySelectorAll('.card');
+  let correctCount = 0;
+  const wrongList = [];
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    const key = kluc[origIndex]; // e.g. 'SNNN'
+    const labels = [...card.querySelectorAll('label.ans')];
+    const selectedOrigIdx = labels.filter(lbl=> lbl.querySelector('input').checked ).map(lbl=> parseInt(lbl.dataset.origAnswerIdx,10));
+    // compute sets
+    const selSet = new Set(selectedOrigIdx);
+    const corrSet = new Set();
+    for(let i=0;i<4;i++) if(key[i]==='S') corrSet.add(i);
+    // Compare exact equality
+    let equal = (selSet.size === corrSet.size);
+    if(equal){
+      for(let v of selSet) if(!corrSet.has(v)){ equal=false; break; }
+    }
+    // mark colors for visual feedback
+    labels.forEach(label=>{
+      label.classList.remove('correct','incorrect');
+      const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10);
+      const isCorrect = key[origAnsIdx] === 'S';
+      const checked = label.querySelector('input').checked;
+      if(isCorrect && checked) label.classList.add('correct');
+      else if(isCorrect && !checked) label.classList.add('incorrect');
+      else if(!isCorrect && checked) label.classList.add('incorrect');
+    });
+
+    if(equal){
+      correctCount++;
+    } else {
+      wrongList.push(origIndex);
+    }
+  });
+
+  // store last wrong set for retry/filters
+  state.lastWrongSet = wrongList.slice();
+
+  // percent relative to number of displayed questions
+  const total = cards.length;
+  const percent = total === 0 ? 0 : ((correctCount/total)*100).toFixed(2);
+  document.getElementById('resultText').textContent = `Úspešnosť: ${percent}% (${correctCount}/${total} úplne správnych otázok)`;
+}
+
+/* Show only wrong questions (filter) */
+function showOnlyWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Nie sú uložené žiadne chybné otázky (vyhodnoť test najprv).');
+    return;
+  }
+  state.filter = 'wrong';
+  renderQuestions();
+}
+
+/* Reset test to initial state (all questions, clear selections, clear coloring) */
+function resetTest(){
+  // reinitialize questions to default order and answers order
+  state.filter = 'all';
+  state.lastWrongSet = [];
+  // restore original questions order (as in questions array)
+  state.questions = questions.map((q,i)=>{
+    const answers = q.a.map((txt, idx)=>({txt, idx}));
+    return { originalIndex:i, qtext:q.q, answers };
+  });
+  // clear favorites stays preserved
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Retry only wrong questions (renders only wrong set but allows answering them) */
+function retryWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Žiadne chybné otázky pre opakovanie. Najprv vyhodnoť test.');
+    return;
+  }
+  // Build state.questions to include only wrong ones, preserving originalIndex
+  state.questions = state.lastWrongSet.map(idx => {
+    const q = questions[idx];
+    const answers = q.a.map((txt, ai)=>({txt, idx:ai}));
+    return { originalIndex: idx, qtext: q.q, answers };
+  });
+  state.filter = 'all';
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Show only favorites */
+function showFavoritesOnly(){
+  state.filter = 'favorites';
+  renderQuestions();
+}
+
+/* Show all questions (clear filters) */
+function showAllQuestions(){
+  state.filter = 'all';
+  // restore full set in original order
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.q, answers: q.a.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Shuffle questions (random order) and shuffle answers within each question */
+function shuffleQuestions(){
+  // shuffle questions array
+  const arr = questions.map((q,i)=>({ originalIndex:i, qtext:q.q, answers: q.a.map((txt, idx)=>({txt, idx})) }));
+  const shuffled = shuffleArr(arr);
+  state.questions = shuffled;
+  state.filter = 'all';
+  renderQuestions();
+}
+
+/* Show Favorites modal/list (simple behavior: filter to favorites) */
+function showFavoritesList(){
+  // if no favorites, inform
+  if(state.favorites.size === 0){
+    alert('Nemáš označené žiadne obľúbené otázky.');
+    return;
+  }
+  state.filter = 'favorites';
+  // prepare state.questions as full list so filter works
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.q, answers: q.a.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Show only wrong (button at bottom) identical to showOnlyWrong function but filters current display */
+function showOnlyWrongButton(){
+  showOnlyWrong();
+}
+
+/* Attach event listeners */
+document.getElementById('btnShowAll').addEventListener('click', showAllCorrect);
+document.getElementById('btnShuffle').addEventListener('click', ()=>{ shuffleQuestions(); });
+document.getElementById('btnFavorites').addEventListener('click', showFavoritesList);
+document.getElementById('btnShowAllQ').addEventListener('click', showAllQuestions);
+document.getElementById('btnShowWrongOnly').addEventListener('click', ()=>{ state.filter = 'wrong'; renderQuestions(); });
+document.getElementById('btnShowFavOnly').addEventListener('click', showFavoritesOnly);
+document.getElementById('btnEvaluate').addEventListener('click', evaluateAll);
+document.getElementById('btnShowWrong').addEventListener('click', showOnlyWrongButton);
+document.getElementById('btnRetryWrong').addEventListener('click', retryWrong);
+document.getElementById('btnReset').addEventListener('click', resetTest);
+
+/* Initialize on load */
+initQuestions();
+</script>
+</body>
+</html>

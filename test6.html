@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6. Bunkové a tkanivové kultúry</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f2f2f2; margin: 0; padding: 20px; }
+  h1 { text-align: center; }
+  .controls { margin-bottom: 20px; text-align: center; }
+  .question { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+  .answers label { display: block; margin: 5px 0; cursor: pointer; }
+  .favorite { float: right; cursor: pointer; color: #ccc; font-weight: bold; }
+  .favorite.active { color: gold; }
+  .correct { background-color: #c6f6c6; }
+  .incorrect { background-color: #f6c6c6; }
+  button { margin: 5px; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; background: #2196f3; color: #fff; }
+  button:hover { background: #1976d2; }
+</style>
+</head>
+<body>
+
+<h1>6. Bunkové a tkanivové kultúry. Hodnotenie základných biologických vlastností buniek</h1>
+
+<div class="controls">
+  <button onclick="showAllCorrect()">Zobraziť všetky správne odpovede</button>
+  <button onclick="shuffleQuestions()">Zamiešať otázky</button>
+</div>
+
+<div id="test-container"></div>
+
+<div class="controls">
+  <button onclick="evaluateAll()">Vyhodnotiť všetko</button>
+  <button onclick="showOnlyWrong()">Zobraziť len chybné otázky</button>
+  <button onclick="resetTest()">Obnoviť test</button>
+  <span id="score"></span>
+</div>
+
+<script>
+const questions = [
+  {
+    text: "Adherenciu buniek na substrát sprostredkúvajú najmä:",
+    answers: ["integríny","kadheríny","CAMs","povrch potiahnutý kolagénom/fibronektínom zlepšuje adherenciu"],
+    correct: [0,3]
+  },
+  {
+    text: "Bunková kultúra:",
+    answers: ["je populácia buniek, ktorá proliferuje in vitro","je populácia buniek, ktorá proliferuje in vivo","je organizovaná ako tkanivo","nie je organizovaná ako tkanivo"],
+    correct: [0,3]
+  },
+  {
+    text: "Bunková kultúra môže byť:",
+    answers: ["adherentná","suspenzná","voľne plávajúca","všetky spomenuté možnosti"],
+    correct: [0,1]
+  },
+  {
+    text: "Bunková línia:",
+    answers: ["je organizovaná ako tkanivo","je zjednodušená a zmenšená verzia orgánu in vitro","je populácia buniek, ktorá vznikla opakovanými pasážami buniek z primokultúry","má využitie v biomedicínskom výskume"],
+    correct: [2,3]
+  },
+  {
+    text: "Bunkové kultúry sa využívajú:",
+    answers: ["vo farmakotoxikológii","pri in vitro fertilizácii","v humánnej genetike","v tkanivovom inžinierstve"],
+    correct: [0,1,2,3]
+  }
+];
+
+let favorites = [];
+let originalQuestions = JSON.parse(JSON.stringify(questions));
+
+function renderQuestions(qs) {
+  const container = document.getElementById("test-container");
+  container.innerHTML = "";
+  qs.forEach((q,index) => {
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.dataset.index = index;
+    qDiv.innerHTML = `
+      <span class="favorite" onclick="toggleFavorite(${index},this)">★</span>
+      <p><strong>${index+1}. ${q.text}</strong></p>
+      <div class="answers">
+        ${q.answers.map((a,i)=>`<label><input type="checkbox" data-i="${i}"> ${a}</label>`).join("")}
+      </div>
+      <button onclick="showCorrect(${index})">Zobraziť správne</button>
+    `;
+    container.appendChild(qDiv);
+  });
+}
+
+function toggleFavorite(index, el){
+  if(favorites.includes(index)){
+    favorites = favorites.filter(i=>i!==index);
+    el.classList.remove("active");
+  } else {
+    favorites.push(index);
+    el.classList.add("active");
+  }
+}
+
+function showCorrect(index){
+  const qDiv = document.querySelector(`.question[data-index='${index}']`);
+  const checkboxes = qDiv.querySelectorAll("input[type=checkbox]");
+  const correct = questions[index].correct;
+  checkboxes.forEach((cb,i)=>{
+    if(correct.includes(i)) cb.parentElement.classList.add("correct");
+    if(cb.checked && !correct.includes(i)) cb.parentElement.classList.add("incorrect");
+    if(!cb.checked && correct.includes(i)) cb.parentElement.classList.add("incorrect");
+  });
+}
+
+function showAllCorrect(){
+  questions.forEach((q,i)=>showCorrect(i));
+}
+
+function evaluateAll(){
+  let correctCount = 0;
+  questions.forEach((q,i)=>{
+    const qDiv = document.querySelector(`.question[data-index='${i}']`);
+    const checkboxes = qDiv.querySelectorAll("input[type=checkbox]");
+    const correct = q.correct;
+    let allCorrect = true;
+    checkboxes.forEach((cb,j)=>{
+      if(cb.checked !== correct.includes(j)) allCorrect = false;
+    });
+    if(allCorrect) correctCount++;
+    showCorrect(i);
+  });
+  const percent = ((correctCount/questions.length)*100).toFixed(2);
+  document.getElementById("score").innerText = ` | Úspešnosť: ${percent}%`;
+}
+
+function showOnlyWrong(){
+  const container = document.getElementById("test-container");
+  container.innerHTML = "";
+  questions.forEach((q,i)=>{
+    const qDiv = document.querySelector(`.question[data-index='${i}']`);
+    const checkboxes = qDiv.querySelectorAll("input[type=checkbox]");
+    const correct = q.correct;
+    let allCorrect = true;
+    checkboxes.forEach((cb,j)=>{
+      if(cb.checked !== correct.includes(j)) allCorrect = false;
+    });
+    if(!allCorrect){
+      container.appendChild(qDiv.cloneNode(true));
+    }
+  });
+}
+
+function resetTest(){
+  questions.splice(0,questions.length,...JSON.parse(JSON.stringify(originalQuestions)));
+  renderQuestions(questions);
+  document.getElementById("score").innerText = "";
+}
+
+function shuffleQuestions(){
+  for(let i=questions.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [questions[i],questions[j]]=[questions[j],questions[i]];
+    // shuffle answers
+    for(let ans of [questions[i],questions[j]]){
+      for(let k=ans.answers.length-1;k>0;k--){
+        const l=Math.floor(Math.random()*(k+1));
+        [ans.answers[k],ans.answers[l]]=[ans.answers[l],ans.answers[k]];
+      }
+    }
+  }
+  renderQuestions(questions);
+}
+
+// Inicialne renderovanie
+renderQuestions(questions);
+
+</script>
+</body>
+</html>

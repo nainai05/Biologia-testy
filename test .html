@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generátor testov – Biológia</title>
+<style>
+:root {
+  --bg: #f7f9fc;
+  --primary: #1976d2;
+  --correct: #4caf50;
+  --wrong: #f44336;
+  --text: #222;
+}
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: var(--bg);
+  margin: 0;
+  padding: 2rem;
+  color: var(--text);
+}
+.container {
+  max-width: 900px;
+  margin: auto;
+}
+h1 {
+  text-align: center;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+.options {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom: 1.5rem;
+}
+button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+button:hover { background: #145ca1; }
+.question {
+  background: white;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.answers label {
+  display: block;
+  margin: 0.25rem 0;
+}
+.correct { background-color: #d4edda; }
+.incorrect { backgr
