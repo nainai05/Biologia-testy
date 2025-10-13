@@ -203,182 +203,332 @@ const questions = [
 
 ];
 
-/* sanity check */
-if(kluc.length !== questions.length){
-  console.warn("Upozornenie: kľúč a počet otázok sa nezhodujú:", kluc.length, questions.length);
-}
+/* ------------------ State ------------------ */
+let state = {
+  questions: [], // will hold questions with original index and randomized answers
+  filter: 'all', // 'all', 'wrong', 'favorites'
+  favorites: new Set(),
+  lastWrongSet: [], // store wrong questions for retry
+};
 
-/* ===== VYGENERUJ HTML PRE OTÁZKY ===== */
-const quizDiv = document.getElementById('quiz');
-
-function buildQuiz(indices = null){
-  quizDiv.innerHTML = '';
-  const idxList = indices ? indices : questions.map((_,i)=>i);
-  idxList.forEach(qi => {
-    const item = questions[qi];
-    const wrap = document.createElement('div');
-    wrap.className = 'question';
-    wrap.id = 'q'+qi;
-
-    const title = document.createElement('div');
-    title.className = 'q-title';
-    title.textContent = item.q;
-    wrap.appendChild(title);
-
-    const ansDiv = document.createElement('div');
-    ansDiv.className = 'answers';
-    for(let i=0;i<4;i++){
-      const lab = document.createElement('label');
-      lab.innerHTML = `<input type="checkbox" name="q${qi}" value="${i}"> ${item.a[i]}`;
-      ansDiv.appendChild(lab);
-    }
-    wrap.appendChild(ansDiv);
-
-    const actions = document.createElement('div');
-    actions.className = 'q-actions';
-    const showBtn = document.createElement('button');
-    showBtn.textContent = 'Zobraziť správne';
-    showBtn.onclick = (e) => { e.preventDefault(); showCorrectOne(qi); };
-    actions.appendChild(showBtn);
-
-    const clearBtn = document.createElement('button');
-    clearBtn.textContent = 'Vymazať výbery';
-    clearBtn.className = 'secondary';
-    clearBtn.onclick = (e) => { e.preventDefault(); clearQuestion(qi); };
-    actions.appendChild(clearBtn);
-
-    wrap.appendChild(actions);
-    quizDiv.appendChild(wrap);
+/* Initialize questions with originalIndex and random answer order */
+function initQuestions(){
+  state.questions = questions.map((q,i)=>{
+    const originalIndex = i; // 0-based
+    const answers = q.a.map((txt, idx)=>({txt, idx}));
+    return { originalIndex, qtext: q.q, answers };
   });
+  renderQuestions();
 }
 
-/* initial build */
-buildQuiz();
-
-/* ===== pomocné funkcie ===== */
-function rightArray(idx){
-  if(!kluc[idx]) return [false,false,false,false];
-  return kluc[idx].split('').map(ch => ch === 'S');
+/* Utility shuffle */
+function shuffleArr(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
 }
 
-function clearQuestion(qi){
-  const wrap = document.getElementById('q'+qi);
-  if(!wrap) return;
-  wrap.querySelectorAll('input[type="checkbox"]').forEach(b=>b.checked=false);
-  wrap.querySelectorAll('label').forEach(l=> l.classList.remove('correct','incorrect'));
-}
+/* Render current state.questions according to filter */
+function renderQuestions(){
+  const container = document.getElementById('quiz');
+  container.innerHTML = '';
+  let toRender = state.questions.slice();
 
-/* ===== vyhodnotenie celeho zobrazenia ===== */
-function evaluate(){
-  const ques = document.querySelectorAll('.question');
-  let correctCount = 0;
-  const total = ques.length;
+  // apply filter
+  if(state.filter === 'favorites'){
+    toRender = toRender.filter(item => state.favorites.has(item.originalIndex));
+  } else if(state.filter === 'wrong'){
+    toRender = toRender.filter(item => state.lastWrongSet.includes(item.originalIndex));
+  }
 
-  ques.forEach(wrap => {
-    const qid = parseInt(wrap.id.slice(1),10);
-    const boxes = wrap.querySelectorAll('input[type="checkbox"]');
-    const selected = Array.from(boxes).map(b => b.checked);
-    const right = rightArray(qid);
-    const labs = wrap.querySelectorAll('label');
-
-    labs.forEach((lab,i)=>{
-      lab.classList.remove('correct','incorrect');
-      if(right[i]) lab.classList.add('correct');
-      if(selected[i] && !right[i]) lab.classList.add('incorrect');
-    });
-
-    // exact match?
-    let match = true;
-    for(let k=0;k<4;k++){
-      if(selected[k] !== right[k]){ match = false; break; }
-    }
-    wrap.dataset.chybna = match ? "false" : "true";
-    if(match) correctCount++;
-  });
-
-  const percent = Math.round((correctCount / total) * 100);
-  document.getElementById('vysledok').innerHTML = `Správnych otázok: ${correctCount} z ${total} — <span style="color:${percent>=60?'green':'#b33'}">${percent}%</span>`;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-/* ===== zobraz správne pre jednu otázku ===== */
-function showCorrectOne(qi){
-  const wrap = document.getElementById('q'+qi);
-  if(!wrap) return;
-  const right = rightArray(qi);
-  const boxes = wrap.querySelectorAll('input[type="checkbox"]');
-  const labs = wrap.querySelectorAll('label');
-  labs.forEach((lab,i)=>{
-    lab.classList.remove('correct','incorrect');
-    if(right[i]) lab.classList.add('correct');
-    if(boxes[i].checked && !right[i]) lab.classList.add('incorrect');
-  });
-}
-
-/* ===== zobraz všetky správne odpovede (bez prepísania dataset) ===== */
-function showAllCorrect(){
-  document.querySelectorAll('.question').forEach(wrap=>{
-    const qid = parseInt(wrap.id.slice(1),10);
-    const right = rightArray(qid);
-    const boxes = wrap.querySelectorAll('input[type="checkbox"]');
-    const labs = wrap.querySelectorAll('label');
-    labs.forEach((lab,i)=>{
-      lab.classList.remove('correct','incorrect');
-      if(right[i]) lab.classList.add('correct');
-      if(boxes[i].checked && !right[i]) lab.classList.add('incorrect');
-    });
-  });
-  document.getElementById('vysledok').textContent = '';
-}
-
-/* ===== zobraz len chybne otázky (po evaluate) ===== */
-function showOnlyWrong(){
-  // ensure evaluate called
-  const anyFlagged = Array.from(document.querySelectorAll('.question')).some(q=>q.dataset.chybna);
-  if(!anyFlagged) evaluate();
-
-  document.querySelectorAll('.question').forEach(wrap=>{
-    if(wrap.dataset.chybna === "true") wrap.classList.remove('hidden');
-    else wrap.classList.add('hidden');
-  });
-  const first = document.querySelector('.question:not(.hidden)');
-  if(first) first.scrollIntoView({behavior:'smooth', block:'center'});
-}
-
-/* ===== retry only wrong ===== */
-function retryWrong(){
-  // ensure evaluate called
-  const anyFlagged = Array.from(document.querySelectorAll('.question')).some(q=>q.dataset.chybna);
-  if(!anyFlagged) evaluate();
-
-  const wrongIndices = Array.from(document.querySelectorAll('.question'))
-    .filter(q => q.dataset.chybna === "true")
-    .map(q => parseInt(q.id.slice(1),10));
-
-  if(wrongIndices.length === 0){
-    alert("Nemáš žiadne chyby — všetky otázky sú správne. Nie je čo spúštať znovu.");
+  if(toRender.length === 0){
+    const info = document.createElement('div');
+    info.style.textAlign='center';
+    info.style.color='#555';
+    info.style.margin='18px';
+    info.textContent = 'Žiadne otázky na zobrazenie.';
+    container.appendChild(info);
+    document.getElementById('resultText').textContent = '';
     return;
   }
 
-  buildQuiz(wrongIndices);
-  document.getElementById('vysledok').textContent = `Opakuješ len ${wrongIndices.length} chybných otázok.`;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toRender.forEach((item, displayIdx)=>{
+    // build card
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.orig = item.originalIndex;
+
+    // header
+    const header = document.createElement('div');
+    header.className = 'q-header';
+
+    const num = document.createElement('div');
+    num.className = 'q-number';
+    num.textContent = (displayIdx+1)+'.';
+
+    const text = document.createElement('div');
+    text.className = 'q-text';
+    text.textContent = item.qtext;
+
+    const actions = document.createElement('div');
+    actions.className = 'q-actions';
+
+    // star favorite
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.title = 'Označiť ako obľúbené';
+    star.innerHTML = state.favorites.has(item.originalIndex) ? '★' : '☆';
+    if(state.favorites.has(item.originalIndex)) star.classList.add('active');
+    star.addEventListener('click', ()=>{
+      if(state.favorites.has(item.originalIndex)){
+        state.favorites.delete(item.originalIndex);
+        star.classList.remove('active');
+        star.innerHTML = '☆';
+      } else {
+        state.favorites.add(item.originalIndex);
+        star.classList.add('active');
+        star.innerHTML = '★';
+      }
+    });
+
+    // show correct button
+    const btnShow = document.createElement('button');
+    btnShow.className = 'btn-small btn-show';
+    btnShow.textContent = 'Zobraziť správne';
+    btnShow.addEventListener('click', ()=> showCorrectForCard(card, item.originalIndex));
+
+    actions.appendChild(star);
+    actions.appendChild(btnShow);
+
+    header.appendChild(num);
+    header.appendChild(text);
+    header.appendChild(actions);
+
+    card.appendChild(header);
+
+    // randomize answer order for display (store mapping)
+    const randomized = item.answers.slice();
+    // If answers not yet shuffled for this render, shuffle them each render
+    const shuffledAnswers = shuffleArr(randomized);
+    card._shuffled = shuffledAnswers.map(a=>a.idx); // store original idx order
+
+    // answers block
+    const answersDiv = document.createElement('div');
+    answersDiv.className = 'answers';
+
+    shuffledAnswers.forEach((ansObj, ansPos)=>{
+      const label = document.createElement('label');
+      label.className = 'ans';
+      label.dataset.origAnswerIdx = ansObj.idx; // 0..3 original index
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.name = `q_${item.originalIndex}`;
+      checkbox.value = ansObj.idx;
+      label.appendChild(checkbox);
+      const span = document.createElement('span');
+      span.textContent = ansObj.txt;
+      label.appendChild(span);
+      answersDiv.appendChild(label);
+    });
+
+    card.appendChild(answersDiv);
+
+    // optional meta area: show original question number
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const origLabel = document.createElement('div');
+    origLabel.textContent = `#${item.originalIndex+1}`;
+    meta.appendChild(origLabel);
+    card.appendChild(meta);
+
+    container.appendChild(card);
+  });
+
+  // clear previous result
+  document.getElementById('resultText').textContent = '';
 }
 
-/* ===== reset / zobraz všetky ===== */
-function resetAll(){
-  buildQuiz();
-  document.getElementById('vysledok').textContent = '';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+/* show correct for one card */
+function showCorrectForCard(cardEl, origIndex){
+  const key = kluc[origIndex]; // string like 'SNNN'
+  const labels = [...cardEl.querySelectorAll('label.ans')];
+  // Determine which shuffled labels correspond to which original index
+  labels.forEach(label=>{
+    const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10); // 0..3
+    const isCorrect = key[origAnsIdx] === 'S';
+    const input = label.querySelector('input');
+    const checked = input.checked;
+    // Reset classes first
+    label.classList.remove('correct','incorrect');
+    if(isCorrect && checked) {
+      label.classList.add('correct');
+    } else if(isCorrect && !checked){
+      // correct but not selected -> mark red (as requested)
+      label.classList.add('incorrect');
+    } else if(!isCorrect && checked){
+      // wrong selected -> red
+      label.classList.add('incorrect');
+    }
+    // else not correct and not selected -> keep default
+  });
 }
 
-/* ===== priradenie tlačidiel ===== */
-document.getElementById('btn-eval').addEventListener('click', evaluate);
-document.getElementById('btn-show-all').addEventListener('click', showAllCorrect);
-document.getElementById('btn-show-wrong').addEventListener('click', showOnlyWrong);
-document.getElementById('btn-retry-wrong').addEventListener('click', retryWrong);
-document.getElementById('btn-reset').addEventListener('click', resetAll);
+/* show all correct answers globally */
+function showAllCorrect(){
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    showCorrectForCard(card, origIndex);
+  });
+}
 
+/* evaluate current shown questions */
+function evaluateAll(){
+  const cards = document.querySelectorAll('.card');
+  let correctCount = 0;
+  const wrongList = [];
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    const key = kluc[origIndex]; // e.g. 'SNNN'
+    const labels = [...card.querySelectorAll('label.ans')];
+    const selectedOrigIdx = labels.filter(lbl=> lbl.querySelector('input').checked ).map(lbl=> parseInt(lbl.dataset.origAnswerIdx,10));
+    // compute sets
+    const selSet = new Set(selectedOrigIdx);
+    const corrSet = new Set();
+    for(let i=0;i<4;i++) if(key[i]==='S') corrSet.add(i);
+    // Compare exact equality
+    let equal = (selSet.size === corrSet.size);
+    if(equal){
+      for(let v of selSet) if(!corrSet.has(v)){ equal=false; break; }
+    }
+    // mark colors for visual feedback
+    labels.forEach(label=>{
+      label.classList.remove('correct','incorrect');
+      const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10);
+      const isCorrect = key[origAnsIdx] === 'S';
+      const checked = label.querySelector('input').checked;
+      if(isCorrect && checked) label.classList.add('correct');
+      else if(isCorrect && !checked) label.classList.add('incorrect');
+      else if(!isCorrect && checked) label.classList.add('incorrect');
+    });
+
+    if(equal){
+      correctCount++;
+    } else {
+      wrongList.push(origIndex);
+    }
+  });
+
+  // store last wrong set for retry/filters
+  state.lastWrongSet = wrongList.slice();
+
+  // percent relative to number of displayed questions
+  const total = cards.length;
+  const percent = total === 0 ? 0 : ((correctCount/total)*100).toFixed(2);
+  document.getElementById('resultText').textContent = `Úspešnosť: ${percent}% (${correctCount}/${total} úplne správnych otázok)`;
+}
+
+/* Show only wrong questions (filter) */
+function showOnlyWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Nie sú uložené žiadne chybné otázky (vyhodnoť test najprv).');
+    return;
+  }
+  state.filter = 'wrong';
+  renderQuestions();
+}
+
+/* Reset test to initial state (all questions, clear selections, clear coloring) */
+function resetTest(){
+  // reinitialize questions to default order and answers order
+  state.filter = 'all';
+  state.lastWrongSet = [];
+  // restore original questions order (as in questions array)
+  state.questions = questions.map((q,i)=>{
+    const answers = q.a.map((txt, idx)=>({txt, idx}));
+    return { originalIndex:i, qtext:q.q, answers };
+  });
+  // clear favorites stays preserved
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Retry only wrong questions (renders only wrong set but allows answering them) */
+function retryWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Žiadne chybné otázky pre opakovanie. Najprv vyhodnoť test.');
+    return;
+  }
+  // Build state.questions to include only wrong ones, preserving originalIndex
+  state.questions = state.lastWrongSet.map(idx => {
+    const q = questions[idx];
+    const answers = q.a.map((txt, ai)=>({txt, idx:ai}));
+    return { originalIndex: idx, qtext: q.q, answers };
+  });
+  state.filter = 'all';
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Show only favorites */
+function showFavoritesOnly(){
+  state.filter = 'favorites';
+  renderQuestions();
+}
+
+/* Show all questions (clear filters) */
+function showAllQuestions(){
+  state.filter = 'all';
+  // restore full set in original order
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.q, answers: q.a.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Shuffle questions (random order) and shuffle answers within each question */
+function shuffleQuestions(){
+  // shuffle questions array
+  const arr = questions.map((q,i)=>({ originalIndex:i, qtext:q.q, answers: q.a.map((txt, idx)=>({txt, idx})) }));
+  const shuffled = shuffleArr(arr);
+  state.questions = shuffled;
+  state.filter = 'all';
+  renderQuestions();
+}
+
+/* Show Favorites modal/list (simple behavior: filter to favorites) */
+function showFavoritesList(){
+  // if no favorites, inform
+  if(state.favorites.size === 0){
+    alert('Nemáš označené žiadne obľúbené otázky.');
+    return;
+  }
+  state.filter = 'favorites';
+  // prepare state.questions as full list so filter works
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.q, answers: q.a.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Show only wrong (button at bottom) identical to showOnlyWrong function but filters current display */
+function showOnlyWrongButton(){
+  showOnlyWrong();
+}
+
+/* Attach event listeners */
+document.getElementById('btnShowAll').addEventListener('click', showAllCorrect);
+document.getElementById('btnShuffle').addEventListener('click', ()=>{ shuffleQuestions(); });
+document.getElementById('btnFavorites').addEventListener('click', showFavoritesList);
+document.getElementById('btnShowAllQ').addEventListener('click', showAllQuestions);
+document.getElementById('btnShowWrongOnly').addEventListener('click', ()=>{ state.filter = 'wrong'; renderQuestions(); });
+document.getElementById('btnShowFavOnly').addEventListener('click', showFavoritesOnly);
+document.getElementById('btnEvaluate').addEventListener('click', evaluateAll);
+document.getElementById('btnShowWrong').addEventListener('click', showOnlyWrongButton);
+document.getElementById('btnRetryWrong').addEventListener('click', retryWrong);
+document.getElementById('btnReset').addEventListener('click', resetTest);
+
+/* Initialize on load */
+initQuestions();
 </script>
 </body>
 </html>
