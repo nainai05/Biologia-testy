@@ -222,16 +222,18 @@ function renderQuiz(qs){
   });
 }
 
-function showCorrect(num, btn){
-  const qDiv = btn.parentElement;
-  const inputs = qDiv.querySelectorAll('input');
-  inputs.forEach((input,i)=>{
-    const isChecked = input.checked;
-    const correct = correctMap[num].includes(parseInt(input.value));
-    if(correct) input.parentElement.classList.add('correct');
-    else if(isChecked) input.parentElement.classList.add('incorrect');
-    else input.parentElement.classList.remove('correct','incorrect');
+/* ===== zobraz len chybne otázky (podľa posledného vyhodnotenia; ak nevyhodnotené, vyhodnotí) ===== */
+function zobrazChybne(){
+  // if none have dataset.chybna, call vyhodnot
+  const anyFlagged = Array.from(document.querySelectorAll('.question')).some(q=>q.dataset.chybna);
+  if(!anyFlagged) vyhodnot();
+
+  document.querySelectorAll('.question').forEach(wrap=>{
+    if(wrap.dataset.chybna === "true") wrap.classList.remove('hidden');
+    else wrap.classList.add('hidden');
   });
+  const first = document.querySelector('.question:not(.hidden)');
+  if(first) first.scrollIntoView({behavior:'smooth', block:'center'});
 }
 
 /* ===== vyhodnotenie celeho (aktualne zobrazeného) quizu ===== */
@@ -314,4 +316,5 @@ renderQuiz(originalQuestions);
 </script>
 </body>
 </html>
+
 
