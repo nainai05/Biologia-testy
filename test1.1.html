@@ -203,332 +203,102 @@ const questions = [
 
 ];
 
-/* ------------------ State ------------------ */
-let state = {
-  questions: [], // will hold questions with original index and randomized answers
-  filter: 'all', // 'all', 'wrong', 'favorites'
-  favorites: new Set(),
-  lastWrongSet: [], // store wrong questions for retry
-};
+let originalQuestions = [...questions];
+let wrongQuestions = [];
 
-/* Initialize questions with originalIndex and random answer order */
-function initQuestions(){
-  state.questions = questions.map((q,i)=>{
-    const originalIndex = i; // 0-based
-    const answers = q.a.map((txt, idx)=>({txt, idx}));
-    return { originalIndex, qtext: q.q, answers };
-  });
-  renderQuestions();
-}
-
-/* Utility shuffle */
-function shuffleArr(arr){
-  const a = arr.slice();
-  for(let i=a.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [a[i],a[j]] = [a[j],a[i]];
-  }
-  return a;
-}
-
-/* Render current state.questions according to filter */
-function renderQuestions(){
+function renderQuiz(qs){
   const container = document.getElementById('quiz');
   container.innerHTML = '';
-  let toRender = state.questions.slice();
-
-  // apply filter
-  if(state.filter === 'favorites'){
-    toRender = toRender.filter(item => state.favorites.has(item.originalIndex));
-  } else if(state.filter === 'wrong'){
-    toRender = toRender.filter(item => state.lastWrongSet.includes(item.originalIndex));
-  }
-
-  if(toRender.length === 0){
-    const info = document.createElement('div');
-    info.style.textAlign='center';
-    info.style.color='#555';
-    info.style.margin='18px';
-    info.textContent = 'Žiadne otázky na zobrazenie.';
-    container.appendChild(info);
-    document.getElementById('resultText').textContent = '';
-    return;
-  }
-
-  toRender.forEach((item, displayIdx)=>{
-    // build card
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.dataset.orig = item.originalIndex;
-
-    // header
-    const header = document.createElement('div');
-    header.className = 'q-header';
-
-    const num = document.createElement('div');
-    num.className = 'q-number';
-    num.textContent = (displayIdx+1)+'.';
-
-    const text = document.createElement('div');
-    text.className = 'q-text';
-    text.textContent = item.qtext;
-
-    const actions = document.createElement('div');
-    actions.className = 'q-actions';
-
-    // star favorite
-    const star = document.createElement('div');
-    star.className = 'star';
-    star.title = 'Označiť ako obľúbené';
-    star.innerHTML = state.favorites.has(item.originalIndex) ? '★' : '☆';
-    if(state.favorites.has(item.originalIndex)) star.classList.add('active');
-    star.addEventListener('click', ()=>{
-      if(state.favorites.has(item.originalIndex)){
-        state.favorites.delete(item.originalIndex);
-        star.classList.remove('active');
-        star.innerHTML = '☆';
-      } else {
-        state.favorites.add(item.originalIndex);
-        star.classList.add('active');
-        star.innerHTML = '★';
-      }
-    });
-
-    // show correct button
-    const btnShow = document.createElement('button');
-    btnShow.className = 'btn-small btn-show';
-    btnShow.textContent = 'Zobraziť správne';
-    btnShow.addEventListener('click', ()=> showCorrectForCard(card, item.originalIndex));
-
-    actions.appendChild(star);
-    actions.appendChild(btnShow);
-
-    header.appendChild(num);
-    header.appendChild(text);
-    header.appendChild(actions);
-
-    card.appendChild(header);
-
-    // randomize answer order for display (store mapping)
-    const randomized = item.answers.slice();
-    // If answers not yet shuffled for this render, shuffle them each render
-    const shuffledAnswers = shuffleArr(randomized);
-    card._shuffled = shuffledAnswers.map(a=>a.idx); // store original idx order
-
-    // answers block
-    const answersDiv = document.createElement('div');
-    answersDiv.className = 'answers';
-
-    shuffledAnswers.forEach((ansObj, ansPos)=>{
-      const label = document.createElement('label');
-      label.className = 'ans';
-      label.dataset.origAnswerIdx = ansObj.idx; // 0..3 original index
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.name = `q_${item.originalIndex}`;
-      checkbox.value = ansObj.idx;
-      label.appendChild(checkbox);
-      const span = document.createElement('span');
-      span.textContent = ansObj.txt;
-      label.appendChild(span);
-      answersDiv.appendChild(label);
-    });
-
-    card.appendChild(answersDiv);
-
-    // optional meta area: show original question number
-    const meta = document.createElement('div');
-    meta.className = 'meta';
-    const origLabel = document.createElement('div');
-    origLabel.textContent = `#${item.originalIndex+1}`;
-    meta.appendChild(origLabel);
-    card.appendChild(meta);
-
-    container.appendChild(card);
-  });
-
-  // clear previous result
-  document.getElementById('resultText').textContent = '';
-}
-
-/* show correct for one card */
-function showCorrectForCard(cardEl, origIndex){
-  const key = kluc[origIndex]; // string like 'SNNN'
-  const labels = [...cardEl.querySelectorAll('label.ans')];
-  // Determine which shuffled labels correspond to which original index
-  labels.forEach(label=>{
-    const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10); // 0..3
-    const isCorrect = key[origAnsIdx] === 'S';
-    const input = label.querySelector('input');
-    const checked = input.checked;
-    // Reset classes first
-    label.classList.remove('correct','incorrect');
-    if(isCorrect && checked) {
-      label.classList.add('correct');
-    } else if(isCorrect && !checked){
-      // correct but not selected -> mark red (as requested)
-      label.classList.add('incorrect');
-    } else if(!isCorrect && checked){
-      // wrong selected -> red
-      label.classList.add('incorrect');
-    }
-    // else not correct and not selected -> keep default
+  qs.forEach((question, index)=>{
+    const answers = [...question.a].map((ans,i)=>({text:ans,index:i}));
+    question.randomOrder = shuffleArray(answers);
+    const div = document.createElement('div');
+    div.className = 'question';
+    div.dataset.index = question.originalIndex ?? index+1;
+    div.innerHTML = `<b>${index+1}. ${question.q}</b><div class="answers">${answers.map(a=>`
+      <label><input type="checkbox" name="q${index}" value="${a.index}"> ${a.text}</label>`).join('')}</div>
+      <button onclick="showCorrect(${question.originalIndex ?? index+1}, this)">Zobraziť správne</button>`;
+    container.appendChild(div);
   });
 }
 
-/* show all correct answers globally */
-function showAllCorrect(){
-  const cards = document.querySelectorAll('.card');
-  cards.forEach(card=>{
-    const origIndex = parseInt(card.dataset.orig,10);
-    showCorrectForCard(card, origIndex);
+function showCorrect(num, btn){
+  const qDiv = btn.parentElement;
+  const inputs = qDiv.querySelectorAll('input');
+  inputs.forEach((input,i)=>{
+    const isChecked = input.checked;
+    const correct = correctMap[num].includes(parseInt(input.value));
+    if(correct) input.parentElement.classList.add('correct');
+    else if(isChecked) input.parentElement.classList.add('incorrect');
+    else input.parentElement.classList.remove('correct','incorrect');
   });
 }
 
-/* evaluate current shown questions */
-function evaluateAll(){
-  const cards = document.querySelectorAll('.card');
+function evaluate(){
+  const quizDiv = document.getElementById('quiz');
+  const questionsDivs = quizDiv.querySelectorAll('.question');
   let correctCount = 0;
-  const wrongList = [];
-  cards.forEach(card=>{
-    const origIndex = parseInt(card.dataset.orig,10);
-    const key = kluc[origIndex]; // e.g. 'SNNN'
-    const labels = [...card.querySelectorAll('label.ans')];
-    const selectedOrigIdx = labels.filter(lbl=> lbl.querySelector('input').checked ).map(lbl=> parseInt(lbl.dataset.origAnswerIdx,10));
-    // compute sets
-    const selSet = new Set(selectedOrigIdx);
-    const corrSet = new Set();
-    for(let i=0;i<4;i++) if(key[i]==='S') corrSet.add(i);
-    // Compare exact equality
-    let equal = (selSet.size === corrSet.size);
-    if(equal){
-      for(let v of selSet) if(!corrSet.has(v)){ equal=false; break; }
-    }
-    // mark colors for visual feedback
-    labels.forEach(label=>{
-      label.classList.remove('correct','incorrect');
-      const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10);
-      const isCorrect = key[origAnsIdx] === 'S';
-      const checked = label.querySelector('input').checked;
-      if(isCorrect && checked) label.classList.add('correct');
-      else if(isCorrect && !checked) label.classList.add('incorrect');
-      else if(!isCorrect && checked) label.classList.add('incorrect');
-    });
-
-    if(equal){
+  wrongQuestions = [];
+  questionsDivs.forEach(qDiv=>{
+    const num = qDiv.dataset.index;
+    const checked = [...qDiv.querySelectorAll('input:checked')].map(i=>parseInt(i.value));
+    const correctAnswers = correctMap[num];
+    const allCorrect = arraysEqual(new Set(checked), new Set(correctAnswers));
+    if(allCorrect){
       correctCount++;
-    } else {
-      wrongList.push(origIndex);
+    }else{
+      wrongQuestions.push(originalQuestions[num-1]);
     }
   });
-
-  // store last wrong set for retry/filters
-  state.lastWrongSet = wrongList.slice();
-
-  // percent relative to number of displayed questions
-  const total = cards.length;
-  const percent = total === 0 ? 0 : ((correctCount/total)*100).toFixed(2);
-  document.getElementById('resultText').textContent = `Úspešnosť: ${percent}% (${correctCount}/${total} úplne správnych otázok)`;
+  const percent = ((correctCount / questionsDivs.length) * 100).toFixed(2);
+  document.getElementById('result').innerText = `Úspešnosť: ${percent}% (${correctCount}/${questionsDivs.length})`;
 }
 
-/* Show only wrong questions (filter) */
 function showOnlyWrong(){
-  if(state.lastWrongSet.length === 0){
-    alert('Nie sú uložené žiadne chybné otázky (vyhodnoť test najprv).');
-    return;
-  }
-  state.filter = 'wrong';
-  renderQuestions();
+  renderQuiz(wrongQuestions.map((q)=>({...q})));
 }
 
-/* Reset test to initial state (all questions, clear selections, clear coloring) */
-function resetTest(){
-  // reinitialize questions to default order and answers order
-  state.filter = 'all';
-  state.lastWrongSet = [];
-  // restore original questions order (as in questions array)
-  state.questions = questions.map((q,i)=>{
-    const answers = q.a.map((txt, idx)=>({txt, idx}));
-    return { originalIndex:i, qtext:q.q, answers };
+function restartWrong(){
+  if(wrongQuestions.length===0){ alert("Nemáš žiadne chybné otázky."); return; }
+  renderQuiz(wrongQuestions.map((q)=>({...q})));
+}
+
+function resetQuiz(){
+  wrongQuestions = [];
+  renderQuiz(originalQuestions.map((q)=>({...q})));
+  document.getElementById('result').innerText = '';
+}
+
+function showAllCorrect(){
+  const quizDiv = document.getElementById('quiz');
+  const questionsDivs = quizDiv.querySelectorAll('.question');
+  questionsDivs.forEach(qDiv=>{
+    const num = qDiv.dataset.index;
+    const inputs = qDiv.querySelectorAll('input');
+    inputs.forEach(input=>{
+      const correct = correctMap[num].includes(parseInt(input.value));
+      if(correct) input.parentElement.classList.add('correct');
+    });
   });
-  // clear favorites stays preserved
-  renderQuestions();
-  document.getElementById('resultText').textContent = '';
 }
 
-/* Retry only wrong questions (renders only wrong set but allows answering them) */
-function retryWrong(){
-  if(state.lastWrongSet.length === 0){
-    alert('Žiadne chybné otázky pre opakovanie. Najprv vyhodnoť test.');
-    return;
-  }
-  // Build state.questions to include only wrong ones, preserving originalIndex
-  state.questions = state.lastWrongSet.map(idx => {
-    const q = questions[idx];
-    const answers = q.a.map((txt, ai)=>({txt, idx:ai}));
-    return { originalIndex: idx, qtext: q.q, answers };
-  });
-  state.filter = 'all';
-  renderQuestions();
-  document.getElementById('resultText').textContent = '';
-}
-
-/* Show only favorites */
-function showFavoritesOnly(){
-  state.filter = 'favorites';
-  renderQuestions();
-}
-
-/* Show all questions (clear filters) */
-function showAllQuestions(){
-  state.filter = 'all';
-  // restore full set in original order
-  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.q, answers: q.a.map((txt, idx)=>({txt, idx})) }));
-  renderQuestions();
-}
-
-/* Shuffle questions (random order) and shuffle answers within each question */
 function shuffleQuestions(){
-  // shuffle questions array
-  const arr = questions.map((q,i)=>({ originalIndex:i, qtext:q.q, answers: q.a.map((txt, idx)=>({txt, idx})) }));
-  const shuffled = shuffleArr(arr);
-  state.questions = shuffled;
-  state.filter = 'all';
-  renderQuestions();
+  const shuffled = shuffleArray(originalQuestions.map((q,i)=>({...q,originalIndex:i+1})));
+  renderQuiz(shuffled);
 }
 
-/* Show Favorites modal/list (simple behavior: filter to favorites) */
-function showFavoritesList(){
-  // if no favorites, inform
-  if(state.favorites.size === 0){
-    alert('Nemáš označené žiadne obľúbené otázky.');
-    return;
-  }
-  state.filter = 'favorites';
-  // prepare state.questions as full list so filter works
-  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.q, answers: q.a.map((txt, idx)=>({txt, idx})) }));
-  renderQuestions();
+function shuffleArray(arr){
+  return arr.map(a=>({sort:Math.random(),value:a})).sort((a,b)=>a.sort-b.sort).map(a=>a.value);
 }
 
-/* Show only wrong (button at bottom) identical to showOnlyWrong function but filters current display */
-function showOnlyWrongButton(){
-  showOnlyWrong();
+function arraysEqual(a,b){
+  if(a.size !== b.size) return false;
+  for(let v of a) if(!b.has(v)) return false;
+  return true;
 }
 
-/* Attach event listeners */
-document.getElementById('btnShowAll').addEventListener('click', showAllCorrect);
-document.getElementById('btnShuffle').addEventListener('click', ()=>{ shuffleQuestions(); });
-document.getElementById('btnFavorites').addEventListener('click', showFavoritesList);
-document.getElementById('btnShowAllQ').addEventListener('click', showAllQuestions);
-document.getElementById('btnShowWrongOnly').addEventListener('click', ()=>{ state.filter = 'wrong'; renderQuestions(); });
-document.getElementById('btnShowFavOnly').addEventListener('click', showFavoritesOnly);
-document.getElementById('btnEvaluate').addEventListener('click', evaluateAll);
-document.getElementById('btnShowWrong').addEventListener('click', showOnlyWrongButton);
-document.getElementById('btnRetryWrong').addEventListener('click', retryWrong);
-document.getElementById('btnReset').addEventListener('click', resetTest);
+renderQuiz(originalQuestions);
 
-/* Initialize on load */
-initQuestions();
 </script>
 </body>
 </html>
