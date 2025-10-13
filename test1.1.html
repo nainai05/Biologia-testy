@@ -203,70 +203,35 @@ const questions = [
 
 ];
 
-  /* ===== sanity check ===== */
-if(kluc.length !== questions.length){
-  console.warn("Upozornenie: počet položiek v kľúči a v otázkach sa nezhoduje:", kluc.length, questions.length);
-}
+let originalQuestions = [...questions];
+let wrongQuestions = [];
 
-/* ===== VYGENERUJ HTML OTÁZOK ===== */
-const quizDiv = document.getElementById('quiz');
-
-function buildQuiz(onlyIndices = null){
-  quizDiv.innerHTML = '';
-  const idxList = onlyIndices ? onlyIndices : questions.map((_,i)=>i);
-  idxList.forEach(qi => {
-    const item = questions[qi];
-    const wrap = document.createElement('div');
-    wrap.className = 'question';
-    wrap.id = 'q'+qi;
-
-    const title = document.createElement('div');
-    title.className = 'q-title';
-    title.textContent = item.q;
-    wrap.appendChild(title);
-
-    const ansDiv = document.createElement('div');
-    ansDiv.className = 'answers';
-    for(let i=0;i<4;i++){
-      const lab = document.createElement('label');
-      lab.innerHTML = `<input type="checkbox" name="q${qi}" value="${i}"> ${item.a[i]}`;
-      ansDiv.appendChild(lab);
-    }
-    wrap.appendChild(ansDiv);
-
-    const actions = document.createElement('div');
-    actions.className = 'q-actions';
-    const showBtn = document.createElement('button');
-    showBtn.textContent = 'Zobraziť správne';
-    showBtn.onclick = (e)=>{ e.preventDefault(); zobrazSpravneJednu(qi); };
-    actions.appendChild(showBtn);
-
-    const clearBtn = document.createElement('button');
-    clearBtn.textContent = 'Vymazať výbery';
-    clearBtn.className = 'secondary';
-    clearBtn.onclick = (e)=>{ e.preventDefault(); clearQuestion(qi); };
-    actions.appendChild(clearBtn);
-
-    wrap.appendChild(actions);
-    quizDiv.appendChild(wrap);
+function renderQuiz(qs){
+  const container = document.getElementById('quiz');
+  container.innerHTML = '';
+  qs.forEach((question, index)=>{
+    const answers = [...question.a].map((ans,i)=>({text:ans,index:i}));
+    question.randomOrder = shuffleArray(answers);
+    const div = document.createElement('div');
+    div.className = 'question';
+    div.dataset.index = question.originalIndex ?? index+1;
+    div.innerHTML = `<b>${index+1}. ${question.q}</b><div class="answers">${answers.map(a=>`
+      <label><input type="checkbox" name="q${index}" value="${a.index}"> ${a.text}</label>`).join('')}</div>
+      <button onclick="showCorrect(${question.originalIndex ?? index+1}, this)">Zobraziť správne</button>`;
+    container.appendChild(div);
   });
 }
 
-/* initial build */
-buildQuiz();
-
-/* ===== utility: convert key string to boolean array ===== */
-function rightArray(idx){
-  if(!kluc[idx]) return [false,false,false,false];
-  return kluc[idx].split('').map(ch => ch === 'S');
-}
-
-/* ===== clear question highlights and selections ===== */
-function clearQuestion(qi){
-  const wrap = document.getElementById('q'+qi);
-  if(!wrap) return;
-  wrap.querySelectorAll('input[type="checkbox"]').forEach(b=>b.checked=false);
-  wrap.querySelectorAll('label').forEach(l=>{ l.classList.remove('correct','incorrect'); });
+function showCorrect(num, btn){
+  const qDiv = btn.parentElement;
+  const inputs = qDiv.querySelectorAll('input');
+  inputs.forEach((input,i)=>{
+    const isChecked = input.checked;
+    const correct = correctMap[num].includes(parseInt(input.value));
+    if(correct) input.parentElement.classList.add('correct');
+    else if(isChecked) input.parentElement.classList.add('incorrect');
+    else input.parentElement.classList.remove('correct','incorrect');
+  });
 }
 
 /* ===== vyhodnotenie celeho (aktualne zobrazeného) quizu ===== */
@@ -301,91 +266,70 @@ function vyhodnot(){
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ===== zobraz správne pre jednu otázku ===== */
-function zobrazSpravneJednu(qi){
-  const wrap = document.getElementById('q'+qi);
-  if(!wrap) return;
-  const boxes = wrap.querySelectorAll('input[type="checkbox"]');
-  const right = rightArray(qi);
-  const labs = wrap.querySelectorAll('label');
-  labs.forEach((lab, i)=>{
-    lab.classList.remove('correct','incorrect');
-    if(right[i]) lab.classList.add('correct');
-    if(boxes[i].checked && !right[i]) lab.classList.add('incorrect');
+function evaluate(){
+  const quizDiv = document.getElementById('quiz');
+  const questionsDivs = quizDiv.querySelectorAll('.question');
+  let correctCount = 0;
+  wrongQuestions = [];
+  questionsDivs.forEach(qDiv=>{
+    const num = qDiv.dataset.index;
+    const checked = [...qDiv.querySelectorAll('input:checked')].map(i=>parseInt(i.value));
+    const correctAnswers = correctMap[num];
+    const allCorrect = arraysEqual(new Set(checked), new Set(correctAnswers));
+    if(allCorrect){
+      correctCount++;
+    }else{
+      wrongQuestions.push(originalQuestions[num-1]);
+    }
   });
+  const percent = ((correctCount / questionsDivs.length) * 100).toFixed(2);
+  document.getElementById('result').innerText = `Úspešnosť: ${percent}% (${correctCount}/${questionsDivs.length})`;
 }
 
-/* ===== zobraz všetky správne (bez prerátania percent) ===== */
-function zobrazSpravneVsetky(){
-  document.querySelectorAll('.question').forEach(wrap=>{
-    const qid = parseInt(wrap.id.slice(1),10);
-    const right = rightArray(qid);
-    const labs = wrap.querySelectorAll('label');
-    labs.forEach((lab,i)=>{
-      lab.classList.remove('correct','incorrect');
-      if(right[i]) lab.classList.add('correct');
-      const box = wrap.querySelectorAll('input[type="checkbox"]')[i];
-      if(box && box.checked && !right[i]) lab.classList.add('incorrect');
+function showOnlyWrong(){
+  renderQuiz(wrongQuestions.map((q)=>({...q})));
+}
+
+function restartWrong(){
+  if(wrongQuestions.length===0){ alert("Nemáš žiadne chybné otázky."); return; }
+  renderQuiz(wrongQuestions.map((q)=>({...q})));
+}
+
+function resetQuiz(){
+  wrongQuestions = [];
+  renderQuiz(originalQuestions.map((q)=>({...q})));
+  document.getElementById('result').innerText = '';
+}
+
+function showAllCorrect(){
+  const quizDiv = document.getElementById('quiz');
+  const questionsDivs = quizDiv.querySelectorAll('.question');
+  questionsDivs.forEach(qDiv=>{
+    const num = qDiv.dataset.index;
+    const inputs = qDiv.querySelectorAll('input');
+    inputs.forEach(input=>{
+      const correct = correctMap[num].includes(parseInt(input.value));
+      if(correct) input.parentElement.classList.add('correct');
     });
   });
-  document.getElementById('vysledok').textContent = '';
 }
 
-/* ===== zobraz len chybne otázky (podľa posledného vyhodnotenia; ak nevyhodnotené, vyhodnotí) ===== */
-function zobrazChybne(){
-  // if none have dataset.chybna, call vyhodnot
-  const anyFlagged = Array.from(document.querySelectorAll('.question')).some(q=>q.dataset.chybna);
-  if(!anyFlagged) vyhodnot();
-
-  document.querySelectorAll('.question').forEach(wrap=>{
-    if(wrap.dataset.chybna === "true") wrap.classList.remove('hidden');
-    else wrap.classList.add('hidden');
-  });
-  const first = document.querySelector('.question:not(.hidden)');
-  if(first) first.scrollIntoView({behavior:'smooth', block:'center'});
+function shuffleQuestions(){
+  const shuffled = shuffleArray(originalQuestions.map((q,i)=>({...q,originalIndex:i+1})));
+  renderQuiz(shuffled);
 }
 
-/* ===== spusti znovu len s chybnými - ponechá len chybné otázky a resetuje ich výbery ===== */
-function retryWrong(){
-  // ensure vyhodnot called
-  const anyFlagged = Array.from(document.querySelectorAll('.question')).some(q=>q.dataset.chybna);
-  if(!anyFlagged) vyhodnot();
-
-  const wrongIndices = Array.from(document.querySelectorAll('.question'))
-    .filter(q => q.dataset.chybna === "true")
-    .map(q => parseInt(q.id.slice(1),10));
-
-  if(wrongIndices.length === 0){
-    alert("Nemáš žiadne chyby — všetky otázky sú správne. Nie je čo spúšťať znovu.");
-    return;
-  }
-
-  // rebuild quiz len s chybnými
-  buildQuiz(wrongIndices);
-  document.getElementById('vysledok').textContent = `Opakuješ len ${wrongIndices.length} chybných otázok.`;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+function shuffleArray(arr){
+  return arr.map(a=>({sort:Math.random(),value:a})).sort((a,b)=>a.sort-b.sort).map(a=>a.value);
 }
 
-/* ===== zobraz všetky otázky (reset skrytých) ===== */
-function showAll(){
-  buildQuiz(); // rebuild full quiz (nezachováva stavy)
-  document.getElementById('vysledok').textContent = '';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+function arraysEqual(a,b){
+  if(a.size !== b.size) return false;
+  for(let v of a) if(!b.has(v)) return false;
+  return true;
 }
 
-/* ===== obnoviť celý test (vymaže všetko, ako pri prvom načítaní) ===== */
-function resetAll(){
-  buildQuiz();
-  document.getElementById('vysledok').textContent = '';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-/* ===== priradenie tlačidiel ===== */
-document.getElementById('btn-eval').addEventListener('click', vyhodnot);
-document.getElementById('btn-show-all').addEventListener('click', zobrazSpravneVsetky);
-document.getElementById('btn-show-wrong').addEventListener('click', zobrazChybne);
-document.getElementById('btn-retry-wrong').addEventListener('click', retryWrong);
-document.getElementById('btn-reset').addEventListener('click', resetAll);
+renderQuiz(originalQuestions);
 
 </script>
 </body>
