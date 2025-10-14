@@ -72,14 +72,20 @@ button:hover {
 
 <div id="quiz"></div>
 
-<div class="buttons">
-  <button onclick="evaluate()">Vyhodnotiť všetko</button>
-  <button onclick="showOnlyWrong()">Zobraziť len chybné otázky</button>
-  <button onclick="restartWrong()">Opakovať len chybné</button>
-  <button onclick="resetQuiz()">Obnoviť test</button>
+<!-- TLAČIDLÁ NA KONCI TESTU -->
+<div class="controls" style="margin-top:20px;">
+  <button id="btn-eval">Vyhodnotiť všetko</button>
+  <button id="btn-show-all">Zobraziť všetky správne odpovede</button>
+  <button id="btn-show-wrong">Zobraziť len chybné otázky</button>
+  <button id="btn-retry-wrong" class="secondary">Spustiť znovu len s chybnými</button>
+  <button id="btn-reset" class="light">Obnoviť test</button>
 </div>
 
-<div class="result" id="result"></div>
+<div id="vysledok" class="result"></div>
+
+<footer>
+  Ulož súbor a otvor v prehliadači. Po vyhodnotení sa správne položky zafarbia zeleno, tvoje nesprávne výbery červeno. Môžeš zobraziť len chybné otázky a niektoré z nich spustiť znova.
+</footer>
 
 <script>
 const key = `1:NNSN
@@ -324,3 +330,4 @@ function arraysEqual(a,b){
 
 renderQuiz(originalQuestions);
 </script>
+
