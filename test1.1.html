@@ -81,6 +81,7 @@ button:hover {
 
 <div class="result" id="result"></div>
 
+<script>
 const questions = [
 {q:"Aké žiarenie sa využíva pri fluorescenčnej mikroskopii?", a:["infračervené žiarenie","žiarenie fialovej farby s vlnovou dĺžkou vo viditeľnom spektre","ultrafialové žiarenie","prúd elektrónov"]},
 {q:"Aké farbivo sa najčastejšie využíva pri vizualizácii chromozómov?", a:["modrý atrament","Giemsovo","Lugolov roztok","hematoxylín a eozín"]},
@@ -139,7 +140,7 @@ const questions = [
 {q:"Ktorá časť mikroskopu slúži na výmenu objektívov?", a:["tubus","okulár","revolverový nosič","kondenzor"]},
 
 ];
-<script>
+
 const key = `1:NNSN
 2:NSNN
 3:SNNN
@@ -342,3 +343,4 @@ function arraysEqual(a,b){
 
 renderQuiz(originalQuestions);
 </script>
+
