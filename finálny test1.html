@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mikroskopia - test</title>
+<style>
+  :root{
+    --bg:#f7f9fb;
+    --card:#fff;
+    --accent:#0b63d6;
+    --ok:#dff7d9;
+    --bad:#ffdddd;
+    --muted:#6b7280;
+    --shadow: 0 2px 10px rgba(12,30,60,0.06);
+  }
+  body{ background:var(--bg); font-family:Arial, Helvetica, sans-serif; margin:0; padding:20px; color:#111; }
+  header{ text-align:center; margin-bottom:18px; }
+  h1{ margin:6px 0; font-size:22px; }
+  p.lead{ margin:0; color:var(--muted); }
+
+  .controls{ text-align:center; margin:14px 0 22px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  button{ background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:14px; }
+  button.secondary{ background:#6b7280; }
+  button.light{ background:transparent; color:var(--accent); border:1px solid var(--accent); }
+  .result{ text-align:center; margin-top:10px; font-weight:700; }
+
+  #quiz{ max-width:980px; margin:0 auto; }
+  .question{ background:var(--card); padding:12px 14px; border-radius:8px; box-shadow:var(--shadow); margin-bottom:12px; }
+  .q-title{ font-weight:700; margin:0 0 8px; white-space:pre-wrap; }
+  .answers label{ display:block; padding:6px 8px; border-radius:6px; margin:4px 0; cursor:pointer; }
+  .answers input{ margin-right:10px; transform:translateY(1px); }
+  .answers label.correct{ background:var(--ok); }
+  .answers label.incorrect{ background:var(--bad); }
+  .q-actions{ margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .q-actions button{ padding:6px 10px; font-size:13px; }
+  .hidden{ display:none !important; }
+  .small{ font-size:13px; color:var(--muted); margin-top:6px; }
+  footer{ max-width:980px; margin:22px auto 40px; text-align:center; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mikroskopia - test</h1>
+  <p class="lead">Vyber správne odpovede podľa svojich vedomostí.</p>
+</header>
+
+<div class="controls">
+  <button id="btn-eval">Vyhodnotiť všetko</button>
+  <button id="btn-show-all">Zobraziť všetky správne odpovede</button>
+  <button id="btn-show-wrong">Zobraziť len chybné otázky</button>
+  <button id="btn-retry-wrong" class="secondary">Spustiť znovu len s chybnými</button>
+  <button id="btn-reset" class="light">Obnoviť test</button>
+</div>
+
+<div id="vysledok" class="result"></div>
+<div id="quiz"></div>
+
+<footer>
+  Ulož súbor a otvor v prehliadači. Správne odpovede sa zobrazia zeleno, nesprávne červeno.
+</footer>
+
+<script>
+const kluc = [
+"NSNS","NSSN","SNNN","NNNS","NNSS","NSNS","SSNN","NSNS","SSNS","NSNN",
+"NNSS","SSSN","SNNN","NNSN","SNNS","NNSN","SNNS","SSSS","SSNN","NNSN",
+"SSNS","SSNS","NNSN","SSNN","NSSS","SSSS","SSNS","SSNN","NSNS","SSSN",
+"NNSN","NSNN","SSSN","SSNN","SNSS","NNNS","NNSN","SNNN","NNSN","SSNN",
+"SSNN","SNSN","SNSN","NSNS","NSSN","SSNN","NNSN","SNNN","SSNN","NSNN",
+"NSNN","NSNN","SNNN","NNNS"
+];
+
+const questions = [
+{ q:"1. Aké žiarenie sa využíva pri fluorescenčnej mikroskopii?", a:["a) infračervené žiarenie","b) žiarenie fialovej farby s vlnovou dĺžkou vo viditeľnom spektre","c) ultrafialové žiarenie","d) prúd elektrónov"]},
+{ q:"2. Aké farbivo sa najčastejšie využíva pri vizualizácii chromozómov?", a:["a) modrý atrament","b) Giemsovo","c) Lugolov roztok","d) hematoxylín a eozín"]},
+{ q:"3. Aké zväčšenie získame, ak použijeme objektív s 40x zväčšením a okulár s 10x zväčšením?", a:["a) 400x","b) 10x","c) 40x","d) 4x"]},
+{ q:"4. Elektrónové mikroskopy ako zdroj žiarenia používajú:", a:["a) biele svetlo","b) biele svetlo alebo ultrafialové žiarenie","c) elektrónkové žiarenie","d) prúd elektrónov"]},
+{ q:"5. Elektrónové mikroskopy:", a:["a) ako zdroj žiarenia využívajú prúd fotónov","b) nevyžadujú špeciálnu úpravu preparátov","c) vyžadujú špeciálnu prípravu preparátov","d) ako zdroj žiarenia využívajú prúd elektrónov"]},
+{ q:"6. Elektrónový mikroskop:", a:["a) je typ svetelného mikroskopu, vieme ním pozorovať bunky in vitro aj in vivo","b) umožňuje sledovať topológiu buniek a tkanív alebo vnútorné štruktúry","c) vieme pozorovať rovnaké preparáty pri SEM aj TEM","d) rozlišovacia schopnosť je väčšia ako pri konfokálnom mikroskope, preparáty sa pripravujú špecifickým spôsobom"]},
+{ q:"7. Farbenie poznáme:", a:["a) orientačné","b) špecifické","c) náhodné","d) všeobecné"]},
+{ q:"8. Fázový kontrast:", a:["a) slúži ako zdroj žiarenia pri málo kontrastných preparátoch","b) sa využíva na zvýraznenie niektorých štruktúr bunky","c) sa v mikroskopii vôbec nepoužíva","d) umožňuje pozorovanie priehľadných objektov s málo výrazným kontrastným rozhraním"]},
+{ q:"9. Invertovaný mikroskop:", a:["a) používa sa napr. pri sledovaní bunkových kultúr","b) umožňuje pozorovanie preparátov v prechádzajúcom svetle","c) je typ elektrónového mikroskopu","d) používa metódu osvetlenia zhora"]},
+{ q:"10. K mechanickej časti svetelného mikroskopu patrí:", a:["a) irisová clona","b) revolverový menič objektívov","c) kondenzor","d) objektív"]},
+// ... pokračovať s ostatnými otázkami 11-55 podľa poskytnutého zoznamu ...
+];
+
+/* ===== sanity check ===== */
+if(kluc.length !== questions.length){
+  console.warn("Upozornenie: počet položiek v kľúči a v otázkach sa nezhoduje:", kluc.length, questions.length);
+}
+
+/* ===== VYGENERUJ HTML OTÁZOK ===== */
+const quizDiv = document.getElementById('quiz');
+
+function buildQuiz(onlyIndices = null){
+  quizDiv.innerHTML = '';
+  const idxList = onlyIndices ? onlyIndices : questions.map((_,i)=>i);
+  idxList.forEach(qi => {
+    const item = questions[qi];
+    const wrap = document.createElement('div');
+    wrap.className = 'question';
+    wrap.id = 'q'+qi;
+
+    const title = document.createElement('div');
+    title.className = 'q-title';
+    title.textContent = item.q;
+    wrap.appendChild(title);
+
+    const ansDiv = document.createElement('div');
+    ansDiv.className = 'answers';
+    for(let i=0;i<4;i++){
+      const lab = document.createElement('label');
+      lab.innerHTML = `<input type="checkbox" name="q${qi}" value="${i}"> ${item.a[i]}`;
+      ansDiv.appendChild(lab);
+    }
+    wrap.appendChild(ansDiv);
+
+    const actions = document.createElement('div');
+    actions.className = 'q-actions';
+    const showBtn = document.createElement('button');
+    showBtn.textContent = 'Zobraziť správne';
+    showBtn.onclick = (e)=>{ e.preventDefault(); zobrazSpravneJednu(qi); };
+    actions.appendChild(showBtn);
+
+    const clearBtn = document.createElement('button');
+    clearBtn.textContent = 'Vymazať výbery';
+    clearBtn.className = 'secondary';
+    clearBtn.onclick = (e)=>{ e.preventDefault(); clearQuestion(qi); };
+    actions.appendChild(clearBtn);
+
+    wrap.appendChild(actions);
+    quizDiv.appendChild(wrap);
+  });
+}
+
+/* initial build */
+buildQuiz();
+
+/* ===== utility: convert key string to boolean array ===== */
+function rightArray(idx){
+  if(!kluc[idx]) return [false,false,false,false];
+  return kluc[idx].split('').map(ch => ch === 'S');
+}
+
+/* ===== clear question highlights and selections ===== */
+function clearQuestion(qi){
+  const wrap = document.getElementById('q'+qi);
+  if(!wrap) return;
+  wrap.querySelectorAll('input[type="checkbox"]').forEach(b=>b.checked=false);
+  wrap.querySelectorAll('label').forEach(l=>{ l.classList.remove('correct','incorrect'); });
+}
+
+/* ===== vyhodnotenie celeho (aktualne zobrazeného) quizu ===== */
+function vyhodnot(){
+  const ques = document.querySelectorAll('.question');
+  let correctCount = 0;
+  const totalQuestions = ques.length;
+
+  ques.forEach(wrap => {
+    const qid = parseInt(wrap.id.slice(1),10);
+    const boxes = wrap.querySelectorAll('input[type="checkbox"]');
+    const selected = Array.from(boxes).map(b => b.checked);
+    const right = rightArray(qid);
+    // mark each label
+    const labs = wrap.querySelectorAll('label');
+    labs.forEach((lab, i)=>{
+      lab.classList.remove('correct','incorrect');
+      if(right[i]) lab.classList.add('correct');
+      if(selected[i] && !right[i]) lab.classList.add('incorrect');
+    });
+    // check full-match
+    let match = true;
+    for(let k=0;k<4;k++){
+      if(selected[k] !== right[k]){ match = false; break; }
+    }
+    wrap.dataset.chybna = match ? "false" : "true";
+    if(match) correctCount++;
+  });
+
+  const percent = Math.round((correctCount / totalQuestions) * 100);
+  document.getElementById('vysledok').innerHTML = `Správnych otázok: ${correctCount} z ${totalQuestions} — <span style="color:${percent>=60?'green':'#b33'}">${percent}%</span>`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ===== zobraz správne pre jednu otázku ===== */
+function zobrazSpravneJednu(qi){
+  const wrap = document.getElementById('q'+qi);
+  if(!wrap) return;
+  const boxes = wrap.querySelectorAll('input[type="checkbox"]');
+  const right = rightArray(qi);
+  const labs = wrap.querySelectorAll('label');
+  labs.forEach((lab, i)=>{
+    lab.classList.remove('correct','incorrect');
+    if(right[i]) lab.classList.add('correct');
+    if(boxes[i].checked && !right[i]) lab.classList.add('incorrect');
+  });
+}
+
+/* ===== zobraz všetky správne (bez prerátania percent) ===== */
+function zobrazSpravneVsetky(){
+  document.querySelectorAll('.question').forEach(wrap=>{
+    const qid = parseInt(wrap.id.slice(1),10);
+    const right = rightArray(qid);
+    const labs = wrap.querySelectorAll('label');
+    labs.forEach((lab,i)=>{
+      lab.classList.remove('correct','incorrect');
+      if(right[i]) lab.classList.add('correct');
+      const box = wrap.querySelectorAll('input[type="checkbox"]')[i];
+      if(box && box.checked && !right[i]) lab.classList.add('incorrect');
+    });
+  });
+  document.getElementById('vysledok').textContent = '';
+}
+
+/* ===== zobraz len chybne otázky (podľa posledného vyhodnotenia; ak nevyhodnotené, vyhodnotí) ===== */
+function zobrazChybne(){
+  // if none have dataset.chybna, call vyhodnot
+  const anyFlagged = Array.from(document.querySelectorAll('.question')).some(q=>q.dataset.chybna);
+  if(!anyFlagged) vyhodnot();
+
+  document.querySelectorAll('.question').forEach(wrap=>{
+    if(wrap.dataset.chybna === "true") wrap.classList.remove('hidden');
+    else wrap.classList.add('hidden');
+  });
+  const first = document.querySelector('.question:not(.hidden)');
+  if(first) first.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+/* ===== spusti znovu len s chybnými - ponechá len chybné otázky a resetuje ich výbery ===== */
+function retryWrong(){
+  // ensure vyhodnot called
+  const anyFlagged = Array.from(document.querySelectorAll('.question')).some(q=>q.dataset.chybna);
+  if(!anyFlagged) vyhodnot();
+
+  const wrongIndices = Array.from(document.querySelectorAll('.question'))
+    .filter(q => q.dataset.chybna === "true")
+    .map(q => parseInt(q.id.slice(1),10));
+
+  if(wrongIndices.length === 0){
+    alert("Nemáš žiadne chyby — všetky otázky sú správne. Nie je čo spúšťať znovu.");
+    return;
+  }
+
+  // rebuild quiz len s chybnými
+  buildQuiz(wrongIndices);
+  document.getElementById('vysledok').textContent = `Opakuješ len ${wrongIndices.length} chybných otázok.`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ===== zobraz všetky otázky (reset skrytých) ===== */
+function showAll(){
+  buildQuiz(); // rebuild full quiz (nezachováva stavy)
+  document.getElementById('vysledok').textContent = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ===== obnoviť celý test (vymaže všetko, ako pri prvom načítaní) ===== */
+function resetAll(){
+  buildQuiz();
+  document.getElementById('vysledok').textContent = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ===== priradenie tlačidiel ===== */
+document.getElementById('btn-eval').addEventListener('click', vyhodnot);
+document.getElementById('btn-show-all').addEventListener('click', zobrazSpravneVsetky);
+document.getElementById('btn-show-wrong').addEventListener('click', zobrazChybne);
+document.getElementById('btn-retry-wrong').addEventListener('click', retryWrong);
+document.getElementById('btn-reset').addEventListener('click', resetAll);
+
+</script>
+</body>
+</html>
