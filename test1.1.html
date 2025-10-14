@@ -16,16 +16,19 @@ h1 {
   color: #333;
 }
 .question {
-  background: white;
+  background: #e9f3ff;
   padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin: 15px auto;
+  border-radius: 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  max-width: 800px;
 }
 .answers label {
   display: block;
   margin: 5px 0;
   cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 8px;
 }
 .correct {
   background-color: #c6f6c6 !important;
@@ -43,7 +46,7 @@ button {
   border: none;
   padding: 10px 15px;
   margin: 5px;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
 }
@@ -55,9 +58,6 @@ button:hover {
   text-align: center;
   margin-top: 20px;
   font-size: 18px;
-}
-.hidden {
-  display: none;
 }
 </style>
 </head>
@@ -141,71 +141,22 @@ const questions = [
 
 ];
 
-const key = `1:NNSN
-2:NSNN
-3:SNNN
-4:NNNS
-5:NNSS
-6:NSNS
-7:SSNN
-8:NSNS
-9:SSNS
-10:NSNN
-11:NNSS
-12:SSSN
-13:SNNN
-14:NNSN
-15:SNNS
-16:NNSN
-17:SNNS
-18:SSSS
-19:SSNN
-20:SSSN
-21:SSNS
-22:SSNS
-23:NNSN
-24:SSNN
-25:NSSS
-26:SSSS
-27:SSNS
-28:SSNN
-29:NSNS
-30:SSSN
-31:NNSN
-32:SSSN
-33:SSNN
-34:SSSN
-35:SNNS
-36:NNNS
-37:NNSN
-38:NSNN
-39:NSNN
-40:NNSN
-41:NSNN
-42:NNSN
-43:SNNN
-44:NSNN
-45:SNNN
-46:NSNN
-47:NSNN
-48:NSNN
-49:NNNS
-50:SNNN
-51:NSNN
-52:NSNN
-53:SNNN
-54:SNNN
-55:NNSN`;
+const kluc = [
+"SSSS","SNNN","NSNS","SSNN","NSSN","NNSS","NSNS","SSSS","NSNN","SNNN",
+"NSSN","NSSN","NNSN","SSSN","SSSS","NSNN","SSNN","SNSS","SSNN","NNSN",
+"NSNN","SNNS","NSSN","SSNS","SSNN","NNSN","NSNS","NSNN","SSSS","NSNN",
+"NSNN","NSSN","NSNN","SSSS","SSNN","SNSS","NNNS","NNSN","SNNN","NNSN",
+"SSNN","SSNN","SNSN","SNSN","NSNS","NSSN","SSNN","NNSN","SNNN","SSNN",
+"NSNN","NSNN","NSNN","SNNN","NNNS"
+];
 
+// mapovanie správnych odpovedí
 const correctMap = {};
-key.split('\n').forEach(line=>{
-  const [num, val] = line.split(':');
-  correctMap[num.trim()] = val.trim().split('').map((c,i)=> c==='S' ? i : null).filter(i=>i!==null);
+kluc.forEach((kod, i)=>{
+  correctMap[i+1] = kod.split('').map((c,j)=> c==='S'? j : null).filter(v=>v!==null);
 });
 
-const questions = [/* ... tvoje otázky ... */];
-
-let originalQuestions = [...questions];
+let originalQuestions = questions.map((q,i)=>({...q,originalIndex:i+1}));
 let wrongQuestions = [];
 
 function renderQuiz(qs){
@@ -224,25 +175,8 @@ function renderQuiz(qs){
           <label><input type="checkbox" name="q${realIndex}" value="${a.index}"> ${a.text}</label>
         `).join('')}
       </div>
-      <button onclick="showCorrect(${realIndex}, this)">Zobraziť správne</button>
     `;
     container.appendChild(div);
-  });
-}
-
-function showCorrect(num, btn){
-  const qDiv = btn.parentElement;
-  const inputs = qDiv.querySelectorAll('input');
-  inputs.forEach((input)=>{
-    const val = parseInt(input.value);
-    const correct = correctMap[num]?.includes(val);
-    if(correct) {
-      input.parentElement.classList.add('correct');
-    } else if(input.checked) {
-      input.parentElement.classList.add('incorrect');
-    } else {
-      input.parentElement.classList.remove('correct','incorrect');
-    }
   });
 }
 
@@ -260,28 +194,20 @@ function evaluate(){
 
     let allCorrect = arraysEqual(new Set(checked), new Set(correctAnswers));
 
-    // Farbiť správne/nesprávne
     inputs.forEach(input=>{
       const val = parseInt(input.value);
-      const isChecked = input.checked;
-      const isCorrect = correctAnswers.includes(val);
-
       input.parentElement.classList.remove('correct','incorrect');
-      if(isCorrect && isChecked) {
-        input.parentElement.classList.add('correct');
-      } else if(isChecked && !isCorrect) {
-        input.parentElement.classList.add('incorrect');
-      } else if(!isChecked && isCorrect) {
-        // správna odpoveď, ktorá nebola označená -> červená
-        input.parentElement.classList.add('incorrect');
+      if(correctAnswers.includes(val) && input.checked){
+        input.parentElement.classList.add('correct'); // správna a označená
+      } else if(!input.checked && correctAnswers.includes(val)){
+        input.parentElement.classList.add('incorrect'); // správna, ale neoznačená
+      } else if(input.checked && !correctAnswers.includes(val)){
+        input.parentElement.classList.add('incorrect'); // nesprávna, označená
       }
     });
 
-    if(allCorrect){
-      correctCount++;
-    } else {
-      wrongQuestions.push(originalQuestions[num-1]);
-    }
+    if(allCorrect) correctCount++;
+    else wrongQuestions.push(originalQuestions[num-1]);
   });
 
   const percent = ((correctCount / questionsDivs.length) * 100).toFixed(2);
@@ -293,7 +219,7 @@ function showOnlyWrong(){
     alert("Zatiaľ nemáš žiadne chybné otázky. Najprv spusti 'Vyhodnotiť všetko'.");
     return;
   }
-  renderQuiz(wrongQuestions.map((q)=>({...q})));
+  renderQuiz(wrongQuestions.map(q=>({...q})));
 }
 
 function restartWrong(){
@@ -301,12 +227,12 @@ function restartWrong(){
     alert("Nemáš žiadne chybné otázky."); 
     return; 
   }
-  renderQuiz(wrongQuestions.map((q)=>({...q})));
+  renderQuiz(wrongQuestions.map(q=>({...q})));
 }
 
 function resetQuiz(){
   wrongQuestions = [];
-  renderQuiz(originalQuestions.map((q)=>({...q})));
+  renderQuiz(originalQuestions.map(q=>({...q})));
   document.getElementById('result').innerText = '';
 }
 
@@ -318,8 +244,7 @@ function showAllCorrect(){
     const inputs = qDiv.querySelectorAll('input');
     inputs.forEach(input=>{
       const val = parseInt(input.value);
-      const correct = correctMap[num].includes(val);
-      if(correct) input.parentElement.classList.add('correct');
+      if(correctMap[num].includes(val)) input.parentElement.classList.add('correct');
     });
   });
 }
@@ -344,3 +269,5 @@ function arraysEqual(a,b){
 renderQuiz(originalQuestions);
 </script>
 
+</body>
+</html>
