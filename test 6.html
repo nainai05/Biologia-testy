@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>6. Bunkové a tkanivové kultúry. hodnotenie základných biologických vlastností buniek.</title>
+<style>
+  :root{
+    --card-bg: #e9f5ff;
+    --accent: #007bff;
+    --good: #c8f7d0;
+    --bad: #ffd6d6;
+	--correct-unchecked: #c8f7d0;
+    --card-radius: 14px;
+  }
+  body{
+    margin:0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: #ffffff;
+    color:#111;
+    padding:30px 16px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{
+    width:100%;
+    max-width:1100px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  h1{
+    margin:0;
+    font-size:22px;
+  }
+  .top-controls{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  button{
+    background:var(--accent);
+    color:white;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  button.secondary{
+    background:#6c757d;
+  }
+  .center-controls{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:14px;
+  }
+  #quiz{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    align-items:center;
+  }
+  .card{
+    width:100%;
+    max-width:980px;
+    background:var(--card-bg);
+    border-radius:var(--card-radius);
+    padding:16px 18px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    display:block;
+    box-sizing:border-box;
+    position:relative;
+  }
+  .q-header{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .q-number{
+    font-weight:700;
+    min-width:34px;
+  }
+  .q-text{
+    font-weight:700;
+    flex:1;
+  }
+  .q-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .star{
+    font-size:20px;
+    cursor:pointer;
+    user-select:none;
+    color:rgba(0,0,0,0.25);
+  }
+  .star.active{ color: gold; text-shadow: 0 0 6px rgba(255,215,0,0.4); }
+  .answers{
+    margin-top:10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  label.ans{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    padding:8px;
+    border-radius:8px;
+  }
+  label.ans input{ transform:scale(1.05); }
+  .btn-small{
+    padding:6px 10px;
+    font-size:13px;
+    border-radius:8px;
+    background:#0b84ff;
+  }
+  .btn-show{
+    background:#0b84ff;
+    color:white;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+  }
+  .meta{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    font-size:13px;
+    margin-top:10px;
+    color:#333;
+  }
+  .result{
+    text-align:center;
+    margin-top:18px;
+    font-weight:700;
+    font-size:16px;
+  }
+  .controls-bottom{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .hidden{ display:none; }
+  /* coloring for showCorrect */
+  .correct { background: var(--good) !important; }
+  .incorrect { background: var(--bad) !important; }
+  .correct-unchecked { background: var(--correct-unchecked) !important; }
+  /* small responsive */
+  @media (max-width:640px){
+    body { padding:14px; }
+    .card{ padding:12px; }
+    .q-number{ min-width:28px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>6. Bunkové a tkanivové kultúry. hodnotenie základných biologických vlastností buniek.</h1>
+    <div class="top-controls">
+      <button id="btnFavorites">Obľúbené</button>
+      <button id="btnShuffle">Zamiešať otázky</button>
+      <button id="btnShowAll" title="Zobraziť všetky správne odpovede">Zobraziť všetky správne odpovede</button>
+    </div>
+  </header>
+
+  <div class="center-controls">
+    <span style="color:#555">Filtrovať zobrazenie:</span>
+    <button id="btnShowAllQ" class="secondary">Zobraziť všetky</button>
+    <button id="btnShowWrongOnly" class="secondary">Zobraziť len chybné</button>
+    <button id="btnShowFavOnly" class="secondary">Zobraziť len obľúbené</button>
+  </div>
+
+  <div id="quiz"></div>
+
+  <div class="controls-bottom">
+    <button id="btnEvaluate">Vyhodnotiť všetko</button>
+    <button id="btnShowWrong">Zobraziť len chybné otázky</button>
+    <button id="btnRetryWrong">Opakovať len chybné</button>
+    <button id="btnReset">Obnoviť test</button>
+  </div>
+
+  <div class="result" id="resultText"></div>
+</div>
+
+<script>
+const questions = [
+  { id: 1, text: "Adherenciu buniek na substrát sprostredkúvajú najmä:", answers: ["integríny", "kadheríny", "CAMs", "povrch potiahnutý kolagénom/fibronektínom zlepšuje adherenciu"], key: "SNNS" },
+  { id: 2, text: "Bunková kultúra:", answers: ["je populácia buniek, ktorá proliferuje in vitro", "je populácia buniek, ktorá proliferuje in vivo", "je organizovaná ako tkanivo", "nie je organizovaná ako tkanivo"], key: "SNNS" },
+  { id: 3, text: "Bunková kultúra:", answers: ["predstavuje populáciu buniek, ktoré proliferujú in vitro a nie sú organizované ako tkanivo", "môže byť adherentná alebo suspenzná", "sa využíva pri in vitro fertilizácii", "jej priebeh možno znázorniť Gaussovou krivkou"], key: "SSSN" },
+  { id: 4, text: "Bunková línia:", answers: ["je organizovaná ako tkanivo", "je zjednodušená a zmenšená verzia orgánu in vitro", "je populácia buniek, ktorá vznikla opakovanými pasážami buniek z primokultúry", "má využitie v biomedicínskom výskume"], key: "NNSS" },
+  { id: 5, text: "Bunkové kultúry sa využívajú:", answers: ["vo farmakotoxikológii", "pri in vitro fertilizácii", "v humánnej genetike", "v tkanivovom inžinierstve"], key: "SSSS" },
+  { id: 6, text: "Bunkovú kultúru môžeme založiť z:", answers: ["baktérií", "prokaryotov", "ľudských tkanív", "eukaryotov"], key: "SSSS" },
+  { id: 7, text: "Explantová kultúra:", answers: ["je technika kultivácie využívajúca rôzne enzýmy", "je technika organotypickej kultivácie buniek z kúska tkaniva", "je prenesenie malého množstva kultivovaných buniek do novej kultivačnej nádoby", "zastavuje rast buniek"], key: "NSNN" },
+  { id: 8, text: "Imortalizované kultúry sa:", answers: ["dajú získať aj transformáciou buniek rôznymi baktériami", "používajú v cytogenetickej diagnostike", "nepoužívajú pri in vitro fertilizácii", "používajú v toxikológii"], key: "NNSS" },
+  { id: 9, text: "Imortalizované kultúry:", answers: ["sa dajú získať aj transformáciou buniek rôznymi vírusmi", "sa používajú v toxikológii", "sa používajú pri analýze genotoxicity vybraných látok", "sa používajú pri kultivácii oplodnených vajíčok"], key: "SSSN" },
+  { id: 10, text: "Krátkodobé kultúry:", answers: ["sa kultivujú 24 hodín alebo maximálne niekoľko dní", "sa nepoužívajú v cytogenetike", "sa kultivujú viac než 10 dní", "môžu byť s vysokou spontánnou mitotickou aktivitou (napr. bunky kostnej drene)"], key: "SNNS" },
+  { id: 11, text: "Ktoré z nasledujúcich patria medzi významné využitia kultivácie buniek u človeka?", answers: ["príprava karyologických preparátov pre cytogenetickú analýzu", "testovanie citlivosti nádorových buniek na cytostatiká", "in vitro fertilizácia („oplodnenie v skúmavke“)", "príprava DNA vakcín v baktériách"], key: "SSSN" },
+  { id: 12, text: "Ktoré z nasledujúcich tvrdení najlepšie vystihuje primárnu bunkovú kultúru?", answers: ["vzniká priamo z tkaniva mechanickou alebo enzymatickou disociáciou buniek", "ide o bunkovú líniu s neobmedzenou deliacou schopnosťou", "je vždy neadherentná", "vzniká výlučne zo suspenzných buniek"], key: "SNNN" },
+  { id: 13, text: "Ktorý faktor má najväčší vplyv na úspešnú adherenciu buniek pri ich prvotnej kultivácii?", answers: ["prítomnosť antibiotík v médiu", "zloženie kultivačného média a typ povrchu nádoby", "dĺžka centrifugácie po odobratí vzorky", "tvar kultivačnej banky"], key: "NSNN" },
+  { id: 14, text: "Na zabezpečenie sterilných podmienok počas manipulácie s bunkovou kultúrou sa používa:", answers: ["laminárny box s UV lampou a laminárnym prúdením vzduchu", "vodný kúpeľ", "mikroskop s vyhrievaným stolíkom", "ultrazvuková sterilizácia média"], key: "SNNN" },
+  { id: 15, text: "Na zabránenie kontaminácie bunkovej kultúry sa používa:", answers: ["fetálne kravské sérum", "streptomycín, penicilín", "amfotericín", "trypsín"], key: "NSSN" },
+  { id: 16, text: "Optimálne podmienky pre kultiváciu živočíšnych buniek zahŕňajú:", answers: ["~37 °C", "pH ~7,1 – 7,4", "0 % CO2 v inkubátore", "osmolalitu v tolerancii cca ±10 %"], key: "SSNS" },
+  { id: 17, text: "Organoidy:", answers: ["zastavujú rast buniek", "sa využívajú na vytváranie bunkových modelov ochorení", "majú využitie v personalizovanej medicíne", "sú zjednodušené a zmenšené verzie orgánov kultivovaných 3D in vitro"], key: "NSSS" },
+  { id: 18, text: "Pasážovanie buniek:", answers: ["zabraňuje senescencii kultivovaných buniek", "je prenesenie malého množstva kultivovaných buniek do novej kultivačnej nádoby", "zastavuje rast buniek", "je spôsobené častým vymieňaním kultivačného média"], key: "NSNN" },
+  { id: 19, text: "Permanentná bunková línia:", answers: ["je populácia buniek, ktorá sa môže neobmedzene deliť", "je populácia buniek, ktorá vznikla napr. z biopsie malígneho nádorového tkaniva", "je zjednodušená a zmenšená verzia orgánu in vitro", "nazýva sa aj imortalizovaná bunková línia"], key: "SSNS" },
+  { id: 20, text: "Plató fáza priebehu kultivácie buniek:", answers: ["sa nazýva aj stacionárna fáza", "je fáza, kedy sa bunky adaptujú na podmienky in vitro", "je fáza množenia buniek", "je fáza, kde bunky v kultúre prežívajú ale už sa nedelia"], key: "SNNS" },
+  { id: 21, text: "Tkanivová kultúra:", answers: ["sú proliferujúce bunky alebo tkanivá v kultivačnom médiu mimo organizmu", "je populácia buniek, ktorá proliferuje in vivo", "zastavuje rast buniek", "je organizovaná ako tkanivo"], key: "SNNS" },
+  { id: 22, text: "Ktoré molekuly sa podieľajú na sprostredkovaní adherencie buniek na substrát?", answers: ["integríny", "kadheríny", "cytokíny", "bunkové adhézne molekuly (CAMs)"], key: "SSNS" },
+  { id: 23, text: "Ktoré tvrdenia o Hayflickovom limite sú správne?", answers: ["týka sa primárnych buniek a bunkových línií", "predstavuje obmedzený počet delení v dôsledku skracovania telomér", "popisuje neobmedzenú schopnosť delenia imortalizovaných línií", "zodpovedá približne 40 – 60 bunkovým deliacim cyklom"], key: "SSNS" },
+  { id: 24, text: "Čo platí o kontaktnej inhibícii bunkového rastu?", answers: ["ide o mechanizmus, pri ktorom sa delenie zastaví po dosiahnutí monovrstvy a vzájomného kontaktu buniek", "je typická pre normálne adherentné bunky v kultúre", "nádorové bunky tento mechanizmus často strácajú", "v suspenzných kultúrach je hlavnou príčinou zastavenia delenia kontakt bunka – bunka"], key: "SSSN" },
+  { id: 25, text: "Čo je potrebné zabezpečiť pri udržiavaní suspenzných kultúr?", answers: ["kontinuálne premiešavanie", "rovnomerný prístup živín a kyslíka", "potiahnutie dna kultivačnej nádoby kolagénom", "zamedzenie agregácie buniek"], key: "SSNS" },
+  { id: 26, text: "Ktoré metabolické charakteristiky sú typické pre bunky v kultúre?", answers: ["prednostné využívanie aeróbnej glykolýzy (Warburgov efekt)", "vysoká spotreba glukózy", "neaktívny Krebsov cyklus", "využívanie glutamínu alebo jeho derivátov ako zdroja dusíka a uhlíka"], key: "SSNS" },
+  { id: 27, text: "Log fáza priebehu kultivácie buniek:", answers: ["je fáza, kde bunky v kultúre prežívajú ale už sa nedelia", "je fáza množenia buniek", "je fáza, kedy sa bunky adaptujú na podmienky in vitro", "sa nazýva aj stacionárna fáza"], key: "NSNN" },
+  { id: 28, text: "Vitálne farbenie:", answers: ["sa používa pri farbení natívnych preparátov", "sa používa po farbení fixovaných preparátov", "umožňuje hodnotiť viabilitu buniek", "umožňuje archiváciu preparátov"], key: "SNSN" },
+  { id: 29, text: "Alamar blue test je založený na:", answers: ["redukcii resazurínu na fluorescenčný rezorufín v metabolicky aktívnych bunkách", "degradácii LDH pri poškodení membrány", "absorpcii Trypánovej modrej do živých buniek", "nešpecifickej redukcii kryštálov formazánu"], key: "SNNN" },
+  { id: 30, text: "Ako funguje test MTT?", answers: ["kvalitatívny test merajúci integritu membrány na odlíšenie živých a mŕtvych buniek", "citlivý test s lineárnym vzťahom medzi aktivitou buniek a absorbanciou", "MTT je redukovaný mitochondriálnou reduktázou a vznikajú kryštály formazánu", "kvalitatívny test založený na nešpecifickej enzymatickej redukcii resazurínu"], key: "NNSN" },
+  { id: 31, text: "Aký je hlavný rozdiel medzi LDH testom a farbením trypánovou modrou?", answers: ["LDH test je založený na úniku intracelulárneho enzýmu pri poškodení membrány", "trypánová modrá hodnotí metabolickú aktivitu mitochondrií", "LDH test je fluorescenčný alebo kolorimetrický, trypánová modrá len kolorimetrická", "trypánová modrá poskytuje kvantitatívne výsledky nezávislé od subjektivity"], key: "SNSN" },
+  { id: 32, text: "LDH test:", answers: ["umožňuje stanovenie miery bunkovej smrti", "sa používa na meranie markerov úniku z cytoplazmy", "umožňuje určiť kinetiku proliferácie buniek", "je kolorimetrický alebo fluorometrický test"], key: "SSNS" },
+  { id: 33, text: "Prečo sa odporúča používať kombináciu viacerých testov cytotoxicity?", answers: ["rôzne testy hodnotia odlišné aspekty bunkovej životaschopnosti (membrána, metabolizmus, únik markerov)", "každý test je absolútne presný a stačí ho použiť samostatne", "kombinácia zvyšuje spoľahlivosť a objektivitu výsledkov", "väčšina testov je lacná, preto sa používajú naraz"], key: "SNSN" },
+  { id: 34, text: "Ktoré metódy patria medzi metabolické testy životaschopnosti buniek?", answers: ["MTT test", "LDH test", "Alamar blue test", "Trypan blue exclusion test"], key: "SNSN" },
+  { id: 35, text: "Aké výhody má Alamar Blue test oproti MTT testu?", answers: ["je neinvazívny", "umožňuje opakované merania v reálnom čase", "je založený na fluorescenčnom signáli", "vyžaduje usmrtenie buniek"], key: "SSSN" },
+  { id: 36, text: "Čo zisťuje LDH test?", answers: ["aktivitu mitochondriálnych enzýmov", "množstvo DNA v bunke", "prítomnosť laktátdehydrogenázy uvoľnenej z poškodených buniek", "apoptotické fragmenty membrány"], key: "NNSN" },
+  { id: 37, text: "Ktoré moderné technológie sa používajú pri hodnotení životaschopnosti buniek?", answers: ["prietoková cytometria", "konfokálna mikroskopia živých buniek", "impedančné systémy", "Western blot"], key: "SSSN" },
+  { id: 38, text: "Čo je výhodou impedančných systémov?", answers: ["umožňujú neinvazívne a kontinuálne sledovanie rastu buniek", "vyžadujú farbenie vitálnymi farbivami", "sú založené na zmene elektrického odporu", "poskytujú len jednorazové údaje"], key: "SNSN" },
+  { id: 39, text: "Aké informácie poskytuje konfokálna mikroskopia živých buniek?", answers: ["dynamické zmeny bunkovej morfológie", "zmeny membránového potenciálu", "detekciu apoptotických procesov", "len konečný obraz fixovaných buniek"], key: "SSSN" },
+  { id: 40, text: "Prečo sa kombinuje viacero testov hodnotenia životaschopnosti?", answers: ["každý test zachytáva iný aspekt bunkovej viability", "získava sa komplexnejší obraz o stave buniek", "znižuje sa riziko falošne negatívnych/pozitívnych výsledkov", "pretože jednotlivé testy nie je možné použiť samostatne"], key: "SSSN" },
+  { id: 41, text: "Ktoré faktory sa často pridávajú do kultivačných médií na podporu rastu a viability buniek?", answers: ["hormóny", "rastové faktory", "antibiotiká", "vitamíny a stopové prvky"], key: "SSNS" },
+  { id: 42, text: "Aký je hlavný ukazovateľ vitálnych funkcií v metabolických testoch?", answers: ["integrita membrány", "aktivita mitochondriálnych enzýmov", "hladina intracelulárneho Ca2+", "počet jadier buniek"], key: "NSNN" },
+  { id: 43, text: "Aké sú limity použitia trypan blue exclusion testu?", answers: ["nedokáže rozlíšiť apoptotické bunky od živých", "hodnotenie je subjektívne", "vyžaduje drahé prístroje", "má nižšiu citlivosť v porovnaní s fluorescenčnými metódami"], key: "SSNS" },
+  { id: 44, text: "Čo umožňuje prietoková cytometria pri hodnotení buniek?", answers: ["rýchlu kvantitatívnu analýzu", "viacparametrické merania na jednej bunke", "analýzu životaschopnosti a apoptózy", "sledovanie rastu celých tkanivových štruktúr"], key: "SSSN" },
+  { id: 45, text: "Ktoré metódy umožňujú kontinuálne monitorovanie bunkovej proliferácie bez farbenia?", answers: ["impedančné systémy", "Trypan blue exclusion test", "konfokálna mikroskopia", "LDH test"], key: "SNNN" },
+  { id: 46, text: "Čo charakterizuje trojrozmerné kultivačné systémy v porovnaní s klasickými 2D kultúrami?", answers: ["lepšie napodobňujú in vivo prostredie", "nedokážu podporovať diferenciáciu", "sú vždy krátkodobé", "neumožňujú interakcie s ECM"], key: "SNNN" },
+  { id: 47, text: "Ktorý jav obmedzuje počet delení primárnych buniek a buniek línií?", answers: ["apoptóza", "Hayflickov limit", "autofágia", "Warburgov efekt"], key: "NSNN" },
+  { id: 48, text: "Čo je typické pre suspenzné kultúry buniek?", answers: ["potrebujú adherenciu na povrch kultivačnej nádoby", "rastú voľne v médiu", "nevyžadujú prísun živín a kyslíka", "sú využiteľné len v genetike"], key: "NSNN" },
+  { id: 49, text: "Aký je hlavný dôvod pasážovania adherentných buniek?", answers: ["zvýšenie pH média", "dosiahnutie konfluencie 80–90 %", "odstránenie starých buniek apoptózou", "inhibícia kontaktu buniek s ECM"], key: "NSNN" },
+  { id: 50, text: "Ktorý metabolit sa najčastejšie pridáva do kultivačných médií ako zdroj dusíka a uhlíka?", answers: ["glukóza", "alanín", "glutamín", "laktát"], key: "NNSN" },
+  { id: 51, text: "Čo vyjadruje lag fáza rastovej krivky bunkovej kultúry?", answers: ["maximálnu mitotickú aktivitu", "adaptáciu buniek a nízku mitotickú aktivitu", "začiatok degradácie a senescencie", "zastavenie delenia kontaktnou inhibíciou"], key: "NSNN" },
+  { id: 52, text: "Ktorá vlastnosť je charakteristická pre Warburgov efekt?", answers: ["prevaha aeróbnej glykolýzy aj pri prítomnosti kyslíka", "blokovanie Krebsovho cyklu", "využívanie mastných kyselín ako hlavného zdroja energie", "aktivácia len v suspenzných kultúrach"], key: "SNNN" },
+  { id: 53, text: "Ktorý test meria aktivitu mitochondriálnych enzýmov redukciou tetrazoliových solí?", answers: ["LDH test", "MTT test", "Trypan blue", "PCR test"], key: "NSNN" },
+  { id: 54, text: "Aké riziko sprevádza prácu s permanentnými bunkovými líniami?", answers: ["krátka životnosť kultúry", "spontánna diferenciácia na špecializované bunky", "akumulácia genetických zmien a odchýlok od pôvodného fenotypu", "neschopnosť rastu vo väčších objemoch"], key: "NNSN" },
+  { id: 55, text: "Ktorý prístup je založený na sledovaní zmien elektrického odporu bunkovej vrstvy počas rastu a proliferácie?", answers: ["Western blot", "MTT test", "FISH", "impedančné systémy"], key: "NNNS" }
+];
+
+const key = [
+  "SNNN", "NSNN", "SNNN", "NNNS", "NNSS",
+  "NSNS", "SSNN", "NSNS", "SSNS", "NSNN",
+  "NNSS", "SSSN", "SNNN", "NNSN", "NNSN",
+  "NNSN", "SNNS", "SSNN", "SNNN", "SSSN",
+  "NNSN", "NSNN", "SNNN", "SNNS", "SSNN",
+  "NNSN", "SSNS", "SSNN", "NSNS", "SSSN",
+  "NNSN", "NSNN", "SSSN", "SSNN", "SNNS",
+  "NNNS", "NNSN", "SNNN", "NNSN", "SSNN",
+  "SSNN", "SNSN", "SNSN", "NSNS", "NSSN",
+  "SSNN", "NNSN", "SNNN", "SSNN", "NSNN",
+  "NSNN", "NSNN", "SNNN", "NNNS"
+];
+
+
+
+/* ------------------ State ------------------ */
+let state = {
+  questions: [], // will hold questions with original index and randomized answers
+  filter: 'all', // 'all', 'wrong', 'favorites'
+  favorites: new Set(),
+  lastWrongSet: [], // store wrong questions for retry
+};
+
+/* Initialize questions with originalIndex and random answer order */
+function initQuestions(){
+  state.questions = questions.map((q,i)=>{
+    const originalIndex = i; // 0-based
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex, qtext: q.text, answers };
+  });
+  renderQuestions();
+}
+
+/* Utility shuffle */
+function shuffleArr(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/* Render current state.questions according to filter */
+function renderQuestions(){
+  const container = document.getElementById('quiz');
+  container.innerHTML = '';
+  let toRender = state.questions.slice();
+
+  // apply filter
+  if(state.filter === 'favorites'){
+    toRender = toRender.filter(item => state.favorites.has(item.originalIndex));
+  } else if(state.filter === 'wrong'){
+    toRender = toRender.filter(item => state.lastWrongSet.includes(item.originalIndex));
+  }
+
+  if(toRender.length === 0){
+    const info = document.createElement('div');
+    info.style.textAlign='center';
+    info.style.color='#555';
+    info.style.margin='18px';
+    info.textContent = 'Žiadne otázky na zobrazenie.';
+    container.appendChild(info);
+    document.getElementById('resultText').textContent = '';
+    return;
+  }
+
+  toRender.forEach((item, displayIdx)=>{
+    // build card
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.orig = item.originalIndex;
+
+    // header
+    const header = document.createElement('div');
+    header.className = 'q-header';
+
+    const num = document.createElement('div');
+    num.className = 'q-number';
+    num.textContent = (displayIdx+1)+'.';
+
+    const text = document.createElement('div');
+    text.className = 'q-text';
+    text.textContent = item.qtext;
+
+    const actions = document.createElement('div');
+    actions.className = 'q-actions';
+
+    // star favorite
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.title = 'Označiť ako obľúbené';
+    star.innerHTML = state.favorites.has(item.originalIndex) ? '★' : '☆';
+    if(state.favorites.has(item.originalIndex)) star.classList.add('active');
+    star.addEventListener('click', ()=>{
+      if(state.favorites.has(item.originalIndex)){
+        state.favorites.delete(item.originalIndex);
+        star.classList.remove('active');
+        star.innerHTML = '☆';
+      } else {
+        state.favorites.add(item.originalIndex);
+        star.classList.add('active');
+        star.innerHTML = '★';
+      }
+    });
+
+    // show correct button
+    const btnShow = document.createElement('button');
+    btnShow.className = 'btn-small btn-show';
+    btnShow.textContent = 'Zobraziť správne';
+    btnShow.addEventListener('click', ()=> showCorrectForCard(card, item.originalIndex));
+
+    actions.appendChild(star);
+    actions.appendChild(btnShow);
+
+    header.appendChild(num);
+    header.appendChild(text);
+    header.appendChild(actions);
+
+    card.appendChild(header);
+
+    // randomize answer order for display (store mapping)
+    const randomized = item.answers.slice();
+    // If answers not yet shuffled for this render, shuffle them each render
+    const shuffledAnswers = shuffleArr(randomized);
+    card._shuffled = shuffledAnswers.map(a=>a.idx); // store original idx order
+
+    // answers block
+    const answersDiv = document.createElement('div');
+    answersDiv.className = 'answers';
+
+    shuffledAnswers.forEach((ansObj, ansPos)=>{
+      const label = document.createElement('label');
+      label.className = 'ans';
+      label.dataset.origAnswerIdx = ansObj.idx; // 0..3 original index
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.name = `q_${item.originalIndex}`;
+      checkbox.value = ansObj.idx;
+      label.appendChild(checkbox);
+      const span = document.createElement('span');
+      span.textContent = ansObj.txt;
+      label.appendChild(span);
+      answersDiv.appendChild(label);
+    });
+
+    card.appendChild(answersDiv);
+
+    // optional meta area: show original question number
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const origLabel = document.createElement('div');
+    origLabel.textContent = `#${item.originalIndex+1}`;
+    meta.appendChild(origLabel);
+    card.appendChild(meta);
+
+    container.appendChild(card);
+  });
+
+  // clear previous result
+  document.getElementById('resultText').textContent = '';
+}
+
+/* show correct for one card */
+function showCorrectForCard(cardEl, origIndex){
+  const key = questions[origIndex].key; // string like 'SNNN'
+  const labels = [...cardEl.querySelectorAll('label.ans')];
+  // Determine which shuffled labels correspond to which original index
+  labels.forEach(label=>{
+    const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10); // 0..3
+    const isCorrect = key[origAnsIdx] === 'S';
+    const input = label.querySelector('input');
+    const checked = input.checked;
+    // Reset classes first
+    label.classList.remove('correct','incorrect');
+    if(isCorrect && checked) {
+      label.classList.add('correct');
+    } else if(isCorrect && !checked){
+      // correct but not selected -> mark blue (as requested)
+      label.classList.add('correct-unchecked'); // modrá
+    } else if(!isCorrect && checked){
+      // wrong selected -> red
+      label.classList.add('incorrect');
+    }
+    // else not correct and not selected -> keep default
+  });
+}
+
+/* show all correct answers globally */
+function showAllCorrect(){
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    showCorrectForCard(card, origIndex);
+  });
+}
+
+/* evaluate current shown questions */
+function evaluateAll(){
+  const cards = document.querySelectorAll('.card');
+  let correctCount = 0;
+  const wrongList = [];
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    const key = questions[origIndex].key; // e.g. 'SNNN'
+    const labels = [...card.querySelectorAll('label.ans')];
+    const selectedOrigIdx = labels.filter(lbl=> lbl.querySelector('input').checked ).map(lbl=> parseInt(lbl.dataset.origAnswerIdx,10));
+    // compute sets
+    const selSet = new Set(selectedOrigIdx);
+    const corrSet = new Set();
+    for(let i=0;i<4;i++) if(key[i]==='S') corrSet.add(i);
+    // Compare exact equality
+    let equal = (selSet.size === corrSet.size);
+    if(equal){
+      for(let v of selSet) if(!corrSet.has(v)){ equal=false; break; }
+    }
+    // mark colors for visual feedback
+    labels.forEach(label=>{
+      label.classList.remove('correct','incorrect');
+      const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10);
+      const isCorrect = key[origAnsIdx] === 'S';
+      const checked = label.querySelector('input').checked;
+      if(isCorrect && checked) label.classList.add('correct');
+      else if(isCorrect && !checked) label.classList.add('incorrect');
+      else if(!isCorrect && checked) label.classList.add('incorrect');
+    });
+
+    if(equal){
+      correctCount++;
+    } else {
+      wrongList.push(origIndex);
+    }
+  });
+
+  // store last wrong set for retry/filters
+  state.lastWrongSet = wrongList.slice();
+
+  // percent relative to number of displayed questions
+  const total = cards.length;
+  const percent = total === 0 ? 0 : ((correctCount/total)*100).toFixed(2);
+  document.getElementById('resultText').textContent = `Úspešnosť: ${percent}% (${correctCount}/${total} úplne správnych otázok)`;
+}
+
+/* Show only wrong questions (filter) */
+function showOnlyWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Nie sú uložené žiadne chybné otázky (vyhodnoť test najprv).');
+    return;
+  }
+  state.filter = 'wrong';
+  renderQuestions();
+}
+
+/* Reset test to initial state (all questions, clear selections, clear coloring) */
+function resetTest(){
+  // reinitialize questions to default order and answers order
+  state.filter = 'all';
+  state.lastWrongSet = [];
+  // restore original questions order (as in questions array)
+  state.questions = questions.map((q,i)=>{
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex:i, qtext:q.text, answers };
+  });
+  // clear favorites stays preserved
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Retry only wrong questions (renders only wrong set but allows answering them) */
+function retryWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Žiadne chybné otázky pre opakovanie. Najprv vyhodnoť test.');
+    return;
+  }
+  // Build state.questions to include only wrong ones, preserving originalIndex
+  state.questions = state.lastWrongSet.map(idx => {
+    const q = questions[idx];
+    const answers = q.answers.map((txt, ai)=>({txt, idx:ai}));
+    return { originalIndex: idx, qtext: q.text, answers };
+  });
+  state.filter = 'all';
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Show only favorites */
+function showFavoritesOnly(){
+  state.filter = 'favorites';
+  renderQuestions();
+}
+
+/* Show all questions (clear filters) */
+function showAllQuestions(){
+  state.filter = 'all';
+  // restore full set in original order
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Shuffle questions (random order) and shuffle answers within each question */
+function shuffleQuestions(){
+  // shuffle questions array
+  const arr = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  const shuffled = shuffleArr(arr);
+  state.questions = shuffled;
+  state.filter = 'all';
+  renderQuestions();
+}
+
+/* Show Favorites modal/list (simple behavior: filter to favorites) */
+function showFavoritesList(){
+  // if no favorites, inform
+  if(state.favorites.size === 0){
+    alert('Nemáš označené žiadne obľúbené otázky.');
+    return;
+  }
+  state.filter = 'favorites';
+  // prepare state.questions as full list so filter works
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Show only wrong (button at bottom) identical to showOnlyWrong function but filters current display */
+function showOnlyWrongButton(){
+  showOnlyWrong();
+}
+
+/* Attach event listeners */
+document.getElementById('btnShowAll').addEventListener('click', showAllCorrect);
+document.getElementById('btnShuffle').addEventListener('click', ()=>{ shuffleQuestions(); });
+document.getElementById('btnFavorites').addEventListener('click', showFavoritesList);
+document.getElementById('btnShowAllQ').addEventListener('click', showAllQuestions);
+document.getElementById('btnShowWrongOnly').addEventListener('click', ()=>{ state.filter = 'wrong'; renderQuestions(); });
+document.getElementById('btnShowFavOnly').addEventListener('click', showFavoritesOnly);
+document.getElementById('btnEvaluate').addEventListener('click', evaluateAll);
+document.getElementById('btnShowWrong').addEventListener('click', showOnlyWrongButton);
+document.getElementById('btnRetryWrong').addEventListener('click', retryWrong);
+document.getElementById('btnReset').addEventListener('click', resetTest);
+
+/* Initialize on load */
+initQuestions();
+</script>
+</body>
+</html>
