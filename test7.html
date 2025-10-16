@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>7. Bunková smrť</title>
+<style>
+  :root{
+    --card-bg: #e9f5ff;
+    --accent: #007bff;
+    --good: #c8f7d0;
+    --bad: #ffd6d6;
+	--correct-unchecked: #c8f7d0;
+    --card-radius: 14px;
+  }
+  body{
+    margin:0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: #ffffff;
+    color:#111;
+    padding:30px 16px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{
+    width:100%;
+    max-width:1100px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  h1{
+    margin:0;
+    font-size:22px;
+  }
+  .top-controls{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  button{
+    background:var(--accent);
+    color:white;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  button.secondary{
+    background:#6c757d;
+  }
+  .center-controls{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:14px;
+  }
+  #quiz{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    align-items:center;
+  }
+  .card{
+    width:100%;
+    max-width:980px;
+    background:var(--card-bg);
+    border-radius:var(--card-radius);
+    padding:16px 18px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    display:block;
+    box-sizing:border-box;
+    position:relative;
+  }
+  .q-header{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .q-number{
+    font-weight:700;
+    min-width:34px;
+  }
+  .q-text{
+    font-weight:700;
+    flex:1;
+  }
+  .q-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .star{
+    font-size:20px;
+    cursor:pointer;
+    user-select:none;
+    color:rgba(0,0,0,0.25);
+  }
+  .star.active{ color: gold; text-shadow: 0 0 6px rgba(255,215,0,0.4); }
+  .answers{
+    margin-top:10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  label.ans{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    padding:8px;
+    border-radius:8px;
+  }
+  label.ans input{ transform:scale(1.05); }
+  .btn-small{
+    padding:6px 10px;
+    font-size:13px;
+    border-radius:8px;
+    background:#0b84ff;
+  }
+  .btn-show{
+    background:#0b84ff;
+    color:white;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+  }
+  .meta{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    font-size:13px;
+    margin-top:10px;
+    color:#333;
+  }
+  .result{
+    text-align:center;
+    margin-top:18px;
+    font-weight:700;
+    font-size:16px;
+  }
+  .controls-bottom{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .hidden{ display:none; }
+  /* coloring for showCorrect */
+  .correct { background: var(--good) !important; }
+  .incorrect { background: var(--bad) !important; }
+  .correct-unchecked { background: var(--correct-unchecked) !important; }
+  /* small responsive */
+  @media (max-width:640px){
+    body { padding:14px; }
+    .card{ padding:12px; }
+    .q-number{ min-width:28px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>7. Bunková smrť</h1>
+    <div class="top-controls">
+      <button id="btnFavorites">Obľúbené</button>
+      <button id="btnShuffle">Zamiešať otázky</button>
+      <button id="btnShowAll" title="Zobraziť všetky správne odpovede">Zobraziť všetky správne odpovede</button>
+    </div>
+  </header>
+
+  <div class="center-controls">
+    <span style="color:#555">Filtrovať zobrazenie:</span>
+    <button id="btnShowAllQ" class="secondary">Zobraziť všetky</button>
+    <button id="btnShowWrongOnly" class="secondary">Zobraziť len chybné</button>
+    <button id="btnShowFavOnly" class="secondary">Zobraziť len obľúbené</button>
+  </div>
+
+  <div id="quiz"></div>
+
+  <div class="controls-bottom">
+    <button id="btnEvaluate">Vyhodnotiť všetko</button>
+    <button id="btnShowWrong">Zobraziť len chybné otázky</button>
+    <button id="btnRetryWrong">Opakovať len chybné</button>
+    <button id="btnReset">Obnoviť test</button>
+  </div>
+
+  <div class="result" id="resultText"></div>
+</div>
+
+<script>
+const questions = [
+  { id: 1, text: "Aké sú základné mechanizmy navodenia apoptózy?", answers: ["cez mitochondriálnu „dráhu“", "stresová cesta cez Golgiho aparát", "cez „receptor smrti“", "cez lyzozómovú „dráhu“"], key: "SNSN" },
+  { id: 2, text: "Akú funkciu má apoptóza v organizme?", answers: ["podporuje rast svalov", "chráni bunky pred UV žiarením", "odstraňuje poškodené alebo nepotrebné bunky", "produkuje energiu pre bunku"], key: "NNSN" },
+  { id: 3, text: "Apoptóza je:", answers: ["programovaná bunková smrť", "tichá bunková smrť", "iný názov pre nekrózu", "fyziologická smrť bunky"], key: "SSNS" },
+  { id: 4, text: "Apoptóza hrá kľúčovú úlohu pri:", answers: ["prevencii tvorby nádorov", "produkcii ATP pre bunkový metabolizmus", "syntéze proteínov", "akumulácii bunkového odpadu"], key: "SNNN" },
+  { id: 5, text: "Apoptóza je primárne charakterizovaná:", answers: ["zmrštením bunky a fragmentáciou DNA", "nekontrolovaným opuchom bunky", "zápalom a imunitnou odpoveďou", "fagocytózou poškodených organel"], key: "SNNN" },
+  { id: 6, text: "Apoptóza má kľúčový význam pri vývoji:", answers: ["srdca", "prstov", "čreva", "mozgu"], key: "SSSS" },
+  { id: 7, text: "Apoptóza sa líši od nekrózy tým, že:", answers: ["apoptóza nie je sprevádzaná zápalom", "nekróza zahŕňa fagocytózu", "apoptóza nie je regulovaná", "nekróza je často spôsobená traumou"], key: "SNNS" },
+  { id: 8, text: "Autofágia je typicky aktivovaná v reakcii na:", answers: ["nedostatok živín", "prebytok energie", "prítomnosť apoptotických buniek", "zvýšenú hladinu kyslíka"], key: "SNNN" },
+  { id: 9, text: "Autofágia môže viesť k bunkovej smrti, ak:", answers: ["sa stane nadmerne aktívnou", "hladiny ATP sú vysoké", "aktivita kaspáz je nízka", "lyzozómy sú neaktívne"], key: "SNNS" },
+  { id: 10, text: "Autofágia slúži na:", answers: ["recykláciu bunkových komponentov", "spustenie delenia buniek", "náhodnú degradáciu proteínov", "tvorbu energetických zásob mimo bunky"], key: "SNNN" },
+  { id: 11, text: "Hlavné funkcie apoptózy:", answers: ["programovaná bunková smrť pri selekcii buniek", "riadená bunková smrť pri ochrane mnohobunkového organizmu pred rizikovými bunkami", "programovaná bunková smrť pri ukončení „životnosti“ bunky", "programovaná bunková smrť počas embryogenézy"], key: "SSSS" },
+  { id: 12, text: "Kaspázy:", answers: ["môžu byť nevýkonné", "patria medzi proteázy", "sa v cytoplazme vyskytujú ako inaktívne pro – kaspázy", "môžu byť výkonné"], key: "NSSS" },
+  { id: 13, text: "Kľúčové proteíny podieľajúce sa na iniciácii apoptózy sú:", answers: ["kaspázy", "ATG proteíny", "p53", "chaperóny"], key: "SNSN" },
+  { id: 14, text: "Ktorá štruktúra je zodpovedná za degradáciu bunkového obsahu počas autofágie?", answers: ["autofagozóm", "ribozóm", "peroxizóm", "jadrový pór"], key: "SNNN" },
+  { id: 15, text: "Ktorá z nasledujúcich dráh je spojená s apoptózou?", answers: ["glukoneogenéza", "dráha MAPK", "dráha receptorov smrti", "glykolýza"], key: "NNSN" },
+  { id: 16, text: "Ktoré morfologické znaky sú typické pre nekrózu?", answers: ["zmršťovanie bunky a fragmentácia jadra", "opuch bunky a prasknutie membrány", "vznik dvojmembránových vakuol", "rozpad organel a uvoľnenie obsahu bunky"], key: "NSNS" },
+  { id: 17, text: "Ktoré tvrdenia charakterizujú exogénnu aktiváciu apoptózy?", answers: ["spúšťa ju naviazanie signálnej molekuly na receptor smrti (napr. Fas, TNF)", "je vyvolaná hlavne mutáciami DNA a skracovaním telomér", "dochádza k aktivácii iniciátorovej kaspázy 8", "spúšťa ju uvoľnenie cytochrómu c z mitochondrií"], key: "SNSN" },
+  { id: 18, text: "Ktoré tvrdenia o autofágii platia?", answers: ["je to proces recyklácie bunkových organel a makromolekúl", "prebieha vytvorením autofagozómov a ich splynutím s lyzozómami", "je sprevádzaná vždy výraznou zápalovou reakciou", "je typickým znakom patologickej bunkovej smrti"], key: "SSNN" },
+  { id: 19, text: "Ktoré tvrdenia o nekróze sú správne?", answers: ["ide o programovanú bunkovú smrť riadenú kaspázami", "je spojená so zápalovou reakciou v okolí", "vzniká pri poškodení bunky hypoxiou alebo toxínmi", "je charakterizovaná tvorbou apoptotických teliesok"], key: "NSSN" },
+  { id: 20, text: "Medzi hlavné kaspázy patria:", answers: ["kaspáza 3", "kaspáza 8", "kaspáza 9", "kaspáza 6"], key: "NSSN" },
+  { id: 21, text: "Medzi hlavné proteíny apoptózy patria:", answers: ["kaspázy", "albumín", "Apaf–1", "Bax"], key: "SNSS" },
+  { id: 22, text: "Morfologické prejavy typické pre apoptózu:", answers: ["denzná agregácia chromatínu na jadrovú membránu", "scvrkávanie sa bunky", "vznik apoptózových teliesok", "tvorba nových mitochondrií"], key: "SSSN" },
+  { id: 23, text: "Na rozdiel od apoptózy, nekróza:", answers: ["často vyvoláva zápal", "je regulovaná bunková smrť", "vedie k tvorbe apoptotických teliesok", "je výsledkom neplánovaného poškodenia buniek"], key: "SNNS" },
+  { id: 24, text: "Na rozdiel od apoptózy, nekróza je:", answers: ["rýchly a nekontrolovaný proces", "spojená s fagocytózou buniek", "závislá na energii", "typicky spojená s aktiváciou imunitnej odpovede"], key: "SNNS" },
+  { id: 25, text: "Nekróza je:", answers: ["náhodná forma bunkovej smrti", "proces vyvolaný vonkajším zranením", "podobná apoptóze", "kontrolovaný mechanizmus bunkovej smrti"], key: "SSNN" },
+  { id: 26, text: "Nekrózu môže spustiť:", answers: ["extrémne zmeny teploty", "nedostatok živín", "genetické mutácie", "toxické látky"], key: "SSNS" },
+  { id: 27, text: "Plazmatická membrána bunky počas apoptózy:", answers: ["zostáva neporušená až do neskorších fáz", "okamžite sa roztrhne", "absorbuje viac lipidov", "spája sa so susednými bunkovými membránami"], key: "SNNN" },
+  { id: 28, text: "Poškodené organely sú v dráhe autofágie dopravené do:", answers: ["jadra", "lyzozómov", "Golgiho aparátu", "mitochondrií"], key: "NSNN" },
+  { id: 29, text: "Pri ktorých procesoch má apoptóza zásadný význam počas embryogenézy?", answers: ["remodelácia srdcových priehradiek", "aktivácia lyzozómov pri vývoji čreva", "formovanie prstov končatín", "prenos génovej informácie medzi neurocytmi"], key: "SNSN" },
+  { id: 30, text: "Pri procese nekrózy bunky:", answers: ["strácajú integritu membrány", "podstupujú kontrolovaný rozpad", "fragmentujú sa na apoptotické telieska", "vylievajú svoj obsah, čo spôsobuje poškodenie tkaniva"], key: "SNNS" },
+  { id: 31, text: "Primárny rozdiel medzi apoptózou a autofágiou je:", answers: ["apoptóza vedie k bunkovej smrti, zatiaľ čo autofágia môže podporovať prežitie bunky", "autofágia vždy vyvoláva zápal", "apoptóza sa deje iba počas embryonálneho vývoja", "autofágia nezahŕňa lyzozómy"], key: "SNNN" },
+  { id: 32, text: "Typické znaky nekrózy zahŕňajú:", answers: ["opuch bunky", "zmrštenie bunky", "roztrhnutie membrány", "uvoľnenie bunkového obsahu do okolitých tkanív"], key: "SNSS" },
+  { id: 33, text: "Ktoré tvrdenie o pyroptóze je správne?", answers: ["je sprostredkovaná inflammasómom", "aktivuje kaspázy 1, 4, 5 a 11", "prebieha bez zápalovej odpovede", "má význam pri obrane proti intracelulárnym patogénom"], key: "SSNS" },
+  { id: 34, text: "Aké sú charakteristické znaky nekroptózy?", answers: ["aktivácia kináz RIPK1 a RIPK3", "fosforylácia proteínu MLKL", "úplná absencia zápalovej odpovede", "alternatívna cesta bunkovej smrti pri zablokovanej apoptóze"], key: "SSNS" },
+  { id: 35, text: "Ktoré morfologické zmeny sú typické pre ferroptózu?", answers: ["zmenšenie mitochondrií", "zvýšená denzita mitochondriálnej matrice", "fragmentácia DNA ako pri apoptóze", "absencia klasických znakov apoptózy"], key: "SSNS" },
+  { id: 36, text: "Čo charakterizuje anoikis?", answers: ["je vyvolaný stratou kontaktu bunky s extracelulárnou matrix", "prebieha cez aktiváciu apoptotických dráh", "predstavuje variant nekrózy", "jeho potlačenie napomáha metastázovaniu"], key: "SSNS" },
+  { id: 37, text: "Čo sa deje počas netózy (NETosis)?", answers: ["aktivujú sa neutrofily", "dochádza k uvoľneniu jadrovej DNA a proteínov", "vznikajú extracelulárne pasce (NETs)", "proces prebieha bez dezintegrácie bunkovej membrány"], key: "SSSN" },
+  { id: 38, text: "Čo je typické pre exogénnu dráhu apoptózy?", answers: ["aktivácia receptorov smrti (Fas, TNF receptory)", "oligomerizácia receptorov a nábor adaptorových proteínov (FADD)", "aktivácia iniciačnej kaspázy 8", "uvoľnenie cytochrómu c z mitochondrií"], key: "SSSN" },
+  { id: 39, text: "Aké poškodenia môžu aktivovať endogénnu dráhu apoptózy?", answers: ["mutácie DNA", "oxidačný stres", "hypoxia", "kontakt s TNF receptorom"], key: "SSSN" },
+  { id: 40, text: "Akú úlohu zohráva proteín p53 v endogénnej dráhe apoptózy?", answers: ["funguje ako „strážca genómu“", "aktivuje transkripciu proapoptotckých členov rodiny Bcl–2", "stabilizuje mitochondriálnu membránu", "zabraňuje permeabilizácii mitochondrií"], key: "SSNN" },
+  { id: 41, text: "Čo je apoptozóm a akú má funkciu?", answers: ["komplex cytochrómu c, Apaf–1 a ATP", "aktivuje iniciačnú kaspázu 9", "je výsledkom aktivácie receptorov smrti", "riadi expresiu génov Bcl–2"], key: "SSNN" },
+  { id: 42, text: "Ktoré kaspázy patria medzi efektorové kaspázy?", answers: ["kaspáza 3", "kaspáza 6", "kaspáza 7", "kaspáza 9"], key: "SSSN" },
+  { id: 43, text: "Čo je typické pre apoptózu vyvolanú stresom v endoplazmatickom retikule?", answers: ["akumulácia nesprávne poskladaných proteínov", "aktivácia prokaspázy 12 (u hlodavcov)", "u človeka sa uplatňuje najmä kaspáza 4 a 5", "aktivácia TNF receptorov"], key: "SSSN" },
+  { id: 44, text: "Aké sú výsledné morfologické znaky apoptózy?", answers: ["fragmentácia DNA", "kondenzácia chromatínu", "tvorba apoptotických teliesok", "rozsiahly zápal tkaniva"], key: "SSSN" },
+  { id: 45, text: "Čo majú spoločné všetky apoptotické dráhy?", answers: ["aktivujú spoločnú efektorovú kaspázovú kaskádu", "končia tvorbou apoptotických teliesok", "vyvolávajú zápalovú reakciu", "vedú k fragmentácii DNA a kondenzácii chromatínu"], key: "SSNS" },
+  { id: 46, text: "Ktorý znak odlišuje apoptózu od nekrózy?", answers: ["fragmentácia DNA a tvorba apoptotických teliesok", "opuch bunky a prasknutie membrány", "vždy vyvoláva zápalovú reakciu", "nie je geneticky programovaná"], key: "SNNN" },
+  { id: 47, text: "Ktorý proteín zohráva kľúčovú úlohu v endogénnej dráhe apoptózy?", answers: ["p53", "FADD", "MLKL", "GPX4"], key: "SNNN" },
+  { id: 48, text: "Čo je typickým znakom autofágie?", answers: ["aktivácia kaspázy 8", "vznik autofagozómu", "uvoľnenie IL–1β a IL–18", "permeabilizácia membrány cez MLKL"], key: "NSNN" },
+  { id: 49, text: "Ktorá regulovaná forma bunkovej smrti je spojená s inflamazómom a uvoľnením IL–1β?", answers: ["netóza", "anoikis", "ferroptóza", "pyroptóza"], key: "NNNS" },
+  { id: 50, text: "Aký je hlavný význam anoikis?", answers: ["obrana proti intracelulárnym patogénom", "prevencia kolonizácie buniek mimo pôvodného tkaniva", "degradácia poškodených proteínov", "udržiavanie homeostázy počas vývoja"], key: "NSNN" },
+  { id: 51, text: "Ktorý mechanizmus bunkovej smrti je typicky sprevádzaný akumuláciou lipidových peroxidov a zlyhaním enzýmu GPX4?", answers: ["ferroptóza", "nekroptóza", "netóza", "autofágia"], key: "SNNN" },
+{ id: 52, text: "Aký je hlavný rozdiel medzi exogénnou a endogénnou apoptotickou dráhou?", answers: ["exogénna je spustená receptormi smrti, endogénna poškodením DNA alebo stresom", "exogénna je vyvolaná oxidačným stresom, endogénna ligandmi receptorov", "exogénna prebieha v lyzozómoch, endogénna v jadre", "exogénna vedie k nekróze, endogénna k apoptóze"], key: "SNNN" },
+{ id: 53, text: "Ktorý enzýmový komplex sa vytvára v endogénnej apoptotickej dráhe po uvoľnení cytochrómu c z mitochondrií?", answers: ["apoptozóm", "inflammasóm", "proteazóm", "ribozóm"], key: "SNNN" },
+{ id: 54, text: "Čo je typickým znakom nekrózy, ktorý ju odlišuje od apoptózy?", answers: ["tvorba apoptotických teliesok", "fragmentácia DNA", "prasknutie bunkovej membrány a vyvolanie zápalu", "aktivácia kaspázy 9"], key: "NNSN" },
+{ id: 55, text: "Ktorý typ bunkovej smrti je typicky spojený s tvorbou extracelulárnych pascí (NETs)?", answers: ["netóza", "pyroptóza", "anoikis", "ferroptóza"], key: "SNNN" }
+];
+
+
+const key = [
+  "SNSN", "NNSN", "SSNS", "SNNN", "SNNN",
+  "SSSS", "SNNS", "SNNN", "SNNS", "SNNN",
+  "SSSS", "NSSS", "SNSN", "SNNN", "NNSN",
+  "NSNS", "SNSN", "SSNN", "NSSN", "NSSN",
+  "SNSS", "SSSN", "SNNS", "SNNS", "SSNN",
+  "SSNS", "SNNN", "NSNN", "SNSN", "SNNS",
+  "SNNN", "SNSS", "SSNS", "SSNS", "SSNS",
+  "SSNS", "SSSN", "SSSN", "SSSN", "SSNN",
+  "SSNN", "SSSN", "SSSN", "SSSN", "SSNS",
+  "SNNN", "SNNN", "NSNN", "NNNS", "NSNN",
+  "SNNN", "SNNN", "SNNN", "NNSN", "SNNN"
+];
+
+
+/* ------------------ State ------------------ */
+let state = {
+  questions: [], // will hold questions with original index and randomized answers
+  filter: 'all', // 'all', 'wrong', 'favorites'
+  favorites: new Set(),
+  lastWrongSet: [], // store wrong questions for retry
+};
+
+/* Initialize questions with originalIndex and random answer order */
+function initQuestions(){
+  state.questions = questions.map((q,i)=>{
+    const originalIndex = i; // 0-based
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex, qtext: q.text, answers };
+  });
+  renderQuestions();
+}
+
+/* Utility shuffle */
+function shuffleArr(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/* Render current state.questions according to filter */
+function renderQuestions(){
+  const container = document.getElementById('quiz');
+  container.innerHTML = '';
+  let toRender = state.questions.slice();
+
+  // apply filter
+  if(state.filter === 'favorites'){
+    toRender = toRender.filter(item => state.favorites.has(item.originalIndex));
+  } else if(state.filter === 'wrong'){
+    toRender = toRender.filter(item => state.lastWrongSet.includes(item.originalIndex));
+  }
+
+  if(toRender.length === 0){
+    const info = document.createElement('div');
+    info.style.textAlign='center';
+    info.style.color='#555';
+    info.style.margin='18px';
+    info.textContent = 'Žiadne otázky na zobrazenie.';
+    container.appendChild(info);
+    document.getElementById('resultText').textContent = '';
+    return;
+  }
+
+  toRender.forEach((item, displayIdx)=>{
+    // build card
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.orig = item.originalIndex;
+
+    // header
+    const header = document.createElement('div');
+    header.className = 'q-header';
+
+    const num = document.createElement('div');
+    num.className = 'q-number';
+    num.textContent = (displayIdx+1)+'.';
+
+    const text = document.createElement('div');
+    text.className = 'q-text';
+    text.textContent = item.qtext;
+
+    const actions = document.createElement('div');
+    actions.className = 'q-actions';
+
+    // star favorite
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.title = 'Označiť ako obľúbené';
+    star.innerHTML = state.favorites.has(item.originalIndex) ? '★' : '☆';
+    if(state.favorites.has(item.originalIndex)) star.classList.add('active');
+    star.addEventListener('click', ()=>{
+      if(state.favorites.has(item.originalIndex)){
+        state.favorites.delete(item.originalIndex);
+        star.classList.remove('active');
+        star.innerHTML = '☆';
+      } else {
+        state.favorites.add(item.originalIndex);
+        star.classList.add('active');
+        star.innerHTML = '★';
+      }
+    });
+
+    // show correct button
+    const btnShow = document.createElement('button');
+    btnShow.className = 'btn-small btn-show';
+    btnShow.textContent = 'Zobraziť správne';
+    btnShow.addEventListener('click', ()=> showCorrectForCard(card, item.originalIndex));
+
+    actions.appendChild(star);
+    actions.appendChild(btnShow);
+
+    header.appendChild(num);
+    header.appendChild(text);
+    header.appendChild(actions);
+
+    card.appendChild(header);
+
+    // randomize answer order for display (store mapping)
+    const randomized = item.answers.slice();
+    // If answers not yet shuffled for this render, shuffle them each render
+    const shuffledAnswers = shuffleArr(randomized);
+    card._shuffled = shuffledAnswers.map(a=>a.idx); // store original idx order
+
+    // answers block
+    const answersDiv = document.createElement('div');
+    answersDiv.className = 'answers';
+
+    shuffledAnswers.forEach((ansObj, ansPos)=>{
+      const label = document.createElement('label');
+      label.className = 'ans';
+      label.dataset.origAnswerIdx = ansObj.idx; // 0..3 original index
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.name = `q_${item.originalIndex}`;
+      checkbox.value = ansObj.idx;
+      label.appendChild(checkbox);
+      const span = document.createElement('span');
+      span.textContent = ansObj.txt;
+      label.appendChild(span);
+      answersDiv.appendChild(label);
+    });
+
+    card.appendChild(answersDiv);
+
+    // optional meta area: show original question number
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const origLabel = document.createElement('div');
+    origLabel.textContent = `#${item.originalIndex+1}`;
+    meta.appendChild(origLabel);
+    card.appendChild(meta);
+
+    container.appendChild(card);
+  });
+
+  // clear previous result
+  document.getElementById('resultText').textContent = '';
+}
+
+/* show correct for one card */
+function showCorrectForCard(cardEl, origIndex){
+  const key = questions[origIndex].key; // string like 'SNNN'
+  const labels = [...cardEl.querySelectorAll('label.ans')];
+  // Determine which shuffled labels correspond to which original index
+  labels.forEach(label=>{
+    const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10); // 0..3
+    const isCorrect = key[origAnsIdx] === 'S';
+    const input = label.querySelector('input');
+    const checked = input.checked;
+    // Reset classes first
+    label.classList.remove('correct','incorrect');
+    if(isCorrect && checked) {
+      label.classList.add('correct');
+    } else if(isCorrect && !checked){
+      // correct but not selected -> mark blue (as requested)
+      label.classList.add('correct-unchecked'); // modrá
+    } else if(!isCorrect && checked){
+      // wrong selected -> red
+      label.classList.add('incorrect');
+    }
+    // else not correct and not selected -> keep default
+  });
+}
+
+/* show all correct answers globally */
+function showAllCorrect(){
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    showCorrectForCard(card, origIndex);
+  });
+}
+
+/* evaluate current shown questions */
+function evaluateAll(){
+  const cards = document.querySelectorAll('.card');
+  let correctCount = 0;
+  const wrongList = [];
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    const key = questions[origIndex].key; // e.g. 'SNNN'
+    const labels = [...card.querySelectorAll('label.ans')];
+    const selectedOrigIdx = labels.filter(lbl=> lbl.querySelector('input').checked ).map(lbl=> parseInt(lbl.dataset.origAnswerIdx,10));
+    // compute sets
+    const selSet = new Set(selectedOrigIdx);
+    const corrSet = new Set();
+    for(let i=0;i<4;i++) if(key[i]==='S') corrSet.add(i);
+    // Compare exact equality
+    let equal = (selSet.size === corrSet.size);
+    if(equal){
+      for(let v of selSet) if(!corrSet.has(v)){ equal=false; break; }
+    }
+    // mark colors for visual feedback
+    labels.forEach(label=>{
+      label.classList.remove('correct','incorrect');
+      const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10);
+      const isCorrect = key[origAnsIdx] === 'S';
+      const checked = label.querySelector('input').checked;
+      if(isCorrect && checked) label.classList.add('correct');
+      else if(isCorrect && !checked) label.classList.add('incorrect');
+      else if(!isCorrect && checked) label.classList.add('incorrect');
+    });
+
+    if(equal){
+      correctCount++;
+    } else {
+      wrongList.push(origIndex);
+    }
+  });
+
+  // store last wrong set for retry/filters
+  state.lastWrongSet = wrongList.slice();
+
+  // percent relative to number of displayed questions
+  const total = cards.length;
+  const percent = total === 0 ? 0 : ((correctCount/total)*100).toFixed(2);
+  document.getElementById('resultText').textContent = `Úspešnosť: ${percent}% (${correctCount}/${total} úplne správnych otázok)`;
+}
+
+/* Show only wrong questions (filter) */
+function showOnlyWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Nie sú uložené žiadne chybné otázky (vyhodnoť test najprv).');
+    return;
+  }
+  state.filter = 'wrong';
+  renderQuestions();
+}
+
+/* Reset test to initial state (all questions, clear selections, clear coloring) */
+function resetTest(){
+  // reinitialize questions to default order and answers order
+  state.filter = 'all';
+  state.lastWrongSet = [];
+  // restore original questions order (as in questions array)
+  state.questions = questions.map((q,i)=>{
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex:i, qtext:q.text, answers };
+  });
+  // clear favorites stays preserved
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Retry only wrong questions (renders only wrong set but allows answering them) */
+function retryWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Žiadne chybné otázky pre opakovanie. Najprv vyhodnoť test.');
+    return;
+  }
+  // Build state.questions to include only wrong ones, preserving originalIndex
+  state.questions = state.lastWrongSet.map(idx => {
+    const q = questions[idx];
+    const answers = q.answers.map((txt, ai)=>({txt, idx:ai}));
+    return { originalIndex: idx, qtext: q.text, answers };
+  });
+  state.filter = 'all';
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Show only favorites */
+function showFavoritesOnly(){
+  state.filter = 'favorites';
+  renderQuestions();
+}
+
+/* Show all questions (clear filters) */
+function showAllQuestions(){
+  state.filter = 'all';
+  // restore full set in original order
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Shuffle questions (random order) and shuffle answers within each question */
+function shuffleQuestions(){
+  // shuffle questions array
+  const arr = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  const shuffled = shuffleArr(arr);
+  state.questions = shuffled;
+  state.filter = 'all';
+  renderQuestions();
+}
+
+/* Show Favorites modal/list (simple behavior: filter to favorites) */
+function showFavoritesList(){
+  // if no favorites, inform
+  if(state.favorites.size === 0){
+    alert('Nemáš označené žiadne obľúbené otázky.');
+    return;
+  }
+  state.filter = 'favorites';
+  // prepare state.questions as full list so filter works
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Show only wrong (button at bottom) identical to showOnlyWrong function but filters current display */
+function showOnlyWrongButton(){
+  showOnlyWrong();
+}
+
+/* Attach event listeners */
+document.getElementById('btnShowAll').addEventListener('click', showAllCorrect);
+document.getElementById('btnShuffle').addEventListener('click', ()=>{ shuffleQuestions(); });
+document.getElementById('btnFavorites').addEventListener('click', showFavoritesList);
+document.getElementById('btnShowAllQ').addEventListener('click', showAllQuestions);
+document.getElementById('btnShowWrongOnly').addEventListener('click', ()=>{ state.filter = 'wrong'; renderQuestions(); });
+document.getElementById('btnShowFavOnly').addEventListener('click', showFavoritesOnly);
+document.getElementById('btnEvaluate').addEventListener('click', evaluateAll);
+document.getElementById('btnShowWrong').addEventListener('click', showOnlyWrongButton);
+document.getElementById('btnRetryWrong').addEventListener('click', retryWrong);
+document.getElementById('btnReset').addEventListener('click', resetTest);
+
+/* Initialize on load */
+initQuestions();
+</script>
+</body>
+</html>
