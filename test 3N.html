@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>3. Biomembrány, transport látok a medzibunková komunikácia. Receptory</title>
+<style>
+  :root{
+    --card-bg: #e9f5ff;
+    --accent: #007bff;
+    --good: #c8f7d0;
+    --bad: #ffd6d6;
+	--correct-unchecked: #c8f7d0;
+    --card-radius: 14px;
+  }
+  body{
+    margin:0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: #ffffff;
+    color:#111;
+    padding:30px 16px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{
+    width:100%;
+    max-width:1100px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  h1{
+    margin:0;
+    font-size:22px;
+  }
+  .top-controls{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  button{
+    background:var(--accent);
+    color:white;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  button.secondary{
+    background:#6c757d;
+  }
+  .center-controls{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:14px;
+  }
+  #quiz{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    align-items:center;
+  }
+  .card{
+    width:100%;
+    max-width:980px;
+    background:var(--card-bg);
+    border-radius:var(--card-radius);
+    padding:16px 18px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    display:block;
+    box-sizing:border-box;
+    position:relative;
+  }
+  .q-header{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .q-number{
+    font-weight:700;
+    min-width:34px;
+  }
+  .q-text{
+    font-weight:700;
+    flex:1;
+  }
+  .q-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .star{
+    font-size:20px;
+    cursor:pointer;
+    user-select:none;
+    color:rgba(0,0,0,0.25);
+  }
+  .star.active{ color: gold; text-shadow: 0 0 6px rgba(255,215,0,0.4); }
+  .answers{
+    margin-top:10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  label.ans{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    padding:8px;
+    border-radius:8px;
+  }
+  label.ans input{ transform:scale(1.05); }
+  .btn-small{
+    padding:6px 10px;
+    font-size:13px;
+    border-radius:8px;
+    background:#0b84ff;
+  }
+  .btn-show{
+    background:#0b84ff;
+    color:white;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+  }
+  .meta{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    font-size:13px;
+    margin-top:10px;
+    color:#333;
+  }
+  .result{
+    text-align:center;
+    margin-top:18px;
+    font-weight:700;
+    font-size:16px;
+  }
+  .controls-bottom{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .hidden{ display:none; }
+  /* coloring for showCorrect */
+  .correct { background: var(--good) !important; }
+  .incorrect { background: var(--bad) !important; }
+  .correct-unchecked { background: var(--correct-unchecked) !important; }
+  /* small responsive */
+  @media (max-width:640px){
+    body { padding:14px; }
+    .card{ padding:12px; }
+    .q-number{ min-width:28px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>3. Biomembrány, transport látok a medzibunková komunikácia. Receptory</h1>
+    <div class="top-controls">
+      <button id="btnFavorites">Obľúbené</button>
+      <button id="btnShuffle">Zamiešať otázky</button>
+      <button id="btnShowAll" title="Zobraziť všetky správne odpovede">Zobraziť všetky správne odpovede</button>
+    </div>
+  </header>
+
+  <div class="center-controls">
+    <span style="color:#555">Filtrovať zobrazenie:</span>
+    <button id="btnShowAllQ" class="secondary">Zobraziť všetky</button>
+    <button id="btnShowWrongOnly" class="secondary">Zobraziť len chybné</button>
+    <button id="btnShowFavOnly" class="secondary">Zobraziť len obľúbené</button>
+  </div>
+
+  <div id="quiz"></div>
+
+  <div class="controls-bottom">
+    <button id="btnEvaluate">Vyhodnotiť všetko</button>
+    <button id="btnShowWrong">Zobraziť len chybné otázky</button>
+    <button id="btnRetryWrong">Opakovať len chybné</button>
+    <button id="btnReset">Obnoviť test</button>
+  </div>
+
+  <div class="result" id="resultText"></div>
+</div>
+
+<script>
+const questions = [
+  { id: 1, text: "Ak majú periférne proteíny:", answers: ["záporný náboj, pripájajú sa na membránu priamo", "záporný náboj, pripájajú sa na membránu prostredníctvom Ca2+ iónov", "kladný náboj, pripájajú sa na membránu priamo", "kladný náboj, pripájajú sa na membránu prostredníctvom Ca2+ iónov"], key: "NSSN" },
+  { id: 2, text: "Aká je hlavná úloha receptorov v bunkách?", answers: ["prenášať signály z vonkajšieho prostredia do bunky", "regulovať hladinu ATP v bunke", "ovládať pohyb buniek", "umožniť syntézu proteínov"], key: "SNNN" },
+  { id: 3, text: "Aké látky/molekuly sú transportované vezikulárnym transportom?", answers: ["veľké častice – napr. fragmenty organel", "makromolekuly", "tekutiny", "všetko vyššie spomenuté"], key: "SSSS" },
+  { id: 4, text: "Aké sú vlastnosti bunkovej membrány?", answers: ["ochrana", "polopriepustnosť", "semipermeabilita", "oddeľuje bunku od okolia"], key: "SSSS" },
+  { id: 5, text: "Ako sa nazýva jav praskania červených krviniek?", answers: ["hemoptýza, prebieha v hypertonickom prostredí", "hemolýza, prebieha v izoosmotickom prostredí", "hemolýza, prebieha v hypotonickom prostredí", "plazmolýza, prebieha v hypertonickom prostredí"], key: "NNSN" },
+  { id: 6, text: "Ako sa nazýva prostredie, keď je osmotická hodnota prostredia menšia ako osmotická hodnotou bunky?", answers: ["hypetronické", "hypotonické", "izoosmotické", "izotonické"], key: "NSNN" },
+  { id: 7, text: "Ako sa nazýva prostredie, keď je osmotická hodnota prostredia väčšia ako osmotická hodnotou bunky?", answers: ["hypertonické", "hyperosmotické", "izotonické", "hypotonické"], key: "SSNN" },
+  { id: 8, text: "Ako sa nazýva prostredie, keď sa osmotická hodnota prostredia zhoduje s osmotickou hodnotou bunky?", answers: ["izotonické", "izoosmotické", "hypetronické", "hypotonické"], key: "SSNN" },
+  { id: 9, text: "Ako sa nazýva schopnosť bunky pohlcovať mikroorganizmy?", answers: ["difúzia", "fagocytóza", "osmóza", "pinocytóza"], key: "NSNN" },
+  { id: 10, text: "Ako sa nazýva všeobecný mechanizmus výdaja látok z buniek?", answers: ["pinocytóza", "difúzia", "osmóza", "exocytóza"], key: "NNNS" },
+  { id: 11, text: "Aktívny transport je:", answers: ["difúzia a osmóza", "prenos látok proti ich koncentračnému gradientu", "prenos látky, na ktorý je potrebná energia", "plazmolýza a cytolýza"], key: "NSSN" },
+  { id: 12, text: "Biologická membrána je:", answers: ["zložená z fosfolipidov a bielkovín", "základom membránových organel, napr. mitochondrií a chloroplastov", "súčasťou bunkovej steny", "základom membránových organel, napr. ribozómov"], key: "SSNN" },
+  { id: 13, text: "Biologická membrána:", answers: ["sa nachádza len v eukaryotických bunkách", "je zložená z bimolekulového filmu fosfolipidov a z bielkovín", "v živočíšnych bunkách neobsahuje cholesterol", "plní rôzne funkcie, napr. príjem látok, vzájomné interakcie, rozpoznávanie signálov, atď."], key: "NSNS" },
+  { id: 14, text: "Biologické membrány obsahujú:", answers: ["fosfolipidy", "cholesterol", "periférne a integrálne proteíny", "polárne lipidy"], key: "SSSS" },
+  { id: 15, text: "Medzi bunkové spojenia patrí:", answers: ["macula occludens", "dezmozóm", "G proteíny", "zonula adhaerrens"], key: "NSNS" },
+  { id: 16, text: "Bunkové spojenia sú:", answers: ["cornea occludens", "dezmatozóm", "G proteíny", "zonula adhaerrens a dezmozóm"], key: "NNNS" },
+  { id: 17, text: "Ako sa nazývajú proteíny, ktoré sú vnorené do fosfolipidovej dvojvrstvy alebo ju úplne prestupujú?", answers: ["periférne proteíny", "integrálne proteíny", "glykoproteíny", "lipidové rafty"], key: "NSNN" },
+  { id: 18, text: "Čo je to osmotická lýza bunky?", answers: ["jav keď bunka príjmom vody zväčšuje svoj objem až praská", "jav, ktorý nastane po umiestnení živočíšnej bunky v hypotonickom prostredí", "jav keď bunka príjmom vody zmenšuje objem", "jav keď bunka príjmom vody nezmení svoj objem"], key: "SSNN" },
+  { id: 19, text: "Facilitovaná difúzia:", answers: ["je transport látok sprostredkovaný lipidovými kvapôčkami", "je najčastejšia forma transportu látok do jadierka", "prebieha bez spotreby energie v smere koncentračného gradientu", "spotrebováva energiu vo forme ATP"], key: "NNSN" },
+  { id: 20, text: "Facilitovaná difúzia:", answers: ["je transport látok sprostredkovaný bielkovinami plazmatickej membrány", "prebieha bez spotreby energie", "prebieha v smere koncentračného gradientu", "prebieha tak, že látka sa naviaže na transportný proteín na povrchu bunky, ten zmení svoju konformáciu a látka sa uvoľní do cytoplazmy"], key: "SSSS" },
+  { id: 21, text: "K typom látkovej komunikácie patria:", answers: ["endokrinná", "parakrinná", "motokrinná", "autokrinná"], key: "SSNS" },
+  { id: 22, text: "Ktoré deje patria medzi endocytózu:", answers: ["difúzia", "pinocytóza", "fagocytóza", "osmóza"], key: "NSSN" },
+  { id: 23, text: "Ktoré látky môžu vstupovať do buniek voľnou difúziou:", answers: ["plyny", "močovina", "etanol", "kyslík"], key: "SSSS" },
+  { id: 24, text: "Ktorý typ receptora je zodpovedný za sprostredkovanie účinkov inzulínu?", answers: ["tyrozínkinázový receptor", "jadrový receptor", "iónový kanál", "receptor spriahnutý s G proteínmi"], key: "SNNN" },
+  { id: 25, text: "Ktorý z nasledujúcich mechanizmov je najviac typický pre receptory spojené s tyrozínkinázou?", answers: ["zmena priepustnosti iónov cez membránu", "dimerizácia receptoru", "aktivácia cyklického AMP (cAMP)", "aktivácia kinázy cAMP"], key: "NSNN" },
+  { id: 26, text: "Membránové receptory rozdeľujeme na:", answers: ["receptory, ktoré sú súčasťou iónových kanálov", "mechanoreceptory", "receptory spriahnuté s G proteínmi", "receptory s enzýmovou aktivitou"], key: "SNSS" },
+  { id: 27, text: "Na čo využíva bunka osmotickú energiu?", answers: ["na prenos látok cez bunkové membrány", "na prenos látok pri proteosyntéze", "na prenos látok pri fotosyntéze", "na prenos osmoticky aktívnych látok"], key: "SNNS" },
+  { id: 28, text: "O polarite povrchu biologickej membrány sú pravdivé tvrdenia:", answers: ["biologická membrána je nepolárna", "biologická membrána je polárna", "na povrchu membrány je záporný náboj", "na povrchu membrány je kladný náboj"], key: "NSSN" },
+  { id: 29, text: "Osmóza je proces, pri ktorom voda prechádza cez cytoplazmatickú membránu z prostredia:", answers: ["s nižšou koncentráciou do prostredia s vyššou koncentráciu", "s vyššou koncentráciou do prostredia s nižšou koncentráciou", "z hypotonického do hypertonického prostredia", "z hypertonického do hypotonického prostredia"], key: "SNSN" },
+  { id: 30, text: "Presun molekúl proti koncentračnému gradientu:", answers: ["vyžaduje energiu, napr. vo forme ATP", "je aktívny transport", "prebieha kým sa nevyrovná koncentrácia na obidvoch stranách membrány", "je pasívny transport"], key: "SSNN" },
+  { id: 31, text: "Receptory spriahnuté s G proteínmi:", answers: ["sa nenachádzajú v cytoplazmatickej membráne eukaryotických buniek", "sú zložené z polynukleotidových reťazcov, ktoré prechádzajú membránou", "nemajú extracelulárnu doménu", "predstavujú najpočetnejšiu skupinu membránových receptorov"], key: "NNNS" },
+  { id: 32, text: "Úloha cholesterolu v biologickej membráne je:", answers: ["je to významný receptor", "zvyšuje jej pružnosť", "spevňuje ju", "dáva jej kladný náboj"], key: "NNSN" },
+  { id: 33, text: "Z čoho sa skladajú biomembrány?", answers: ["dvoch vrstiev molekúl fosfolipidov a molekúl bielkovín", "dvoch vrstiev molekúl fosfolipidov a RNA", "fosfolipidovej dvojvrstvy", "z jednej vrstvy fosfolipidov"], key: "SNSN" },
+  { id: 34, text: "Základné zložky cytoplazmatickej membrány sú:", answers: ["fosfolipidy, cholesterol, proteíny, glykolipidy", "vápnik, cholesterol, cerebrozidy, gangliozidy", "hormóny, proteíny, ATP, fosfolipidy", "peptidoglykány, chitín, celulóza, glykoproteíny"], key: "SNNN" },
+  { id: 35, text: "Ktorá časť membránového receptora sprostredkuje odpoveď bunky?", answers: ["extracelulárna doména", "intracelulárna doména", "transmembránová časť", "lipidová dvojvrstva"], key: "NSNN" },
+  { id: 36, text: "Aká je typická funkcia receptorov tvoriacich iónové kanály?", answers: ["fosforylácia proteínov", "zmena priepustnosti iónov cez membránu", "aktivácia G proteínov", "spustenie apoptózy"], key: "NSNN" },
+  { id: 37, text: "Ktoré tvrdenie o receptoroch s enzýmovou aktivitou je správne?", answers: ["obsahujú 7 transmembránových helixov", "najčastejšie katalyzujú fosforyláciu", "aktivujú sa väzbou GTP", "sú typickými receptormi pre neurotransmitery GABA a glycín"], key: "NSNN" },
+  { id: 38, text: "Ktorý z uvedených receptorov je príkladom iónového kanálového receptora?", answers: ["inzulínový receptor", "nikotínový acetylcholínový receptor", "β–adrenergný receptor", "receptor pre epidermálny rastový faktor (EGFR)"], key: "NSNN" },
+  { id: 39, text: "Akú hlavnú úlohu zohrávajú druhí poslovia v bunkovej signalizácii?", answers: ["prenášajú signál z extracelulárneho prostredia priamo na DNA", "zosilňujú a sprostredkujú signál medzi receptorom a intracelulárnymi efektormi", "slúžia ako receptory pre neurotransmitery", "tvoria primárnu väzbovú doménu membránových receptorov"], key: "NSNN" },
+  { id: 40, text: "Aký význam majú lipidové rafty v bunkovej signalizácii a imunitných procesoch?", answers: ["slúžia ako sklad cholesterolu a mastných kyselín", "zabezpečujú degradáciu poškodených proteínov v membráne", "koncentrujú receptory a signálne molekuly, čím umožňujú efektívnejšiu aktiváciu signálnych dráh (napr. pri imunitnej odpovedi)", "znižujú fluiditu membrány a tým bránia prenosu signálov"], key: "NNSN" },
+  { id: 41, text: "Kde sa nachádzajú glykolipidy v biomembráne a aká je ich hlavná funkcia?", answers: ["na cytoplazmatickej strane; katalýza biochemických reakcií", "v jadrovej membráne; regulácia transkripcie", "na extracelulárnej strane; rozpoznávanie buniek a antigénne determinanty", "v mitochondriách; prenos elektrónov"], key: "NNSN" },
+  { id: 42, text: "Čo platí o type a počte membránových proteínov?", answers: ["sú vždy rovnaké vo všetkých bunkách", "menia sa len počas apoptózy", "sú variabilné a závisia od diferenciácie a fázy bunkového cyklu", "závisia len od množstva cholesterolu v membráne"], key: "NNSN" },
+  { id: 43, text: "Aký je význam komunikácie cez medzibunkové spojenia (gap junctions alebo plazmodezmy)?", answers: ["prenos hormónov na veľké vzdialenosti", "aktivácia génovej expresie v jadre", "priamy prenos iónov a malých molekúl medzi susednými bunkami", "zamedzenie akejkoľvek výmeny medzi bunkami"], key: "NNSN" },
+  { id: 44, text: "Aký je hlavný mechanizmus, ktorým receptory sprostredkujú bunkovú odpoveď?", answers: ["oxidácia mastných kyselín", "aktivácia alebo inaktivácia proteínov fosforyláciou", "tvorba DNA v jadre", "pasívna difúzia vody"], key: "NSNN" },
+  { id: 45, text: "Ktorý enzým katalyzuje prenos fosfátovej skupiny z ATP na proteín?", answers: ["fosfatáza", "proteínkináza", "DNA–polymeráza", "telomeráza"], key: "NSNN" },
+  { id: 46, text: "Ktoré bunkové spojenia zabezpečujú najsilnejšie mechanické ukotvenie medzi bunkami?", answers: ["gap junctions", "dezmozómy (macula adhaerens)", "zonula occludens", "zonula adhaerens"], key: "NSNN" },
+  { id: 47, text: "Ktoré typy komunikácie patria medzi látkovú (humorálnu) signalizáciu?", answers: ["endokrinná", "parakrinná", "synaptická", "autokrinná"], key: "SSNS" },
+  { id: 48, text: "Ktorý typ receptorov má 7 transmembránových helixov a využíva druhých poslov?", answers: ["receptory s enzýmovou aktivitou", "receptory tvoriace iónové kanály", "receptory spriahnuté s G proteínmi", "receptory pre antigény"], key: "NNSN" },
+  { id: 49, text: "Čo je typickou funkciou receptorov s enzýmovou aktivitou?", answers: ["katalyzovanie fosforylačných reakcií", "otváranie iónových kanálov", "viazanie protilátok", "transport glukózy"], key: "SNNN" },
+  { id: 50, text: "Ktorý príklad patrí medzi receptory tvoriace iónové kanály?", answers: ["nikotínový acetylcholínový receptor", "inzulínový receptor", "receptor pre rastový faktor EGF", "receptor spriahnutý s G proteínom"], key: "SNNN" },
+  { id: 51, text: "Ktoré bunkové spojenie umožňuje priamy prenos malých molekúl medzi susednými bunkami?", answers: ["dezmozómy", "zonula occludens", "gap junctions", "zonula adhaerens"], key: "NNSN" },
+  { id: 52, text: "Ktoré tri časti obsahuje typický membránový receptor?", answers: ["extracelulárna doména, transmembránová časť, intracelulárna doména", "ribozómová jednotka, cytoskelet, fosfolipid", "DNA jadra, nukleozóm, histón", "cytoplazma, jadro, mitochondria"], key: "SNNN" },
+  { id: 53, text: "Čo sa stane po naviazaní ligandu na receptor?", answers: ["receptor sa degraduje okamžite", "dôjde k zmene konformácie proteínu a spusteniu signálnej kaskády", "DNA sa okamžite replikuje", "receptor sa transportuje do jadra"], key: "NSNN" },
+  { id: 54, text: "Aká je funkcia extracelulárnej domény receptora?", answers: ["viaže ligand", "sprostredkuje fosforyláciu", "ukotvuje receptor v lipidovej dvojvrstve", "prenáša signál do jadra"], key: "SNNN" },
+  { id: 55, text: "Aká je funkcia intracelulárnej domény receptora?", answers: ["viaže ligand", "ukotvuje receptor v membráne", "sprostredkuje bunkovú odpoveď", "produkuje ATP"], key: "NNSN" }
+];
+
+
+
+const key = [
+"SNSN","NNSN","NSSS","SNSS","NSNS","NSSS","SNSS","SSNS","NSSN","NSNS",
+"SSSS","SSNN","NSNN","NNNS","NNSN","SNSN","SNSS","NNNS","SSSN","NSNN",
+"SSSS","NSSN","NSNN","NNSS","NSSN","NSNN","NSSN","SNNN","SSSN","SNNN",
+"NNSN","SNNS","SNSS","SSSN","NNSN","SNSN","SSNN","SNSN","NNSS","SNNN",
+"SNNS","NNSS","SSNN","SNSS","NSSS","NSSN","NSNN","NSSN","SSSS","SNSN",
+"SNSS","SNSN","SNSS","NNSN","NSSN","NSSN","NNSS","NSSN","SSNN","SSNN"
+];
+
+
+
+/* ------------------ State ------------------ */
+let state = {
+  questions: [], // will hold questions with original index and randomized answers
+  filter: 'all', // 'all', 'wrong', 'favorites'
+  favorites: new Set(),
+  lastWrongSet: [], // store wrong questions for retry
+};
+
+/* Initialize questions with originalIndex and random answer order */
+function initQuestions(){
+  state.questions = questions.map((q,i)=>{
+    const originalIndex = i; // 0-based
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex, qtext: q.text, answers };
+  });
+  renderQuestions();
+}
+
+/* Utility shuffle */
+function shuffleArr(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/* Render current state.questions according to filter */
+function renderQuestions(){
+  const container = document.getElementById('quiz');
+  container.innerHTML = '';
+  let toRender = state.questions.slice();
+
+  // apply filter
+  if(state.filter === 'favorites'){
+    toRender = toRender.filter(item => state.favorites.has(item.originalIndex));
+  } else if(state.filter === 'wrong'){
+    toRender = toRender.filter(item => state.lastWrongSet.includes(item.originalIndex));
+  }
+
+  if(toRender.length === 0){
+    const info = document.createElement('div');
+    info.style.textAlign='center';
+    info.style.color='#555';
+    info.style.margin='18px';
+    info.textContent = 'Žiadne otázky na zobrazenie.';
+    container.appendChild(info);
+    document.getElementById('resultText').textContent = '';
+    return;
+  }
+
+  toRender.forEach((item, displayIdx)=>{
+    // build card
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.orig = item.originalIndex;
+
+    // header
+    const header = document.createElement('div');
+    header.className = 'q-header';
+
+    const num = document.createElement('div');
+    num.className = 'q-number';
+    num.textContent = (displayIdx+1)+'.';
+
+    const text = document.createElement('div');
+    text.className = 'q-text';
+    text.textContent = item.qtext;
+
+    const actions = document.createElement('div');
+    actions.className = 'q-actions';
+
+    // star favorite
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.title = 'Označiť ako obľúbené';
+    star.innerHTML = state.favorites.has(item.originalIndex) ? '★' : '☆';
+    if(state.favorites.has(item.originalIndex)) star.classList.add('active');
+    star.addEventListener('click', ()=>{
+      if(state.favorites.has(item.originalIndex)){
+        state.favorites.delete(item.originalIndex);
+        star.classList.remove('active');
+        star.innerHTML = '☆';
+      } else {
+        state.favorites.add(item.originalIndex);
+        star.classList.add('active');
+        star.innerHTML = '★';
+      }
+    });
+
+    // show correct button
+    const btnShow = document.createElement('button');
+    btnShow.className = 'btn-small btn-show';
+    btnShow.textContent = 'Zobraziť správne';
+    btnShow.addEventListener('click', ()=> showCorrectForCard(card, item.originalIndex));
+
+    actions.appendChild(star);
+    actions.appendChild(btnShow);
+
+    header.appendChild(num);
+    header.appendChild(text);
+    header.appendChild(actions);
+
+    card.appendChild(header);
+
+    // randomize answer order for display (store mapping)
+    const randomized = item.answers.slice();
+    // If answers not yet shuffled for this render, shuffle them each render
+    const shuffledAnswers = shuffleArr(randomized);
+    card._shuffled = shuffledAnswers.map(a=>a.idx); // store original idx order
+
+    // answers block
+    const answersDiv = document.createElement('div');
+    answersDiv.className = 'answers';
+
+    shuffledAnswers.forEach((ansObj, ansPos)=>{
+      const label = document.createElement('label');
+      label.className = 'ans';
+      label.dataset.origAnswerIdx = ansObj.idx; // 0..3 original index
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.name = `q_${item.originalIndex}`;
+      checkbox.value = ansObj.idx;
+      label.appendChild(checkbox);
+      const span = document.createElement('span');
+      span.textContent = ansObj.txt;
+      label.appendChild(span);
+      answersDiv.appendChild(label);
+    });
+
+    card.appendChild(answersDiv);
+
+    // optional meta area: show original question number
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const origLabel = document.createElement('div');
+    origLabel.textContent = `#${item.originalIndex+1}`;
+    meta.appendChild(origLabel);
+    card.appendChild(meta);
+
+    container.appendChild(card);
+  });
+
+  // clear previous result
+  document.getElementById('resultText').textContent = '';
+}
+
+/* show correct for one card */
+function showCorrectForCard(cardEl, origIndex){
+  const key = questions[origIndex].key; // string like 'SNNN'
+  const labels = [...cardEl.querySelectorAll('label.ans')];
+  // Determine which shuffled labels correspond to which original index
+  labels.forEach(label=>{
+    const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10); // 0..3
+    const isCorrect = key[origAnsIdx] === 'S';
+    const input = label.querySelector('input');
+    const checked = input.checked;
+    // Reset classes first
+    label.classList.remove('correct','incorrect');
+    if(isCorrect && checked) {
+      label.classList.add('correct');
+    } else if(isCorrect && !checked){
+      // correct but not selected -> mark blue (as requested)
+      label.classList.add('correct-unchecked'); // modrá
+    } else if(!isCorrect && checked){
+      // wrong selected -> red
+      label.classList.add('incorrect');
+    }
+    // else not correct and not selected -> keep default
+  });
+}
+
+/* show all correct answers globally */
+function showAllCorrect(){
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    showCorrectForCard(card, origIndex);
+  });
+}
+
+/* evaluate current shown questions */
+function evaluateAll(){
+  const cards = document.querySelectorAll('.card');
+  let correctCount = 0;
+  const wrongList = [];
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    const key = questions[origIndex].key; // e.g. 'SNNN'
+    const labels = [...card.querySelectorAll('label.ans')];
+    const selectedOrigIdx = labels.filter(lbl=> lbl.querySelector('input').checked ).map(lbl=> parseInt(lbl.dataset.origAnswerIdx,10));
+    // compute sets
+    const selSet = new Set(selectedOrigIdx);
+    const corrSet = new Set();
+    for(let i=0;i<4;i++) if(key[i]==='S') corrSet.add(i);
+    // Compare exact equality
+    let equal = (selSet.size === corrSet.size);
+    if(equal){
+      for(let v of selSet) if(!corrSet.has(v)){ equal=false; break; }
+    }
+    // mark colors for visual feedback
+    labels.forEach(label=>{
+      label.classList.remove('correct','incorrect');
+      const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10);
+      const isCorrect = key[origAnsIdx] === 'S';
+      const checked = label.querySelector('input').checked;
+      if(isCorrect && checked) label.classList.add('correct');
+      else if(isCorrect && !checked) label.classList.add('incorrect');
+      else if(!isCorrect && checked) label.classList.add('incorrect');
+    });
+
+    if(equal){
+      correctCount++;
+    } else {
+      wrongList.push(origIndex);
+    }
+  });
+
+  // store last wrong set for retry/filters
+  state.lastWrongSet = wrongList.slice();
+
+  // percent relative to number of displayed questions
+  const total = cards.length;
+  const percent = total === 0 ? 0 : ((correctCount/total)*100).toFixed(2);
+  document.getElementById('resultText').textContent = `Úspešnosť: ${percent}% (${correctCount}/${total} úplne správnych otázok)`;
+}
+
+/* Show only wrong questions (filter) */
+function showOnlyWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Nie sú uložené žiadne chybné otázky (vyhodnoť test najprv).');
+    return;
+  }
+  state.filter = 'wrong';
+  renderQuestions();
+}
+
+/* Reset test to initial state (all questions, clear selections, clear coloring) */
+function resetTest(){
+  // reinitialize questions to default order and answers order
+  state.filter = 'all';
+  state.lastWrongSet = [];
+  // restore original questions order (as in questions array)
+  state.questions = questions.map((q,i)=>{
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex:i, qtext:q.text, answers };
+  });
+  // clear favorites stays preserved
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Retry only wrong questions (renders only wrong set but allows answering them) */
+function retryWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Žiadne chybné otázky pre opakovanie. Najprv vyhodnoť test.');
+    return;
+  }
+  // Build state.questions to include only wrong ones, preserving originalIndex
+  state.questions = state.lastWrongSet.map(idx => {
+    const q = questions[idx];
+    const answers = q.answers.map((txt, ai)=>({txt, idx:ai}));
+    return { originalIndex: idx, qtext: q.text, answers };
+  });
+  state.filter = 'all';
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Show only favorites */
+function showFavoritesOnly(){
+  state.filter = 'favorites';
+  renderQuestions();
+}
+
+/* Show all questions (clear filters) */
+function showAllQuestions(){
+  state.filter = 'all';
+  // restore full set in original order
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Shuffle questions (random order) and shuffle answers within each question */
+function shuffleQuestions(){
+  // shuffle questions array
+  const arr = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  const shuffled = shuffleArr(arr);
+  state.questions = shuffled;
+  state.filter = 'all';
+  renderQuestions();
+}
+
+/* Show Favorites modal/list (simple behavior: filter to favorites) */
+function showFavoritesList(){
+  // if no favorites, inform
+  if(state.favorites.size === 0){
+    alert('Nemáš označené žiadne obľúbené otázky.');
+    return;
+  }
+  state.filter = 'favorites';
+  // prepare state.questions as full list so filter works
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Show only wrong (button at bottom) identical to showOnlyWrong function but filters current display */
+function showOnlyWrongButton(){
+  showOnlyWrong();
+}
+
+/* Attach event listeners */
+document.getElementById('btnShowAll').addEventListener('click', showAllCorrect);
+document.getElementById('btnShuffle').addEventListener('click', ()=>{ shuffleQuestions(); });
+document.getElementById('btnFavorites').addEventListener('click', showFavoritesList);
+document.getElementById('btnShowAllQ').addEventListener('click', showAllQuestions);
+document.getElementById('btnShowWrongOnly').addEventListener('click', ()=>{ state.filter = 'wrong'; renderQuestions(); });
+document.getElementById('btnShowFavOnly').addEventListener('click', showFavoritesOnly);
+document.getElementById('btnEvaluate').addEventListener('click', evaluateAll);
+document.getElementById('btnShowWrong').addEventListener('click', showOnlyWrongButton);
+document.getElementById('btnRetryWrong').addEventListener('click', retryWrong);
+document.getElementById('btnReset').addEventListener('click', resetTest);
+
+/* Initialize on load */
+initQuestions();
+</script>
+</body>
+</html>

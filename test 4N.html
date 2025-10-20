@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>4. Organely eukaryotickej bunky</title>
+<style>
+  :root{
+    --card-bg: #e9f5ff;
+    --accent: #007bff;
+    --good: #c8f7d0;
+    --bad: #ffd6d6;
+	--correct-unchecked: #c8f7d0;
+    --card-radius: 14px;
+  }
+  body{
+    margin:0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: #ffffff;
+    color:#111;
+    padding:30px 16px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{
+    width:100%;
+    max-width:1100px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  h1{
+    margin:0;
+    font-size:22px;
+  }
+  .top-controls{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  button{
+    background:var(--accent);
+    color:white;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  button.secondary{
+    background:#6c757d;
+  }
+  .center-controls{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:14px;
+  }
+  #quiz{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    align-items:center;
+  }
+  .card{
+    width:100%;
+    max-width:980px;
+    background:var(--card-bg);
+    border-radius:var(--card-radius);
+    padding:16px 18px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    display:block;
+    box-sizing:border-box;
+    position:relative;
+  }
+  .q-header{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .q-number{
+    font-weight:700;
+    min-width:34px;
+  }
+  .q-text{
+    font-weight:700;
+    flex:1;
+  }
+  .q-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .star{
+    font-size:20px;
+    cursor:pointer;
+    user-select:none;
+    color:rgba(0,0,0,0.25);
+  }
+  .star.active{ color: gold; text-shadow: 0 0 6px rgba(255,215,0,0.4); }
+  .answers{
+    margin-top:10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  label.ans{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    padding:8px;
+    border-radius:8px;
+  }
+  label.ans input{ transform:scale(1.05); }
+  .btn-small{
+    padding:6px 10px;
+    font-size:13px;
+    border-radius:8px;
+    background:#0b84ff;
+  }
+  .btn-show{
+    background:#0b84ff;
+    color:white;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+  }
+  .meta{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    font-size:13px;
+    margin-top:10px;
+    color:#333;
+  }
+  .result{
+    text-align:center;
+    margin-top:18px;
+    font-weight:700;
+    font-size:16px;
+  }
+  .controls-bottom{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .hidden{ display:none; }
+  /* coloring for showCorrect */
+  .correct { background: var(--good) !important; }
+  .incorrect { background: var(--bad) !important; }
+  .correct-unchecked { background: var(--correct-unchecked) !important; }
+  /* small responsive */
+  @media (max-width:640px){
+    body { padding:14px; }
+    .card{ padding:12px; }
+    .q-number{ min-width:28px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>4. Organely eukaryotickej bunky</h1>
+    <div class="top-controls">
+      <button id="btnFavorites">Obľúbené</button>
+      <button id="btnShuffle">Zamiešať otázky</button>
+      <button id="btnShowAll" title="Zobraziť všetky správne odpovede">Zobraziť všetky správne odpovede</button>
+    </div>
+  </header>
+
+  <div class="center-controls">
+    <span style="color:#555">Filtrovať zobrazenie:</span>
+    <button id="btnShowAllQ" class="secondary">Zobraziť všetky</button>
+    <button id="btnShowWrongOnly" class="secondary">Zobraziť len chybné</button>
+    <button id="btnShowFavOnly" class="secondary">Zobraziť len obľúbené</button>
+  </div>
+
+  <div id="quiz"></div>
+
+  <div class="controls-bottom">
+    <button id="btnEvaluate">Vyhodnotiť všetko</button>
+    <button id="btnShowWrong">Zobraziť len chybné otázky</button>
+    <button id="btnRetryWrong">Opakovať len chybné</button>
+    <button id="btnReset">Obnoviť test</button>
+  </div>
+
+  <div class="result" id="resultText"></div>
+</div>
+
+<script>
+const questions = [
+  { id: 1, text: "Aké organely sú typické pre všetky eukaryotické bunky?", answers: ["cytoskelet zložený z aktínových, tubulínových a intermediárnych filamentov", "pravé jadro, ktoré nie je ohraničené membránou", "endomembránový systém", "glykokalyx"], key: "SNSN" },
+  { id: 2, text: "Aké organely a štruktúry obsahujú všetky prokaryotické aj eukaryotické bunky?", answers: ["mitochondrie, pravé jadro, ribozómy, cytoplazmu", "ribozómy, cytoplazmu, cytoplazmatickú membránu, glykokalyx", "ribozómy, cytoplazmu, cytoplazmatickú membránu, DNA", "pravé jadro, ribozómy, DNA, lyzozómy"], key: "NNSN" },
+  { id: 3, text: "Aké sú hlavné úlohy cytoskeletu v bunke?", answers: ["je to vonkajšia kostra buniek", "umožňuje pohyb niektorých baktérií", "zohráva úlohu pri bunkovom delení", "umožňuje efektívny transport molekúl v bunkách"], key: "NSSS" },
+  { id: 4, text: "Bunkové jadro:", answers: ["je koordinačným a riadiacim centrom bunky", "prokaryotických buniek je zložené z jadrovej membrány, jadrovej matrix a chromatínu", "obsahuje genetickú informáciu", "je obalené dvojitou jadrovou membránou"], key: "SNSS" },
+  { id: 5, text: "Cielená likvidácia vybraných proteínov sa uskutočňuje:", answers: ["v peroxizómoch", "v proteazómoch", "disjunkciou", "ubikvitináciou"], key: "NSNS" },
+  { id: 6, text: "Cytoplazma:", answers: ["je vonkajším prostredím bunky", "je schopná sa meniť zo sólu na gél a naopak", "je polotekutá", "bielkoviny a ich hydratačný plášť najviac ovplyvňujú jej viskozitu"], key: "NSSS" },
+  { id: 7, text: "Čo je to nukleoid?", answers: ["jadro prokaryotickej bunky", "jadro eukaryotickej bunky", "jadro bakteriálnej bunky", "kruhová molekula DNA"], key: "SNSS" },
+  { id: 8, text: "Čo patrí medzi syntetické centrá bunky?", answers: ["endoplazmatické retikulum", "jadro", "lyzozóm", "Golgiho aparát"], key: "SSNS" },
+  { id: 9, text: "Čo tvorí jadro prokaryotickej bunky?", answers: ["dve cirkulárne molekuly dvojvláknovej DNA", "jedna cirkulárna molekula dvojvláknovej DNA", "nukleoid", "jadierko"], key: "NSSN" },
+  { id: 10, text: "Jadierko:", answers: ["je súčasťou prokaryotickej bunky", "je súčasťou eukaryotickej bunky", "je miestom syntézy tRNA", "nachádzajú sa v ňom molekuly DNA, RNA a proteínov"], key: "NSNS" },
+  { id: 11, text: "Jadro eukaryotickej bunky:", answers: ["je koordinačným a riadiacim centrom bunky", "obsahuje genetickú informáciu", "môže obsahovať jedno alebo viac jadierok", "sa skladá z jadrovej membrány, jadrovej matrix a chromatínu"], key: "SSSS" },
+  { id: 12, text: "Jadro eukaryotickej bunky:", answers: ["je koordinačným a riadiacim centrom bunky", "obsahuje jadrové póry", "nemôže mať viac ako jedno jadierko", "sa skladá z jadrovej membrány, matrix a jadrového chromozómu"], key: "SSNN" },
+  { id: 13, text: "Jadro:", answers: ["v prokaryotoch obsahuje DNA zbalenú do nukleotidov pomocou histónov", "u eukaryotov, prechádza cyklickými zmenami počas bunkového cyklu", "dochádza v ňom k translácii a tvorbe polypeptidov", "neobsahuje RNA"], key: "NSNN" },
+  { id: 14, text: "Kde sú v bunke často lokalizované mitochondrie?", answers: ["hneď pod cytoplazmatickou membránou", "vždy na apikálnej strane buniek", "v jadre", "v mieste, kde je najvyššia spotreba energie"], key: "NNNS" },
+  { id: 15, text: "Ktoré organely živočíšnych buniek sú od okolitého prostredia vyčlenené dvojitou membránou:", answers: ["mitochondrie a jadierko", "mitochondrie a chloroplasty", "mitochondrie a jadro", "mitochondrie a endoplazmatické retikulum"], key: "NNSN" },
+  { id: 16, text: "Ktoré tvrdenia o centrozóme sú správne?", answers: ["centrozóm sa skladá z dvoch na seba kolmých centriolov, pričom každý tvorí deväť trojíc tubulínových vlákien", "kinetochorové mikrofilamenty sa viažu na centroméru chromozómov a umožňujú ich pohyb v mitóze", "nekinetochorové mikrotubuly sa podieľajú na posúvaní centrozómov na póly bunky", "centrozóm sa počas interfázy nachádza vždy v jadre bunky"], key: "SNSN" },
+  { id: 17, text: "Ktoré tvrdenia o cytoskelete eukaryotickej bunky sú správne?", answers: ["mikrotubuly sa podieľajú na transporte mechúrikov a tvorbe deliaceho vretienka", "mikrofilamenty sú tvorené tubulínom a zabezpečujú pohyb chromozómov", "intermediárne filamenty poskytujú bunke odolnosť voči ťahu a tlaku", "kinetochor je bielkovinový komplex, ktorý sa počas delenia pripája na centroméru chromozómov"], key: "SNSS" },
+  { id: 18, text: "Ktoré tvrdenie o mitochondriách je pravdivé?", answers: ["80S ribozómy sú poskladané v cytoplazme a následne sú trasnportované do mitochondrií", "mitochondrie majú vlastnú genetickú informáciu, ale tá nie je exprimovaná, je to len rudiment", "mitochondriálna DNA má rovnakú štruktúru ako DNA v eukaryotickom jadre", "pre správne fungovanie mitochondrií je potrebná interakcia produktov jadrových aj mitochondriálnych génov"], key: "NNNS" },
+  { id: 19, text: "Ktoré tvrdenie správne popisuje jednotlivé druhy vlákien cytoskeletu?", answers: ["mikrotubuly – duté rúrky z tubulínu, súčasť deliaceho vretienka", "mikrofilamenty – tenké vlákna z aktínu a myozínu, vytvárajú kontraktilný systém", "intermediárne filamenty – 10 nm vlákna bez kontrakcie, zvyšujú mechanickú odolnosť bunky", "mikrotrabekuly – súčasť ribozómov, zabezpečujú proteosyntézu"], key: "SSSN" },
+  { id: 20, text: "Lyzozómy sú:", answers: ["mechúriky obalené dvojitou membránou, obsahujúce DNA", "mechúriky vznikajúce odškrtením z Golgiho aparátu, obsahujúce hydrolázy", "štruktúry s oxidačnými enzýmami, ktoré detoxikujú bunku", "zásobníky glykogénu v cytoplazme"], key: "NSNN" },
+  { id: 21, text: "Medzi organely eukaryotickej bunky patria:", answers: ["Golgiho aparát", "endoplazmatické retikulum", "mitochondrie", "lyzozómy"], key: "SSSS" },
+  { id: 22, text: "Mikrotubuly sa predlžujú:", answers: ["depolymerizáciou", "polymerizáciou", "pridávaním tubulínových dimérov", "odoberaním tubulínových dimérov"], key: "NSSN" },
+  { id: 23, text: "Mitochondrie vznikajú:", answers: ["de novo v každej dcérskej bunke vzniknutej bunkovým delením", "delením existujúcich mitochondrií", "pučaním z jadra", "pučaním z endoplazmatického retikula"], key: "NSNN" },
+  { id: 24, text: "Mitochondrie:", answers: ["sú zložené z troch biologických membrán", "neobsahujú DNA", "sú miestom oxidatívnej fosforylácie", "sú maternálneho pôvodu"], key: "NNSS" },
+  { id: 25, text: "Mitochondrie:", answers: ["sú zložené z troch biologických membrán", "obsahujú DNA", "dochádza tu k terminálnej oxidácii", "sú paternálneho pôvodu"], key: "NSSN" },
+  { id: 26, text: "Na obnove laminy a obalu jadra sa najviac podieľa:", answers: ["lamín A", "lamín B", "lamín C", "lamín D"], key: "NSNN" },
+  { id: 27, text: "O jadierku platí, že:", answers: ["je to trvalá organela", "skladá sa z RNA a bielkovín", "je miestom produkcie ribozómov", "je miestom produkcie proteazómov"], key: "NSSN" },
+  { id: 28, text: "Peroxizómy sa vyznačujú tým, že:", answers: ["vznikajú odškrtením z Golgiho aparátu, obsahujú prevažne oxidačné enzýmy", "majú životnosť desiatky rokov a sú trvalou súčasťou bunky", "sú najväčšou organelou bunky, ich hlavnou funkciou je proteosyntéza", "sú kódované iba mitochondriálnymi génmi"], key: "SNNN" },
+  { id: 29, text: "Podľa zloženia rozlišuje bunkové organely:", answers: ["membránové", "zložené z bielkovín", "zložené z bielkovín a RNA", "zložené z DNA a RNA"], key: "SSSN" },
+  { id: 30, text: "Pre akú organelu je typické nízke pH vnútorného prostredia?", answers: ["lyzozóm", "jadro", "mitochondrie", "cytoplazma"], key: "SNNN" },
+  { id: 31, text: "Pre akú organelu je typické vysoké pH vnútorného prostredia?", answers: ["lyzozóm", "jadro", "mitochondria", "cytoplazma"], key: "NNSN" },
+  { id: 32, text: "Ribozómy:", answers: ["nie sú zložené z biomembrány", "sa nenachádzajú v prokaryotických bunkách", "sú miestom transkripcie", "sú miestom translácie"], key: "SNNS" },
+  { id: 33, text: "Ribozómy:", answers: ["nie sú zložené z biomembrán", "sa nenachádzajú v eukaryotických bunkách", "sú miestom replikácie", "sú zložené z dvoch bielkovinových podjednotiek a rRNA"], key: "SNNS" },
+  { id: 34, text: "Typy jadierka sú:", answers: ["kompaktné", "s nukleolonémou", "prstencovité", "s nukleolomérou"], key: "SSSN" },
+  { id: 35, text: "Z čoho sú zložené ribozómy?", answers: ["z lipopolysacharidov", "z molekúl cholesterolu a sacharidov", "z ribonukleovej kyseliny a bielkovín", "z proteínov a lipidov"], key: "NNSN" },
+  { id: 36, text: "Riasinky a bičíky:", answers: ["sú tvorené mikrotubulami", "riasinky zabezpečujú pohyb spermií", "bičík je pohybová organela niektorých živočíšnych buniek", "sú tvorené len aktínovými filamentmi"], key: "SNSN" },
+  { id: 37, text: "Centrozóm a cytoskelet:", answers: ["centrozóm sa skladá z dvoch centriol uložených kolmo na seba", "cytoskelet sa skladá z mikrotubulov, mikrofilamentov a intermediárnych filamentov", "cytoskelet je tvorený len z bielkovín aktínu", "centrozóm má význam len v rastlinných bunkách"], key: "SSNN" },
+  { id: 38, text: "Vakuoly:", answers: ["v rastlinných bunkách pomáhajú udržiavať turgor", "v živočíšnych bunkách majú vždy rovnakú veľkosť a funkciu", "slúžia na skladovanie látok a rozklad metabolitov", "vznikajú delením jadra"], key: "SNSN" },
+  { id: 39, text: "Čo je to chromatozóm?", answers: ["prokaryotické jadro", "dekondenzovaný ribozóm", "nukleozóm stabilizovaný histónom H1", "stavebná/štruktúrna jednotka chromatínového vlákna"], key: "NNSS" },
+  { id: 40, text: "Čo je to matrizóm?", answers: ["kohorta génov kódujúcich komponenty extracelulárneho matrixu", "súbor mitochondrií v materskej bunke", "matrica na vystavanie cytoskeletu v bunke", "komplex centrozómu a mikrotubulov deliaceho vretienka"], key: "SNNN" },
+  { id: 41, text: "Endomembránový systém bunky:", answers: ["je tvorený napr. membránami endoplazmatického retikula, Golgiho aparátu, lyzozómami", "sa nachádza v prokaryotických organizmoch", "je tvorený hlavne membránovými organelami, ako sú peroxizómy a cytoskelet", "komponenty systému si môžu vymieňať látky vezikulárnym transportom"], key: "SNNS" },
+  { id: 42, text: "Euchromatín:", answers: ["je tvorený kondenzovanými úsekmi chromozómov", "ide o transkripčne neaktívny chromatín", "má jemnú, penovitú až fibrilárnu štruktúru", "je transkripčne aktívny"], key: "NNSS" },
+  { id: 43, text: "Heterochromatín:", answers: ["je tvorený kondenzovanými úsekmi chromozómov", "ide o transkripčne neaktívny chromatín", "má jemnú, penovitú až fibrilárnu štruktúru", "je transkripčne aktívny"], key: "SSNN" },
+  { id: 44, text: "Histónové bielkoviny:", answers: ["patria medzi tzv. bázické bielkoviny", "sa nevyskytujú v jadrách eukaryotických buniek", "rozdeľujeme do 6 tried", "sú posttranslačne modifikované"], key: "SNSS" },
+  { id: 45, text: "Jadrová matrix:", answers: ["neobsahuje transkriptozómy a replikozómy", "predstavuje najdôležitejšiu extrachromatínovú zložku jadra", "obsahuje enzýmy a ďalšie proteíny potrebné pre transkripciu a replikáciu", "na jej tvorbe sa podieľajú laminy A a C"], key: "NSSS" },
+  { id: 46, text: "Jadrový obal:", answers: ["oddeľuje bunku od extracelulárneho prostredia", "je tvorený dvoma biologickými membránami", "vonkajšia membrána jadrového obalu je v kontakte s endoplazmatickým retikulom a s cytoplazmou", "vnútorná membrána jadrového obalu je v kontakte s endoplazmatickým retikulom a s cytoplazmou"], key: "NSSN" },
+  { id: 47, text: "Jedno „poschodie“ 30 nm chromatínového vlákna sa nazýva:", answers: ["signum", "solenoid", "chromozóm", "segment"], key: "NSNN" },
+  { id: 48, text: "Na výstavbe histónového oktaméru sa podieľajú:", answers: ["H1", "H3", "H4", "H8"], key: "NSSN" },
+  { id: 49, text: "Nehistónové bielkoviny asociované so skafoldom a jadrovou matrix sú:", answers: ["proteíny zabezpečujúce teritóriá chromozómov", "enzýmy, ktoré odstraňujú torzné napätie", "proteíny, ktoré vykonávajú transkripciu", "proteíny, ktoré vykonávajú replikáciu"], key: "SSSS" },
+  { id: 50, text: "Pórový komplex sa skladá z:", answers: ["jednej centrálnej granuly", "jednej bočnej granuly", "diafragmy", "karyotheky"], key: "SNSN" },
+  { id: 51, text: "Nehistónové bielkoviny chromozómu:", answers: ["majú prevažne regulačnú funkciu", "nemajú vplyv na vnútornú organizáciu interfázového jadra", "sú skafoldové proteíny tvoriace ultraštruktúru chromozómov", "zabezpečujú ochranu teritória chromozómu a dynamiku chromatínových slučiek v ňom"], key: "SNSS" },
+  { id: 52, text: "V akých iných organelách eukaryotických buniek okrem jadra sa môžu vyskytovať gény?", answers: ["v mitochondriách", "v Golgiho aparáte", "v chloroplastoch", "v lyzozómoch"], key: "SNSN" },
+  { id: 53, text: "Základné komponenty cytoskeletu sú:", answers: ["intermediárne filamenty", "centroméra", "mikrotubuly", "mikrofilamenty"], key: "SNSS" },
+  { id: 54, text: "Globulárny aktín je základnou stavebnou:", answers: ["intermediárnych filamentov", "mikrotubulov", "mikrofilamentov", "aktínoidov"], key: "NNSN" },
+  { id: 55, text: "Jadrové póry:", answers: ["sa nachádzajú na vnútornej strane jadrového obalu", "sú tvorené z proteínových vlákien a granúl, ktoré spolu vytvárajú pórový komplex", "zabezpečujú aktívny transport látok z jadra do cytoplazmy", "sa nachádzajú v jadrovej membráne prokaryotických buniek"], key: "NSSN" },
+  { id: 56, text: "Medzi jednomembránové organely patria:", answers: ["ribozómy a jadierko", "Golgiho aparát a peroxizómy", "lyzozómy a endoplazmatické retikulum", "mitochondrie a chloroplasty"], key: "NSSN" },
+  { id: 57, text: "Jadrové póry:", answers: ["majú priemer cca 100 μm", "sa nachádzajú v jadrovej membráne prokaryotických buniek", "zabezpečujú aktívny transport z jadra do cytoplazmy", "sú tvorené z proteínových vlákien a granúl"], key: "NNSS" },
+  { id: 58, text: "Medzi organely eukaryotických buniek ktoré sú tvorené jednou biomembránou patria:", answers: ["chloroplasty, mitochondrie", "Golgiho aparát", "peroxizómy, lyzozómy", "jadierko, jadro"], key: "NSSN" },
+  { id: 59, text: "Membránové organely poznáme zložené z:", answers: ["jednej membrány, napr. endoplazmatické retikulum", "dvoch membrán (obal jadra, mitochondrie a chloroplasty)", "dvoch membrán, napr. Golgiho aparát", "jednej membrány (obal jadra, mitochondrie a chloroplasty)"], key: "SSNN" },
+  { id: 60, text: "Z koľkých biomembrán sú tvorené mitochondrie?", answers: ["z dvoch", "z dvoch – vonkajšieho obalu a vnútornej zriasenej", "z jednej", "z dvoch – vonkajšej zriasenej a vnútornej zriasenej"], key: "SSNN" },
+];
+
+
+
+
+const key = [
+  "SNSN","NNSN","NSSS","SNSS","NSNS","NSSS","SNSS","SSNS","NSSN","NSNS",
+  "SSSS","SSNN","NSNN","NNNS","NNSN","SNSN","SNSS","NNNS","SSSN","NSNN",
+  "SSSS","NSSN","NSNN","NNSS","NSSN","NSNN","NSSN","SNNN","SSSN","SNNN",
+  "NNSN","SNNS","SNNS","SSSN","NNSN","SNSN","SSNN","SNSN","NNSS","SNNN",
+  "SNNS","NNSS","SSNN","SNSS","NSSS","NSSN","NSNN","NSSN","SSSS","SNSN",
+  "SNSS","SNSN","SNSS","NNSN","NSSN","NSSN","NNSS","NSSN","SSNN","SSNN"
+];
+
+
+
+
+/* ------------------ State ------------------ */
+let state = {
+  questions: [], // will hold questions with original index and randomized answers
+  filter: 'all', // 'all', 'wrong', 'favorites'
+  favorites: new Set(),
+  lastWrongSet: [], // store wrong questions for retry
+};
+
+/* Initialize questions with originalIndex and random answer order */
+function initQuestions(){
+  state.questions = questions.map((q,i)=>{
+    const originalIndex = i; // 0-based
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex, qtext: q.text, answers };
+  });
+  renderQuestions();
+}
+
+/* Utility shuffle */
+function shuffleArr(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/* Render current state.questions according to filter */
+function renderQuestions(){
+  const container = document.getElementById('quiz');
+  container.innerHTML = '';
+  let toRender = state.questions.slice();
+
+  // apply filter
+  if(state.filter === 'favorites'){
+    toRender = toRender.filter(item => state.favorites.has(item.originalIndex));
+  } else if(state.filter === 'wrong'){
+    toRender = toRender.filter(item => state.lastWrongSet.includes(item.originalIndex));
+  }
+
+  if(toRender.length === 0){
+    const info = document.createElement('div');
+    info.style.textAlign='center';
+    info.style.color='#555';
+    info.style.margin='18px';
+    info.textContent = 'Žiadne otázky na zobrazenie.';
+    container.appendChild(info);
+    document.getElementById('resultText').textContent = '';
+    return;
+  }
+
+  toRender.forEach((item, displayIdx)=>{
+    // build card
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.orig = item.originalIndex;
+
+    // header
+    const header = document.createElement('div');
+    header.className = 'q-header';
+
+    const num = document.createElement('div');
+    num.className = 'q-number';
+    num.textContent = (displayIdx+1)+'.';
+
+    const text = document.createElement('div');
+    text.className = 'q-text';
+    text.textContent = item.qtext;
+
+    const actions = document.createElement('div');
+    actions.className = 'q-actions';
+
+    // star favorite
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.title = 'Označiť ako obľúbené';
+    star.innerHTML = state.favorites.has(item.originalIndex) ? '★' : '☆';
+    if(state.favorites.has(item.originalIndex)) star.classList.add('active');
+    star.addEventListener('click', ()=>{
+      if(state.favorites.has(item.originalIndex)){
+        state.favorites.delete(item.originalIndex);
+        star.classList.remove('active');
+        star.innerHTML = '☆';
+      } else {
+        state.favorites.add(item.originalIndex);
+        star.classList.add('active');
+        star.innerHTML = '★';
+      }
+    });
+
+    // show correct button
+    const btnShow = document.createElement('button');
+    btnShow.className = 'btn-small btn-show';
+    btnShow.textContent = 'Zobraziť správne';
+    btnShow.addEventListener('click', ()=> showCorrectForCard(card, item.originalIndex));
+
+    actions.appendChild(star);
+    actions.appendChild(btnShow);
+
+    header.appendChild(num);
+    header.appendChild(text);
+    header.appendChild(actions);
+
+    card.appendChild(header);
+
+    // randomize answer order for display (store mapping)
+    const randomized = item.answers.slice();
+    // If answers not yet shuffled for this render, shuffle them each render
+    const shuffledAnswers = shuffleArr(randomized);
+    card._shuffled = shuffledAnswers.map(a=>a.idx); // store original idx order
+
+    // answers block
+    const answersDiv = document.createElement('div');
+    answersDiv.className = 'answers';
+
+    shuffledAnswers.forEach((ansObj, ansPos)=>{
+      const label = document.createElement('label');
+      label.className = 'ans';
+      label.dataset.origAnswerIdx = ansObj.idx; // 0..3 original index
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.name = `q_${item.originalIndex}`;
+      checkbox.value = ansObj.idx;
+      label.appendChild(checkbox);
+      const span = document.createElement('span');
+      span.textContent = ansObj.txt;
+      label.appendChild(span);
+      answersDiv.appendChild(label);
+    });
+
+    card.appendChild(answersDiv);
+
+    // optional meta area: show original question number
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const origLabel = document.createElement('div');
+    origLabel.textContent = `#${item.originalIndex+1}`;
+    meta.appendChild(origLabel);
+    card.appendChild(meta);
+
+    container.appendChild(card);
+  });
+
+  // clear previous result
+  document.getElementById('resultText').textContent = '';
+}
+
+/* show correct for one card */
+function showCorrectForCard(cardEl, origIndex){
+  const key = questions[origIndex].key; // string like 'SNNN'
+  const labels = [...cardEl.querySelectorAll('label.ans')];
+  // Determine which shuffled labels correspond to which original index
+  labels.forEach(label=>{
+    const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10); // 0..3
+    const isCorrect = key[origAnsIdx] === 'S';
+    const input = label.querySelector('input');
+    const checked = input.checked;
+    // Reset classes first
+    label.classList.remove('correct','incorrect');
+    if(isCorrect && checked) {
+      label.classList.add('correct');
+    } else if(isCorrect && !checked){
+      // correct but not selected -> mark blue (as requested)
+      label.classList.add('correct-unchecked'); // modrá
+    } else if(!isCorrect && checked){
+      // wrong selected -> red
+      label.classList.add('incorrect');
+    }
+    // else not correct and not selected -> keep default
+  });
+}
+
+/* show all correct answers globally */
+function showAllCorrect(){
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    showCorrectForCard(card, origIndex);
+  });
+}
+
+/* evaluate current shown questions */
+function evaluateAll(){
+  const cards = document.querySelectorAll('.card');
+  let correctCount = 0;
+  const wrongList = [];
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    const key = questions[origIndex].key; // e.g. 'SNNN'
+    const labels = [...card.querySelectorAll('label.ans')];
+    const selectedOrigIdx = labels.filter(lbl=> lbl.querySelector('input').checked ).map(lbl=> parseInt(lbl.dataset.origAnswerIdx,10));
+    // compute sets
+    const selSet = new Set(selectedOrigIdx);
+    const corrSet = new Set();
+    for(let i=0;i<4;i++) if(key[i]==='S') corrSet.add(i);
+    // Compare exact equality
+    let equal = (selSet.size === corrSet.size);
+    if(equal){
+      for(let v of selSet) if(!corrSet.has(v)){ equal=false; break; }
+    }
+    // mark colors for visual feedback
+    labels.forEach(label=>{
+      label.classList.remove('correct','incorrect');
+      const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10);
+      const isCorrect = key[origAnsIdx] === 'S';
+      const checked = label.querySelector('input').checked;
+      if(isCorrect && checked) label.classList.add('correct');
+      else if(isCorrect && !checked) label.classList.add('incorrect');
+      else if(!isCorrect && checked) label.classList.add('incorrect');
+    });
+
+    if(equal){
+      correctCount++;
+    } else {
+      wrongList.push(origIndex);
+    }
+  });
+
+  // store last wrong set for retry/filters
+  state.lastWrongSet = wrongList.slice();
+
+  // percent relative to number of displayed questions
+  const total = cards.length;
+  const percent = total === 0 ? 0 : ((correctCount/total)*100).toFixed(2);
+  document.getElementById('resultText').textContent = `Úspešnosť: ${percent}% (${correctCount}/${total} úplne správnych otázok)`;
+}
+
+/* Show only wrong questions (filter) */
+function showOnlyWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Nie sú uložené žiadne chybné otázky (vyhodnoť test najprv).');
+    return;
+  }
+  state.filter = 'wrong';
+  renderQuestions();
+}
+
+/* Reset test to initial state (all questions, clear selections, clear coloring) */
+function resetTest(){
+  // reinitialize questions to default order and answers order
+  state.filter = 'all';
+  state.lastWrongSet = [];
+  // restore original questions order (as in questions array)
+  state.questions = questions.map((q,i)=>{
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex:i, qtext:q.text, answers };
+  });
+  // clear favorites stays preserved
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Retry only wrong questions (renders only wrong set but allows answering them) */
+function retryWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Žiadne chybné otázky pre opakovanie. Najprv vyhodnoť test.');
+    return;
+  }
+  // Build state.questions to include only wrong ones, preserving originalIndex
+  state.questions = state.lastWrongSet.map(idx => {
+    const q = questions[idx];
+    const answers = q.answers.map((txt, ai)=>({txt, idx:ai}));
+    return { originalIndex: idx, qtext: q.text, answers };
+  });
+  state.filter = 'all';
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Show only favorites */
+function showFavoritesOnly(){
+  state.filter = 'favorites';
+  renderQuestions();
+}
+
+/* Show all questions (clear filters) */
+function showAllQuestions(){
+  state.filter = 'all';
+  // restore full set in original order
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Shuffle questions (random order) and shuffle answers within each question */
+function shuffleQuestions(){
+  // shuffle questions array
+  const arr = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  const shuffled = shuffleArr(arr);
+  state.questions = shuffled;
+  state.filter = 'all';
+  renderQuestions();
+}
+
+/* Show Favorites modal/list (simple behavior: filter to favorites) */
+function showFavoritesList(){
+  // if no favorites, inform
+  if(state.favorites.size === 0){
+    alert('Nemáš označené žiadne obľúbené otázky.');
+    return;
+  }
+  state.filter = 'favorites';
+  // prepare state.questions as full list so filter works
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Show only wrong (button at bottom) identical to showOnlyWrong function but filters current display */
+function showOnlyWrongButton(){
+  showOnlyWrong();
+}
+
+/* Attach event listeners */
+document.getElementById('btnShowAll').addEventListener('click', showAllCorrect);
+document.getElementById('btnShuffle').addEventListener('click', ()=>{ shuffleQuestions(); });
+document.getElementById('btnFavorites').addEventListener('click', showFavoritesList);
+document.getElementById('btnShowAllQ').addEventListener('click', showAllQuestions);
+document.getElementById('btnShowWrongOnly').addEventListener('click', ()=>{ state.filter = 'wrong'; renderQuestions(); });
+document.getElementById('btnShowFavOnly').addEventListener('click', showFavoritesOnly);
+document.getElementById('btnEvaluate').addEventListener('click', evaluateAll);
+document.getElementById('btnShowWrong').addEventListener('click', showOnlyWrongButton);
+document.getElementById('btnRetryWrong').addEventListener('click', retryWrong);
+document.getElementById('btnReset').addEventListener('click', resetTest);
+
+/* Initialize on load */
+initQuestions();
+</script>
+</body>
+</html>

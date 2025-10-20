@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>1. Úvod do mikroskopickej techniky</title>
+<style>
+  :root{
+    --card-bg: #e9f5ff;
+    --accent: #007bff;
+    --good: #c8f7d0;
+    --bad: #ffd6d6;
+	--correct-unchecked: #c8f7d0;
+    --card-radius: 14px;
+  }
+  body{
+    margin:0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: #ffffff;
+    color:#111;
+    padding:30px 16px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{
+    width:100%;
+    max-width:1100px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  h1{
+    margin:0;
+    font-size:22px;
+  }
+  .top-controls{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  button{
+    background:var(--accent);
+    color:white;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  button.secondary{
+    background:#6c757d;
+  }
+  .center-controls{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:14px;
+  }
+  #quiz{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    align-items:center;
+  }
+  .card{
+    width:100%;
+    max-width:980px;
+    background:var(--card-bg);
+    border-radius:var(--card-radius);
+    padding:16px 18px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    display:block;
+    box-sizing:border-box;
+    position:relative;
+  }
+  .q-header{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .q-number{
+    font-weight:700;
+    min-width:34px;
+  }
+  .q-text{
+    font-weight:700;
+    flex:1;
+  }
+  .q-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .star{
+    font-size:20px;
+    cursor:pointer;
+    user-select:none;
+    color:rgba(0,0,0,0.25);
+  }
+  .star.active{ color: gold; text-shadow: 0 0 6px rgba(255,215,0,0.4); }
+  .answers{
+    margin-top:10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  label.ans{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    padding:8px;
+    border-radius:8px;
+  }
+  label.ans input{ transform:scale(1.05); }
+  .btn-small{
+    padding:6px 10px;
+    font-size:13px;
+    border-radius:8px;
+    background:#0b84ff;
+  }
+  .btn-show{
+    background:#0b84ff;
+    color:white;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+  }
+  .meta{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    font-size:13px;
+    margin-top:10px;
+    color:#333;
+  }
+  .result{
+    text-align:center;
+    margin-top:18px;
+    font-weight:700;
+    font-size:16px;
+  }
+  .controls-bottom{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .hidden{ display:none; }
+  /* coloring for showCorrect */
+  .correct { background: var(--good) !important; }
+  .incorrect { background: var(--bad) !important; }
+  .correct-unchecked { background: var(--correct-unchecked) !important; }
+  /* small responsive */
+  @media (max-width:640px){
+    body { padding:14px; }
+    .card{ padding:12px; }
+    .q-number{ min-width:28px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>1. Úvod do mikroskopickej techniky</h1>
+    <div class="top-controls">
+      <button id="btnFavorites">Obľúbené</button>
+      <button id="btnShuffle">Zamiešať otázky</button>
+      <button id="btnShowAll" title="Zobraziť všetky správne odpovede">Zobraziť všetky správne odpovede</button>
+    </div>
+  </header>
+
+  <div class="center-controls">
+    <span style="color:#555">Filtrovať zobrazenie:</span>
+    <button id="btnShowAllQ" class="secondary">Zobraziť všetky</button>
+    <button id="btnShowWrongOnly" class="secondary">Zobraziť len chybné</button>
+    <button id="btnShowFavOnly" class="secondary">Zobraziť len obľúbené</button>
+  </div>
+
+  <div id="quiz"></div>
+
+  <div class="controls-bottom">
+    <button id="btnEvaluate">Vyhodnotiť všetko</button>
+    <button id="btnShowWrong">Zobraziť len chybné otázky</button>
+    <button id="btnRetryWrong">Opakovať len chybné</button>
+    <button id="btnReset">Obnoviť test</button>
+  </div>
+
+  <div class="result" id="resultText"></div>
+</div>
+
+<script>
+const questions = [
+  { id: 1, text: "Aké žiarenie sa využíva pri fluorescenčnej mikroskopii?", answers: ["infračervené žiarenie", "žiarenie fialovej farby s vlnovou dĺžkou vo viditeľnom spektre", "ultrafialové žiarenie", "prúd elektrónov"], key: "NNSN" },
+  { id: 2, text: "Aké farbivo sa najčastejšie využíva pri vizualizácii chromozómov?", answers: ["modrý atrament", "Giemsovo", "Lugolov roztok", "hematoxylín a eozín"], key: "NSNN" },
+  { id: 3, text: "Aké zväčšenie získame, ak použijeme objektív s 40x zväčšením a okulár s 10x zväčšením?", answers: ["400x", "10x", "40x", "4x"], key: "SNNN" },
+  { id: 4, text: "Elektrónové mikroskopy ako zdroj žiarenia používajú:", answers: ["biele svetlo", "biele svetlo alebo ultrafialové žiarenie", "elektrónkové žiarenie", "prúd elektrónov"], key: "NNNS" },
+  { id: 5, text: "Elektrónové mikroskopy:", answers: ["ako zdroj žiarenia využívajú prúd fotónov", "nevyžadujú špeciálnu úpravu preparátov", "vyžadujú špeciálnu prípravu preparátov", "ako zdroj žiarenia využívajú prúd elektrónov"], key: "NNSS" },
+  { id: 6, text: "Elektrónový mikroskop:", answers: ["je typ svetelného mikroskopu, vieme ním pozorovať bunky in vitro aj in vivo", "umožňuje sledovať topológiu buniek a tkanív alebo vnútorné štruktúry", "vieme pozorovať rovnaké preparáty pri SEM aj TEM", "rozlišovacia schopnosť je väčšia ako pri konfokálnom mikroskope, preparáty sa pripravujú špecifickým spôsobom"], key: "NSNS" },
+  { id: 7, text: "Farbenie poznáme:", answers: ["orientačné", "špecifické", "náhodné", "všeobecné"], key: "SSNN" },
+  { id: 8, text: "Fázový kontrast:", answers: ["slúži ako zdroj žiarenia pri málo kontrastných preparátoch", "sa využíva na zvýraznenie niektorých štruktúr bunky", "sa v mikroskopii vôbec nepoužíva", "umožňuje pozorovanie priehľadných objektov s málo výrazným kontrastným rozhraním"], key: "NSNS" },
+  { id: 9, text: "Invertovaný mikroskop:", answers: ["používa sa napr. pri sledovaní bunkových kultúr", "umožňuje pozorovanie preparátov v prechádzajúcom svetle", "je typ elektrónového mikroskopu", "používa metódu osvetlenia zhora"], key: "SSNS" },
+  { id: 10, text: "K mechanickej časti svetelného mikroskopu patrí:", answers: ["irisová clona", "revolverový menič objektívov", "kondenzor", "objektív"], key: "NSNN" },
+  { id: 11, text: "K osvetľovacej časti mikroskopu patrí:", answers: ["tubus", "objektívy", "zdroj svetla", "kondenzor"], key: "NNSS" },
+  { id: 12, text: "Konfokálny mikroskop:", answers: ["je forma svetelného fluorescenčného mikroskopu so zvýšenou rozlišovacou schopnosťou", "ako zdroj svetla využíva lasery s rôznymi excitačnými vlnovými dĺžkami", "pri hrubších rezoch umožňuje selektívne zaostriť a zaznamenať konkrétnu optickú rovinu", "je to druh elektrónového mikroskopu"], key: "SSSN" },
+  { id: 13, text: "Ktorá z nasledujúcich možností je najvhodnejšia na získanie povrchového zobrazenia objektu?", answers: ["SEM – skenovací elektrónový mikroskop", "TEM – transmisný elektrónový mikroskop", "invertovaný mikroskop", "svetelný mikroskop"], key: "SNNN" },
+  { id: 14, text: "Ktorá z nasledujúcich možností sa používa na vizualizáciu živých buniek?", answers: ["SEM – skenovací elektrónový mikroskop", "TEM – transmisný elektrónový mikroskop", "mikroskop s fázovým kontrastom", "všetky tieto"], key: "NNSN" },
+  { id: 15, text: "Ktoré časti mikroskopu majú zväčšujúcu schopnosť:", answers: ["objektív", "irisová clona", "kondenzor", "okulár"], key: "SNNS" },
+  { id: 16, text: "Ktorý mikroskop má obrátené poradie svetelnej a optickej časti?", answers: ["elektrónový", "skenovací", "invertovaný", "rastrovací"], key: "NNSN" },
+  { id: 17, text: "Medzi optické časti mikroskopu patrí:", answers: ["okulár", "revolverový menič", "zdroj svetla", "objektív"], key: "SNNS" },
+  { id: 18, text: "Mechanická časť mikroskopu obsahuje:", answers: ["tubus", "revolverový menič", "mikroskrutku", "makroskrutku"], key: "SSSS" },
+  { id: 19, text: "Mechanická časť mikroskopu obsahuje:", answers: ["makroskrutku", "posúvateľný stolček", "okuláre", "objektívy"], key: "SSNN" },
+  { id: 20, text: "Na orientáciu v zornom poli sa používa:", answers: ["rozdelenie na sústredné kruhy", "rozdelenie na kvadranty", "orientácia podľa ciferníka hodín", "irisová clona"], key: "SSSN" },
+  { id: 21, text: "Natívne preparáty:", answers: ["sa používajú pri sledovaní fyziologických prejavov buniek", "používajú sa aj pri sledovaní typického tvaru buniek", "umožňuje detailne pozorovať vnútrobunkové štruktúry", "umožňujú sledovať pohyb buniek"], key: "SSNS" },
+  { id: 22, text: "Obraz v mikroskope je:", answers: ["obrátený", "zväčšený", "zmenšený", "skutočný"], key: "SSNS" },
+  { id: 23, text: "Optické časti elektrónového mikroskopu:", answers: ["sú zo skla", "tvoria šošovky z brúseného skla", "tvoria elektromagnetické šošovky", "sú impregnované elektrondenznými prostriedkami"], key: "NNSN" },
+  { id: 24, text: "Optické časti svetelného mikroskopu:", answers: ["sú zo skla", "tvoria šošovky z brúseného skla", "tvoria elektromagnetické šošovky", "sú impregnované elektrondenznými prostriedkami"], key: "SSNN" },
+  { id: 25, text: "Osvetľovacia časť svetelného mikroskopu obsahuje:", answers: ["okulár a objektív", "zdroj svetla", "sústavu filtrov a clôn", "kondenzor"], key: "NSSS" },
+  { id: 26, text: "Podľa spôsobu prípravy poznáme preparáty:", answers: ["odtlačkové", "nátery", "zakryté krycím sklíčkom", "trvalé"], key: "SSSS" },
+  { id: 27, text: "Podľa typu konštrukcie rozlišujeme svetelné mikroskopy:", answers: ["jednoduché lupy a stereolupy", "mikroskopy s jedným alebo viacerými objektívmi", "elektrónové mikroskopy", "invertované mikroskopy"], key: "SSNS" },
+  { id: 28, text: "Podľa typu používaného žiarenia rozlišujeme mikroskopy:", answers: ["svetelné", "elektrónové", "elektrónkové", "výbojkové"], key: "SSNN" },
+  { id: 29, text: "Pracovná vzdialenosť:", answers: ["je vzdialenosť oka od mikroskopu", "je vzdialenosť preparátu od frontálnej šošovky objektívu", "je vzdialenosť objektívu od okulára", "sa skracuje so stúpajúcim zväčšením objektívu"], key: "NSNS" },
+  { id: 30, text: "Pre zvýraznenie štruktúr v natívnych preparátoch je možné použiť:", answers: ["mikroskopovanie v tmavom poli", "fázový kontrast", "vitálne farbenie", "elektrónovú mikroskopiu"], key: "SSSN" },
+  { id: 31, text: "Pre zvýraznenie štruktúr v natívnych preparátoch je možné použiť:", answers: ["mikroskopovanie v svetlom poli", "fázové kontrastné farbenie", "vitálne farbenie alebo fázový kontrast", "elektrónovú mikroskopiu"], key: "NNSN" },
+  { id: 32, text: "Pri pozorovaní v tmavom poli:", answers: ["sa používa zvláštny typ kondenzora", "kondenzor mikroskopu prepúšťa len bočné svetlo", "pozorujeme len lúče odrazené od objektu", "fázový kontrast umožňuje pozorovanie fluoreskujúcich objektov"], key: "SSSN" },
+  { id: 33, text: "Svetelné mikroskopy ako zdroj žiarenia používajú:", answers: ["biele svetlo", "ultrafialové žiarenie", "elektrónkové žiarenie", "prúd elektrónov"], key: "SSNN" },
+  { id: 34, text: "Svetelný mikroskop obsahuje:", answers: ["optickú časť", "osvetľovaciu časť", "mechanickú časť", "biologickú časť"], key: "SSSN" },
+  { id: 35, text: "Svetelnými mikroskopmi sa bežne pozorujú objekty:", answers: ["menšie ako 70 μm", "väčšie ako 70 μm", "menšie ako 70 nm", "ktoré sa nedajú pozorovať voľným okom"], key: "SNNS" },
+  { id: 36, text: "Transmisný elektrónový mikroskop:", answers: ["má šošovku z brúseného skla, využíva prúd elektrónov a skenuje povrch objektu", "má šošovku z brúseného skla, využíva prúd elektrónov a môžeme ním pozorovať aj vnútro bunky", "preparát je potrebné pripraviť s elektrón-denznou látkou, ktorá emituje nadmernú energiu z pohlteného UV", "obsahuje elektromagnetickú šošovku a pozorujeme ním aj vnútorné štruktúry bunky"], key: "NNNS" },
+  { id: 37, text: "Výsledné zväčšenie pri mikroskopovaní sa vypočíta ako:", answers: ["súčet zväčšenia objektívu a pracovnej vzdialenosti", "súčin zväčšenia šošovky a zväčšenia objektívu", "súčin zväčšenia objektívu a zväčšenia okulára", "súčin pracovnej vzdialenosti objektívu a hrúbky sklíčka"], key: "NNSN" },
+  { id: 38, text: "Aký je hlavný cieľ fixácie mikroskopických preparátov?", answers: ["zvýšenie kontrastu preparátu pri pozorovaní", "zachovanie štruktúry buniek a tkanív pred poškodením alebo rozkladom", "zabezpečenie lepšieho prenosu svetla cez preparát", "zníženie hrúbky preparátu na optimálnu úroveň"], key: "NSNN" },
+  { id: 39, text: "Čo vyjadruje pojem rozlišovacia schopnosť mikroskopu?", answers: ["maximálne dosiahnuteľné zväčšenie obrazu", "minimálnu vzdialenosť medzi dvomi bodmi, ktoré ešte vidíme oddelene", "schopnosť mikroskopu zachytiť čo najviac svetla", "schopnosť zvýšiť kontrast bez farbenia preparátu"], key: "NSNN" },
+  { id: 40, text: "Čo platí o numerickej apertúre objektívu?", answers: ["vyššia numerická apertura znamená menší prienik svetla do objektívu", "numerická apertura nezávisí od použitého média medzi preparátom a objektívom", "vyššia numerická apertura znamená lepší kontrast a rozlišovaciu schopnosť", "numerická apertura vyjadruje len teoretické maximálne zväčšenie objektívu"], key: "NNSN" },
+  { id: 41, text: "Čo spôsobuje sférickú aberáciu?", answers: ["nepravidelný lom svetla na rozhraní rôznych médií", "rôzny lom svetla cez stred a okraj šošovky", "vznik farebných lemov na okrajoch objektov", "nesprávne uloženie preparátu na podložnom skle"], key: "NSNN" },
+  { id: 42, text: "Ako sa prejavuje chromatická aberácia?", answers: ["rozmazaný obraz len v jednom smere", "znížený kontrast preparátu", "farebné lemy na okrajoch pozorovaných objektov", "neostrý obraz pri vysokom zväčšení aj po použití imerzného oleja"], key: "NNSN" },
+  { id: 43, text: "Aký obraz vzniká pri astigmatizme šošovky?", answers: ["ostrý v jednom smere a rozmazaný v druhom", "s farebnými lemami na okrajoch", "rozmazaný po celej ploche rovnomerne", "vysoko kontrastný, ale s nízkym zväčšením"], key: "SNNN" },
+  { id: 44, text: "Aký je hlavný princíp konfokálnej mikroskopie v porovnaní s klasickou fluorescenčnou mikroskopiou?", answers: ["používa polarizované svetlo na zvýraznenie štruktúr", "využíva pinholový otvor na elimináciu rozptýleného svetla a získanie optických rezov", "dosahuje rozlišovaciu schopnosť až 0,2 nm vďaka elektrónovému lúču", "nepotrebuje fluorescenčné farbivá na zobrazenie preparátu"], key: "NSNN" },
+  { id: 45, text: "Prečo samotné zväčšenie bez dobrej rozlišovacej schopnosti nie je postačujúce?", answers: ["pretože obraz zostáva veľký, ale bez detailov", "pretože zväčšenie vždy znižuje kontrast", "pretože vysoké zväčšenie je možné len pri elektrónovej mikroskopii", "pretože zväčšenie sa nedá kombinovať s farbením preparátov"], key: "SNNN" },
+  { id: 46, text: "Čo je hlavnou úlohou kalibrácie mikroskopu pomocou okulárového mikrometra?", answers: ["zvýšenie kontrastu preparátu", "presné určenie rozmerov mikroštruktúr", "predĺženie životnosti mikroskopu", "rozlíšenie medzi natívnym a fixovaným preparátom"], key: "NSNN" },
+  { id: 47, text: "Akou látkou sa najčastejšie fixujú preparáty, aby sa zachovala štruktúra buniek a tkanív?", answers: ["glycerol", "formalín", "agar", "metylénová modrá"], key: "NSNN" },
+  { id: 48, text: "Aká je funkcia imerzného média pri mikroskopovaní?", answers: ["zvyšuje životnosť optických častí", "zlepšuje rozlišovaciu schopnosť a kontrast pri vysokých zväčšeniach", "umožňuje pozorovať živé bunky", "znižuje potrebu kalibrácie mikroskopu"], key: "NSNN" },
+  { id: 49, text: "Aké riziko predstavuje sférická aberácia pri mikroskopovaní?", answers: ["vznik farebných lemov na okrajoch obrazu", "rozpad štruktúry preparátu", "ostrý obraz len v jednom smere", "rozmazaný obraz, pretože lúče sa nelámu rovnomerne"], key: "NNNS" },
+  { id: 50, text: "Čo charakterizuje numerickú apertúru (NA) objektívu?", answers: ["schopnosť zachytiť svetlo v závislosti od uhla lúčov a indexu lomu prostredia", "maximálny počet pozorovateľných buniek", "rýchlosť preostrovania pri práci s objektívom", "veľkosť preparátu vhodného na pozorovanie"], key: "SNNN" },
+  { id: 51, text: "Aký problém spôsobuje chromatická aberácia?", answers: ["obraz je rozmazaný", "obraz má farebné lemy na okrajoch", "obraz je ostrý len v jednom smere", "obraz sa javí trojrozmerný"], key: "NSNN" },
+  { id: 52, text: "Ako sa majú čistiť objektívy a okuláre mikroskopu?", answers: ["bežnou papierovou vreckovkou", "špeciálnymi utierkami alebo roztokmi určenými na optiku", "alkoholom technickej čistoty", "destilovanou vodou"], key: "NSNN" },
+  { id: 53, text: "Čo je základnou funkciou objektívu mikroskopu?", answers: ["zväčšiť obraz objektu", "usmerniť lúče svetla na preparát", "zabezpečiť ochranu okulára pred poškodením", "upravovať intenzitu svetla"], key: "SNNN" },
+  { id: 54, text: "Aká je funkcia stolíka mikroskopu?", answers: ["zabezpečuje správne uloženie preparátu", "zvyšuje kontrast pozorovania", "obsahuje mechanizmus na výmenu objektívov", "slúži na reguláciu napätia"], key: "SNNN" },
+  { id: 55, text: "Ktorá časť mikroskopu slúži na výmenu objektívov?", answers: ["tubus", "okulár", "revolverový nosič", "kondenzor"], key: "NNSN" }
+];
+
+
+const key = `1:NNSN
+2:NSNN
+3:SNNN
+4:NNNS
+5:NNSS
+6:NSNS
+7:SSNN
+8:NSNS
+9:SSNS
+10:NSNN
+11:NNSS
+12:SSSN
+13:SNNN
+14:NNSN
+15:SNNS
+16:NNSN
+17:SNNS
+18:SSSS
+19:SSNN
+20:SSSN
+21:SSNS
+22:SSNS
+23:NNSN
+24:SSNN
+25:NSSS
+26:SSSS
+27:SSNS
+28:SSNN
+29:NSNS
+30:SSSN
+31:NNSN
+32:SSSN
+33:SSNN
+34:SSSN
+35:SNNS
+36:NNNS
+37:NNSN
+38:NSNN
+39:NSNN
+40:NNSN
+41:NSNN
+42:NNSN
+43:SNNN
+44:NSNN
+45:SNNN
+46:NSNN
+47:NSNN
+48:NSNN
+49:NNNS
+50:SNNN
+51:NSNN
+52:NSNN
+53:SNNN
+54:SNNN
+55:NNSN`;
+
+
+/* ------------------ State ------------------ */
+let state = {
+  questions: [], // will hold questions with original index and randomized answers
+  filter: 'all', // 'all', 'wrong', 'favorites'
+  favorites: new Set(),
+  lastWrongSet: [], // store wrong questions for retry
+};
+
+/* Initialize questions with originalIndex and random answer order */
+function initQuestions(){
+  state.questions = questions.map((q,i)=>{
+    const originalIndex = i; // 0-based
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex, qtext: q.text, answers };
+  });
+  renderQuestions();
+}
+
+/* Utility shuffle */
+function shuffleArr(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/* Render current state.questions according to filter */
+function renderQuestions(){
+  const container = document.getElementById('quiz');
+  container.innerHTML = '';
+  let toRender = state.questions.slice();
+
+  // apply filter
+  if(state.filter === 'favorites'){
+    toRender = toRender.filter(item => state.favorites.has(item.originalIndex));
+  } else if(state.filter === 'wrong'){
+    toRender = toRender.filter(item => state.lastWrongSet.includes(item.originalIndex));
+  }
+
+  if(toRender.length === 0){
+    const info = document.createElement('div');
+    info.style.textAlign='center';
+    info.style.color='#555';
+    info.style.margin='18px';
+    info.textContent = 'Žiadne otázky na zobrazenie.';
+    container.appendChild(info);
+    document.getElementById('resultText').textContent = '';
+    return;
+  }
+
+  toRender.forEach((item, displayIdx)=>{
+    // build card
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.orig = item.originalIndex;
+
+    // header
+    const header = document.createElement('div');
+    header.className = 'q-header';
+
+    const num = document.createElement('div');
+    num.className = 'q-number';
+    num.textContent = (displayIdx+1)+'.';
+
+    const text = document.createElement('div');
+    text.className = 'q-text';
+    text.textContent = item.qtext;
+
+    const actions = document.createElement('div');
+    actions.className = 'q-actions';
+
+    // star favorite
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.title = 'Označiť ako obľúbené';
+    star.innerHTML = state.favorites.has(item.originalIndex) ? '★' : '☆';
+    if(state.favorites.has(item.originalIndex)) star.classList.add('active');
+    star.addEventListener('click', ()=>{
+      if(state.favorites.has(item.originalIndex)){
+        state.favorites.delete(item.originalIndex);
+        star.classList.remove('active');
+        star.innerHTML = '☆';
+      } else {
+        state.favorites.add(item.originalIndex);
+        star.classList.add('active');
+        star.innerHTML = '★';
+      }
+    });
+
+    // show correct button
+    const btnShow = document.createElement('button');
+    btnShow.className = 'btn-small btn-show';
+    btnShow.textContent = 'Zobraziť správne';
+    btnShow.addEventListener('click', ()=> showCorrectForCard(card, item.originalIndex));
+
+    actions.appendChild(star);
+    actions.appendChild(btnShow);
+
+    header.appendChild(num);
+    header.appendChild(text);
+    header.appendChild(actions);
+
+    card.appendChild(header);
+
+    // randomize answer order for display (store mapping)
+    const randomized = item.answers.slice();
+    // If answers not yet shuffled for this render, shuffle them each render
+    const shuffledAnswers = shuffleArr(randomized);
+    card._shuffled = shuffledAnswers.map(a=>a.idx); // store original idx order
+
+    // answers block
+    const answersDiv = document.createElement('div');
+    answersDiv.className = 'answers';
+
+    shuffledAnswers.forEach((ansObj, ansPos)=>{
+      const label = document.createElement('label');
+      label.className = 'ans';
+      label.dataset.origAnswerIdx = ansObj.idx; // 0..3 original index
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.name = `q_${item.originalIndex}`;
+      checkbox.value = ansObj.idx;
+      label.appendChild(checkbox);
+      const span = document.createElement('span');
+      span.textContent = ansObj.txt;
+      label.appendChild(span);
+      answersDiv.appendChild(label);
+    });
+
+    card.appendChild(answersDiv);
+
+    // optional meta area: show original question number
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const origLabel = document.createElement('div');
+    origLabel.textContent = `#${item.originalIndex+1}`;
+    meta.appendChild(origLabel);
+    card.appendChild(meta);
+
+    container.appendChild(card);
+  });
+
+  // clear previous result
+  document.getElementById('resultText').textContent = '';
+}
+
+/* show correct for one card */
+function showCorrectForCard(cardEl, origIndex){
+  const key = questions[origIndex].key; // string like 'SNNN'
+  const labels = [...cardEl.querySelectorAll('label.ans')];
+  // Determine which shuffled labels correspond to which original index
+  labels.forEach(label=>{
+    const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10); // 0..3
+    const isCorrect = key[origAnsIdx] === 'S';
+    const input = label.querySelector('input');
+    const checked = input.checked;
+    // Reset classes first
+    label.classList.remove('correct','incorrect');
+    if(isCorrect && checked) {
+      label.classList.add('correct');
+    } else if(isCorrect && !checked){
+      // correct but not selected -> mark blue (as requested)
+      label.classList.add('correct-unchecked'); // modrá
+    } else if(!isCorrect && checked){
+      // wrong selected -> red
+      label.classList.add('incorrect');
+    }
+    // else not correct and not selected -> keep default
+  });
+}
+
+/* show all correct answers globally */
+function showAllCorrect(){
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    showCorrectForCard(card, origIndex);
+  });
+}
+
+/* evaluate current shown questions */
+function evaluateAll(){
+  const cards = document.querySelectorAll('.card');
+  let correctCount = 0;
+  const wrongList = [];
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    const key = questions[origIndex].key; // e.g. 'SNNN'
+    const labels = [...card.querySelectorAll('label.ans')];
+    const selectedOrigIdx = labels.filter(lbl=> lbl.querySelector('input').checked ).map(lbl=> parseInt(lbl.dataset.origAnswerIdx,10));
+    // compute sets
+    const selSet = new Set(selectedOrigIdx);
+    const corrSet = new Set();
+    for(let i=0;i<4;i++) if(key[i]==='S') corrSet.add(i);
+    // Compare exact equality
+    let equal = (selSet.size === corrSet.size);
+    if(equal){
+      for(let v of selSet) if(!corrSet.has(v)){ equal=false; break; }
+    }
+    // mark colors for visual feedback
+    labels.forEach(label=>{
+      label.classList.remove('correct','incorrect');
+      const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10);
+      const isCorrect = key[origAnsIdx] === 'S';
+      const checked = label.querySelector('input').checked;
+      if(isCorrect && checked) label.classList.add('correct');
+      else if(isCorrect && !checked) label.classList.add('incorrect');
+      else if(!isCorrect && checked) label.classList.add('incorrect');
+    });
+
+    if(equal){
+      correctCount++;
+    } else {
+      wrongList.push(origIndex);
+    }
+  });
+
+  // store last wrong set for retry/filters
+  state.lastWrongSet = wrongList.slice();
+
+  // percent relative to number of displayed questions
+  const total = cards.length;
+  const percent = total === 0 ? 0 : ((correctCount/total)*100).toFixed(2);
+  document.getElementById('resultText').textContent = `Úspešnosť: ${percent}% (${correctCount}/${total} úplne správnych otázok)`;
+}
+
+/* Show only wrong questions (filter) */
+function showOnlyWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Nie sú uložené žiadne chybné otázky (vyhodnoť test najprv).');
+    return;
+  }
+  state.filter = 'wrong';
+  renderQuestions();
+}
+
+/* Reset test to initial state (all questions, clear selections, clear coloring) */
+function resetTest(){
+  // reinitialize questions to default order and answers order
+  state.filter = 'all';
+  state.lastWrongSet = [];
+  // restore original questions order (as in questions array)
+  state.questions = questions.map((q,i)=>{
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex:i, qtext:q.text, answers };
+  });
+  // clear favorites stays preserved
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Retry only wrong questions (renders only wrong set but allows answering them) */
+function retryWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Žiadne chybné otázky pre opakovanie. Najprv vyhodnoť test.');
+    return;
+  }
+  // Build state.questions to include only wrong ones, preserving originalIndex
+  state.questions = state.lastWrongSet.map(idx => {
+    const q = questions[idx];
+    const answers = q.answers.map((txt, ai)=>({txt, idx:ai}));
+    return { originalIndex: idx, qtext: q.text, answers };
+  });
+  state.filter = 'all';
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Show only favorites */
+function showFavoritesOnly(){
+  state.filter = 'favorites';
+  renderQuestions();
+}
+
+/* Show all questions (clear filters) */
+function showAllQuestions(){
+  state.filter = 'all';
+  // restore full set in original order
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Shuffle questions (random order) and shuffle answers within each question */
+function shuffleQuestions(){
+  // shuffle questions array
+  const arr = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  const shuffled = shuffleArr(arr);
+  state.questions = shuffled;
+  state.filter = 'all';
+  renderQuestions();
+}
+
+/* Show Favorites modal/list (simple behavior: filter to favorites) */
+function showFavoritesList(){
+  // if no favorites, inform
+  if(state.favorites.size === 0){
+    alert('Nemáš označené žiadne obľúbené otázky.');
+    return;
+  }
+  state.filter = 'favorites';
+  // prepare state.questions as full list so filter works
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Show only wrong (button at bottom) identical to showOnlyWrong function but filters current display */
+function showOnlyWrongButton(){
+  showOnlyWrong();
+}
+
+/* Attach event listeners */
+document.getElementById('btnShowAll').addEventListener('click', showAllCorrect);
+document.getElementById('btnShuffle').addEventListener('click', ()=>{ shuffleQuestions(); });
+document.getElementById('btnFavorites').addEventListener('click', showFavoritesList);
+document.getElementById('btnShowAllQ').addEventListener('click', showAllQuestions);
+document.getElementById('btnShowWrongOnly').addEventListener('click', ()=>{ state.filter = 'wrong'; renderQuestions(); });
+document.getElementById('btnShowFavOnly').addEventListener('click', showFavoritesOnly);
+document.getElementById('btnEvaluate').addEventListener('click', evaluateAll);
+document.getElementById('btnShowWrong').addEventListener('click', showOnlyWrongButton);
+document.getElementById('btnRetryWrong').addEventListener('click', retryWrong);
+document.getElementById('btnReset').addEventListener('click', resetTest);
+
+/* Initialize on load */
+initQuestions();
+</script>
+</body>
+</html>
