@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>10. Proteosyntéza</title>
+<style>
+  :root{
+	--card-bg: #FFE8F3;      
+	--accent: #FF8FBF;       
+    --good: #c8f7d0;
+    --bad: #FF9999;
+	--correct-unchecked: #c8f7d0;
+    --card-radius: 14px;
+  }
+  body{
+    margin:0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: #FFF5F8;
+    color:#111;body{
+  background: 
+}
+    padding:30px 16px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{
+    width:100%;
+    max-width:1100px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  h1{
+    margin:0;
+    font-size:22px;
+  }
+  .top-controls{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  button{
+    background:var(--accent);
+    color:white;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  button.secondary{
+    background:#6c757d;
+  }
+  .center-controls{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:14px;
+  }
+  #quiz{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    align-items:center;
+  }
+  .card{
+    width:100%;
+    max-width:980px;
+    background:var(--card-bg);
+    border-radius:var(--card-radius);
+	border: 2px solid #FF8FBF;  /* žltý rámik */
+    padding:16px 18px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    display:block;
+    box-sizing:border-box;
+    position:relative;
+  }
+  .q-header{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .q-number{
+    font-weight:700;
+    min-width:34px;
+  }
+  .q-text{
+    font-weight:700;
+    flex:1;
+  }
+  .q-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .star{
+    font-size:20px;
+    cursor:pointer;
+    user-select:none;
+    color:rgba(0,0,0,0.25);
+  }
+  .star.active{ color: gold; text-shadow: 0 0 6px rgba(255,215,0,0.4); }
+  .answers{
+    margin-top:10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  label.ans{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    padding:8px;
+    border-radius:8px;
+  }
+  label.ans input{ transform:scale(1.05); }
+  .btn-small{
+    padding:6px 10px;
+    font-size:13px;
+    border-radius:8px;
+    background:#0b84ff;
+  }
+  .btn-show{
+    background:#0b84ff;
+    color:white;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+  }
+  .meta{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    font-size:13px;
+    margin-top:10px;
+    color:#333;
+  }
+  .result{
+    text-align:center;
+    margin-top:18px;
+    font-weight:700;
+    font-size:16px;
+  }
+  .controls-bottom{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .hidden{ display:none; }
+  /* coloring for showCorrect */
+  .correct { background: var(--good) !important; }
+  .incorrect { background: var(--bad) !important; }
+  .correct-unchecked { background: var(--correct-unchecked) !important; }
+  /* small responsive */
+  @media (max-width:640px){
+    body { padding:14px; }
+    .card{ padding:12px; }
+    .q-number{ min-width:28px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>10. Proteosyntéza</h1>
+    <div class="top-controls">
+      <button id="btnFavorites">Obľúbené</button>
+      <button id="btnShuffle">Zamiešať otázky</button>
+      <button id="btnShowAll" title="Zobraziť všetky správne odpovede">Zobraziť všetky správne odpovede</button>
+    </div>
+  </header>
+
+  <div class="center-controls">
+    <span style="color:#555">Filtrovať zobrazenie:</span>
+    <button id="btnShowAllQ" class="secondary">Zobraziť všetky</button>
+    <button id="btnShowWrongOnly" class="secondary">Zobraziť len chybné</button>
+    <button id="btnShowFavOnly" class="secondary">Zobraziť len obľúbené</button>
+  </div>
+
+  <div id="quiz"></div>
+
+  <div class="controls-bottom">
+    <button id="btnEvaluate">Vyhodnotiť všetko</button>
+    <button id="btnShowWrong">Zobraziť len chybné otázky</button>
+    <button id="btnRetryWrong">Opakovať len chybné</button>
+    <button id="btnReset">Obnoviť test</button>
+  </div>
+
+  <div class="result" id="resultText"></div>
+</div>
+
+<script>
+const questions = [
+{ id: 1, text: "Štruktúrny eukaryotický gén obsahuje:", answers: ["kódujúce oblasti", "intróny", "STOP kodón", "ŠTART kvadruplet"], key: "SSSN" },
+{ id: 2, text: "RNA polymeráza I:", answers: ["transkribuje gény pre tRNA", "vyskytuje sa v jadierku", "vyskytuje sa iba u baktérií", "transkribuje gény pre 5SrRNA"], key: "NSNN" },
+{ id: 3, text: "Transkripčný faktor TFIID sa viaže na:", answers: ["TATA box", "CAAT box", "GC box", "NusA proteín"], key: "SNNN" },
+{ id: 4, text: "Prokaryotická mRNA je:", answers: ["megacistronická", "monocistronická", "acistronická", "polycistronická"], key: "NNNS" },
+{ id: 5, text: "Posttranskripčné modifikácie RNA sú:", answers: ["Shine–Dalgarnova úprava", "vystrihnutie intrónov", "čiapočka na 5 ́ konci", "čiapočka na 3 ́ konci"], key: "NSSN" },
+{ id: 6, text: "Ktoré z nasledujúcich tvrdení sú pri syntéze (transkripcii) RNA pravdivé?", answers: ["RNA polymeráza pridáva nukleotidy do 5' → 3' rastúceho vlákna DNA", "promótory sú rozpoznané sekvencie, ktoré signalizujú začiatok transkripcie", "templátové vlákno DNA sa číta v smere 3' → 5'", "obe vlákna DNA slúžia ako templáty súčasne"], key: "NSSN" },
+{ id: 7, text: "RNA polymeráza II syntetizuje:", answers: ["mRNA", "miRNA", "hnRNA", "tRNA"], key: "SSSN" },
+{ id: 8, text: "Aminokyseliny môžu byť kódované:", answers: ["vždy len jedným kodónom", "vždy len jedným tripletom", "viacerými tripletmi", "viacerými kodónmi"], key: "NNSS" },
+{ id: 9, text: "Modifikácia hnRNA zahŕňa:", answers: ["úpravu 5 ́ konca (čiapočka)", "úpravu 3 ́ konca (čiapočka)", "polyadenyláciu 3 ́ konca", "polyadenyláciu 5 ́ konca"], key: "SNSN" },
+{ id: 10, text: "Vlastnosti genetického kódu sú:", answers: ["univerzálny", "tripletový", "degenerovaný", "semikonzervatívny"], key: "SSSN" },
+{ id: 11, text: "Štartovacím kodónom je:", answers: ["GUA", "UAG", "UAC", "AUG"], key: "NNNS" },
+{ id: 12, text: "Syntéza polypeptidového reťazca u prokaryotických organizmov začína aminokyselinou:", answers: ["metionín", "N – formylmetionín", "arginín", "prolín"], key: "NSNN" },
+{ id: 13, text: "Ktoré z nasledujúcich zložiek sa počas syntézy RNA (transkripcie) podieľajú na iniciácii transkripcie?", answers: ["promótorová oblasť", "terminátorová sekvencia", "ribonukleotidtrifosfáty (rNTP)", "transkripčné faktory"], key: "SNSS" },
+{ id: 14, text: "Čo sa rozumie pod pojmom „genetický kód“?", answers: ["poradie nukleotidov určujúce štruktúru bielkoviny", "reťazec aminokyselín", "typ RNA v bunke", "sekvencia repetitívnej DNA"], key: "SNNN" },
+{ id: 15, text: "Aký enzým predlžuje konce DNA pri replikácii telomér?", answers: ["DNA pol ε", "telomeráza", "DNA ligáza", "PCNA"], key: "NSNN" },
+{ id: 16, text: "Čo sa deje s nukleozómami počas replikácie DNA?", answers: ["nukleozómy sa počas replikácie nemenia", "počas replikácie sa rozpadnú a znova poskladajú zo starých aj nových histónov", "históny sa úplne odstránia a nahradia iba novými", "DNA sa replikuje bez účasti histónov"], key: "NSNN" },
+{ id: 17, text: "Ktorý box sa nachádza v prokaryotickom promótore v polohe – 10?", answers: ["GACA", "TATAAT (Pribnow box)", "CAAT", "GC"], key: "NSNN" },
+{ id: 18, text: "Ktorý box sa nachádza v eukaryotickom promótore a viaže TFIID?", answers: ["TATA (Hognessov)", "CAAT", "GC", "Shine – Dalgarno"], key: "SNNN" },
+{ id: 19, text: "V eukaryotickej kódujúcej oblasti sa striedajú:", answers: ["promótory a enhancery", "exóny a intróny", "ORF a 5′UTR", "GC a CAAT boxy"], key: "NSNN" },
+{ id: 20, text: "Aká sekvencia signalizuje polyadenyláciu eukaryotickej mRNA?", answers: ["AATAAA", "AUG", "TTAGGG", "Shine – Dalgarno"], key: "SNNN" },
+{ id: 21, text: "Koľko typov RNA polymeráz majú eukaryoty?", answers: ["1", "2", "3", "5"], key: "NNSN" },
+{ id: 22, text: "Ktorá RNA polymeráza syntetizuje mRNA u eukaryotov?", answers: ["RNA pol I", "RNA pol II", "RNA pol III", "RNA pol IV"], key: "NSNN" },
+{ id: 23, text: "Ktorá sekvencia umožňuje väzbu mRNA na 16S rRNA u prokaryotov?", answers: ["Shine–Dalgarnova", "TATA box", "PolyA signál", "GC box"], key: "SNNN" },
+{ id: 24, text: "Ktoré faktory regulujú intenzitu transkripcie u eukaryotov?", answers: ["enhancery", "silencery", "σ – faktory", "nukleozómy"], key: "SSNN" },
+{ id: 25, text: "Mechanizmus regulácie proteosyntézy pomocou RNA sa nazýva:", answers: ["interferencia", "interupcia", "interakcia", "intermediarita"], key: "SNNN" },
+{ id: 26, text: "Ramená tRNA sú:", answers: ["akceptorové", "pseudouridínové", "náhodné", "kodónové"], key: "SSNN" },
+{ id: 27, text: "Proteosyntetický aparát je zložený z:", answers: ["mRNA", "konformačného ribozómu", "aminokyseliny", "tRNA"], key: "SNSS" },
+{ id: 28, text: "Translácia prebieha:", answers: ["v jadre", "v jadierku", "v cytoplazme", "na ribozómoch"], key: "NNSS" },
+{ id: 29, text: "Na ribozóme sú väzbové miesta:", answers: ["väzbové miesto pre mRNA", "P miesto", "A miesto", "výstupné miesto"], key: "SSSS" },
+{ id: 30, text: "Podjednotky eukaryotických ribozómov sú:", answers: ["50S a 30S", "40S a 60S", "60S a 30S", "30S a 70S"], key: "NSNN" },
+{ id: 31, text: "Ktorá sekvencia sa nachádza na 3′ konci tRNA?", answers: ["AUG", "UAA", "CCA", "TTAGGG"], key: "NNSN" },
+{ id: 32, text: "Aká je funkcia adenínu na 3′ konci tRNA?", answers: ["je tam z dôvodu stabilizácie slučky", "slúži ako väzobné miesto pre aminokyselinu", "slúži ako väzobné miesto pre ribozóm", "slúži ako väzobné miesto pre mRNA"], key: "NSNN" },
+{ id: 33, text: "Ktoré bázy patria medzi minoritné bázy tRNA?", answers: ["inozín", "dihydrouracil", "tymín", "metionín"], key: "SSSN" },
+{ id: 34, text: "Ktorý enzým syntetizuje prekurzorovú tRNA?", answers: ["RNA pol I", "RNA pol II", "RNA pol III", "DNA pol δ"], key: "NNSN" },
+{ id: 35, text: "Ktorý enzým odstraňuje intróny z pre–tRNA?", answers: ["RNáza H", "špecifické endonukleázy", "exonukleáza", "Pol δ"], key: "NSNN" },
+{ id: 36, text: "Koľko typov rRNA majú prokaryoty?", answers: ["2", "3", "4", "5"], key: "NSNN" },
+{ id: 37, text: "Ktoré podjednotky ribozómu majú eukaryoty?", answers: ["30S a 50S", "40S a 60S", "20S a 40S", "18S a 28S"], key: "NSNN" },
+{ id: 38, text: "Koľko typov rRNA majú eukaryoty?", answers: ["3", "4", "5", "6"], key: "NSNN" },
+{ id: 39, text: "Čo obsahuje 40S podjednotka ribozómu?", answers: ["18S rRNA", "28S rRNA", "5S rRNA", "5,8S rRNA"], key: "SNNN" },
+{ id: 40, text: "Čo obsahuje 60S podjednotka ribozómu?", answers: ["18S rRNA", "28S rRNA", "5,8S rRNA", "5S rRNA"], key: "NSSS" },
+{ id: 41, text: "Kde prebieha syntéza rRNA?", answers: ["v jadre", "v jadierku", "v cytoplazme", "v endoplazmatickom retikule"], key: "NSNN" },
+{ id: 42, text: "Ktorá RNA polymeráza prepisuje 45S pre – rRNA?", answers: ["RNA pol I", "RNA pol II", "RNA pol III", "DNA pol γ"], key: "SNNN" },
+{ id: 43, text: "Čo je hlavnou funkciou miRNA?", answers: ["katalýza peptidových väzieb", "regulácia génovej expresie", "splicing hnRNA", "transport aminokyselín"], key: "NSNN" },
+{ id: 44, text: "Akú štruktúru má siRNA?", answers: ["jednovláknovú", "dvojvláknovú", "kruhovú", "trojlístkovú"], key: "NSNN" },
+{ id: 45, text: "Aká je hlavná úloha snoRNA?", answers: ["prenos aminokyselín", "modifikácia rRNA", "regulácia mRNA", "translácia"], key: "NSNN" },
+{ id: 46, text: "Ktoré procesy sprostredkúva snoRNA?", answers: ["metylácia", "pseudouridylácia", "fosforylácia", "polyadenylácia"], key: "SSNN" },
+{ id: 47, text: "Čo je RNA interferencia (RNAi)?", answers: ["mechanizmus splicingu", "mechanizmus degradácie alebo inhibície mRNA prostredníctvom regulačných RNA", "mechanizmus syntézy proteínov", "mechanizmus syntézy tRNA"], key: "NSNN" },
+{ id: 48, text: "Ktorý enzým katalyzuje vznik peptidovej väzby počas elongácie?", answers: ["peptidyltransferáza", "DNA pol δ", "RNA pol II", "ligáza"], key: "SNNN" },
+{ id: 49, text: "Čo sú polyribozómy (polyzómy)?", answers: ["reťazce ribozómových proteínov", "viac ribozómov súčasne na jednej mRNA", "ribozómy pripojené na ER", "skupina ribozómov bez RNA"], key: "NSNN" },
+{ id: 50, text: "Čo je gén?", answers: ["úsek DNA alebo RNA nesúci informáciu pre syntézu proteínu alebo funkčnej RNA", "úsek DNA, ktorý vždy kóduje iba proteín", "najmenšia jednotka dedičnosti tvorí jeden nukleotid", "kompletná sekvencia DNA, ktorá sa replikuje"], key: "SNNN" },
+{ id: 51, text: "Aké typy génov poznáme podľa funkcie?", answers: ["štruktúrne gény", "regulačné gény", "lipidy kódujúce gény", "gény kódujúce len polysacharidy"], key: "SSNN" },
+{ id: 52, text: "Ktoré prvky obsahuje prokaryotický promótor?", answers: ["GACA box v polohe – 35", "TATA (Pribnowov) box v polohe – 10", "CAAT box", "GC box"], key: "SSNN" },
+{ id: 53, text: "Ktoré sekvencie sú typické pre eukaryotický promótor?", answers: ["GACA box", "CAAT box", "TATA box (Hognessov)", "Shine–Dalgarnova sekvencia"], key: "NSSN" },
+{ id: 54, text: "Čo sa nachádza v kódujúcej oblasti eukaryotických génov?", answers: ["len regulačné proteíny", "intróny", "iba stop kodóny", "exóny"], key: "NSNS" },
+{ id: 55, text: "Čo je regulačný gén?", answers: ["gén, ktorý kóduje induktory alebo represory ovplyvňujúce expresiu iných génov", "gén, ktorý sa vždy prepíše do tRNA", "gén bez funkcie", "gén, ktorý kóduje poly(A) polymerázu"], key: "SNNN" },
+{ id: 56, text: "Koľko kodónov existuje a koľko z nich kóduje aminokyseliny?", answers: ["64 kodónov, z toho 61 kóduje aminokyseliny", "64 kodónov, z toho 3 sú stop kodóny", "20 kodónov, z toho všetky kódujú aminokyseliny", "64 kodónov, z toho iba 20 má význam"], key: "SSNN" },
+{ id: 57, text: "Ktoré tvrdenia platia pre štart kodón?", answers: ["jeho sekvencia je UAA", "kóduje metionín", "nachádza sa iba u prokaryotov", "jeho sekvencia je AUG"], key: "NSNS" },
+{ id: 58, text: "Čo sú prióny?", answers: ["patologické proteíny schopné meniť konformáciu normálnych proteínov", "častice obsahujúce len RNA", "infekčné častice bez nukleových kyselín", "retrovírusy"], key: "SNSN" },
+{ id: 59, text: "Čo je transkripcia?", answers: ["syntéza RNA podľa templátu DNA", "syntéza DNA podľa RNA", "syntéza proteínu na ribozóme", "oprava poškodených úsekov DNA"], key: "NNNS" },
+{ id: 60, text: "Aký je rozdiel medzi mRNA u prokaryotov a eukaryotov?", answers: ["prokaryotická mRNA je často polycistronická", "eukaryotická mRNA je normocistronická", "prokaryotická mRNA vždy kóduje iba jeden proteín", "eukaryotická mRNA sa nikdy neupravuje"], key: "SNNN" },
+{ id: 61, text: "Čo sprostredkuje iniciáciu transkripcie u prokaryotov?", answers: ["sigma faktor", "NusA proteín", "rho faktor", "DNA ligáza"], key: "SNNN" },
+{ id: 62, text: "Čo je charakteristické pre elongáciu transkripcie u prokaryotov?", answers: ["RNA polymeráza postupuje rýchlosťou asi 60 nt/s", "sigma faktor zostáva stále naviazaný", "NusA proteín sa viaže na RNA polymerázu", "polymeráza sa pohybuje iba po vedúcom vlákne DNA"], key: "SNSN" },
+{ id: 63, text: "Čo je primárnym produktom transkripcie štruktúrnych génov u eukaryotov?", answers: ["pre–mRNA", "hotová mRNA", "tRNA", "hnRNA"], key: "SNNS" },
+{ id: 64, text: "Čo je promótor?", answers: ["regulačná oblasť génu umožňujúca naviazanie RNA polymerázy", "úsek DNA, ktorý vždy kóduje proteín", "časť ribozómu", "regulačná sekvencia obsahujúca boxy (napr. TATA, CAAT)"], key: "SNNS" },
+{ id: 65, text: "Ktoré kodóny patria medzi stop kodóny?", answers: ["UAA", "UAG", "UGG", "UGA"], key: "SSNS" },
+{ id: 66, text: "Ktoré tvrdenia sú správne o exónoch a intrónoch?", answers: ["exóny sú kódujúce úseky génu", "intróny sú nekódujúce úseky génu", "intróny kódujú proteíny", "exóny sa vystrihujú zo zrelého transkriptu"], key: "SSNN" },
+{ id: 67, text: "Aký je rozdiel medzi štruktúrnym a regulačným génom?", answers: ["štruktúrny gén kóduje proteín", "regulačný gén kóduje faktor ovplyvňujúci expresiu iných génov", "regulačný gén vždy kóduje tRNA", "štruktúrny gén neobsahuje promótor"], key: "SSNN" },
+{ id: 68, text: "Čo je Shine – Dalgarno sekvencia?", answers: ["úsek mRNA u prokaryotov, ktorý sa viaže na 16S rRNA", "úsek eukaryotického promótora", "štart kodón AUG", "časť poly(A) chvosta"], key: "SNNN" },
+{ id: 69, text: "Ktoré tvrdenia platia o štart kodóne?", answers: ["jeho sekvencia je AUG", "kóduje metionín", "nachádza sa v intróne", "je zároveň stop signál"], key: "SSNN" },
+{ id: 70, text: "Aké bázy sa čítajú v triplete kodónu?", answers: ["2 puríny a 1 pyrimidín", "trojica za sebou idúcich nukleotidov", "4 nukleotidy v rade", "vždy len adenín a uracil"], key: "NSNN" },
+{ id: 71, text: "Čo platí o intrónoch?", answers: ["sú to nekódujúce úseky génu", "odstraňujú sa splicingom", "sú to kodóny pre stop signály", "sú sekvencie, ktoré kódujú tRNA"], key: "SSNN" },
+{ id: 72, text: "Ktoré aminokyseliny sú kódované iba jedným kodónom?", answers: ["metionín", "leucín", "tryptofán", "serín"], key: "SNSN" },
+{ id: 73, text: "Čo sa nachádza v 3’ UTR oblasti génu?", answers: ["signály pre polyadenyláciu", "regulačné sekvencie ovplyvňujúce stabilitu mRNA", "štart kodón", "Shine–Dalgarnova sekvencia"], key: "SSNN" },
+{ id: 74, text: "Čo je GC box?", answers: ["sekvencia eukaryotického promótora", "časť poly(A) chvosta", "viaže sa naň transkripčný faktor SP1", "miesto, kde začína splicing"], key: "SNSN" },
+{ id: 75, text: "Ktoré tvrdenia sú správne o stop kodónoch?", answers: ["sú tri: UAA, UAG, UGA", "kódujú metionín", "nešpecifikujú žiadnu aminokyselinu", "určujú začiatok translácie"], key: "SNSN" },
+];
+
+const key = [
+"SSSN","NSNN","SNNN","NNNS","NSSN","NSSN","SSSN","NNSS","SNSN","SSSN",
+"NNNS","NSNN","SNSS","SNNN","NSNN","NSNN","NSNN","SNNN","NSNN","SNNN",
+"NNSN","NSNN","SNNN","SSNN","SNNN","SSNN","SNSS","NNSS","SSSS","NSNN",
+"NNSN","NSNN","NSNN","NSNN","NSNN","NSNN","SNNN","NSSS","NSNN","SNNN",
+"NSNN","NSNN","NSNN","SSNN","NSNN","SNNN","NSNN","SNNN","SSNN","SSNN",
+"NSSN","NSNS","SNNN","SSNN","NSNS","SNSN","NNNS","SNNN","SNNN","SNSN",
+"SNNS","SNNS","SSNS","SSNN","SSNN","SNNN","SSNN","NSNN","SSNN","SNSN",
+"SSNN","SNSN","SNSN"
+];
+
+
+
+/* ------------------ State ------------------ */
+let state = {
+  questions: [], // will hold questions with original index and randomized answers
+  filter: 'all', // 'all', 'wrong', 'favorites'
+  favorites: new Set(),
+  lastWrongSet: [], // store wrong questions for retry
+};
+
+/* Initialize questions with originalIndex and random answer order */
+function initQuestions(){
+  state.questions = questions.map((q,i)=>{
+    const originalIndex = i; // 0-based
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex, qtext: q.text, answers };
+  });
+  renderQuestions();
+}
+
+/* Utility shuffle */
+function shuffleArr(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/* Render current state.questions according to filter */
+function renderQuestions(){
+  const container = document.getElementById('quiz');
+  container.innerHTML = '';
+  let toRender = state.questions.slice();
+
+  // apply filter
+  if(state.filter === 'favorites'){
+    toRender = toRender.filter(item => state.favorites.has(item.originalIndex));
+  } else if(state.filter === 'wrong'){
+    toRender = toRender.filter(item => state.lastWrongSet.includes(item.originalIndex));
+  }
+
+  if(toRender.length === 0){
+    const info = document.createElement('div');
+    info.style.textAlign='center';
+    info.style.color='#555';
+    info.style.margin='18px';
+    info.textContent = 'Žiadne otázky na zobrazenie.';
+    container.appendChild(info);
+    document.getElementById('resultText').textContent = '';
+    return;
+  }
+
+  toRender.forEach((item, displayIdx)=>{
+    // build card
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.orig = item.originalIndex;
+
+    // header
+    const header = document.createElement('div');
+    header.className = 'q-header';
+
+    const num = document.createElement('div');
+    num.className = 'q-number';
+    num.textContent = (displayIdx+1)+'.';
+
+    const text = document.createElement('div');
+    text.className = 'q-text';
+    text.textContent = item.qtext;
+
+    const actions = document.createElement('div');
+    actions.className = 'q-actions';
+
+    // star favorite
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.title = 'Označiť ako obľúbené';
+    star.innerHTML = state.favorites.has(item.originalIndex) ? '★' : '☆';
+    if(state.favorites.has(item.originalIndex)) star.classList.add('active');
+    star.addEventListener('click', ()=>{
+      if(state.favorites.has(item.originalIndex)){
+        state.favorites.delete(item.originalIndex);
+        star.classList.remove('active');
+        star.innerHTML = '☆';
+      } else {
+        state.favorites.add(item.originalIndex);
+        star.classList.add('active');
+        star.innerHTML = '★';
+      }
+    });
+
+    // show correct button
+    const btnShow = document.createElement('button');
+    btnShow.className = 'btn-small btn-show';
+    btnShow.textContent = 'Zobraziť správne';
+    btnShow.addEventListener('click', ()=> showCorrectForCard(card, item.originalIndex));
+
+    actions.appendChild(star);
+    actions.appendChild(btnShow);
+
+    header.appendChild(num);
+    header.appendChild(text);
+    header.appendChild(actions);
+
+    card.appendChild(header);
+
+    // randomize answer order for display (store mapping)
+    const randomized = item.answers.slice();
+    // If answers not yet shuffled for this render, shuffle them each render
+    const shuffledAnswers = shuffleArr(randomized);
+    card._shuffled = shuffledAnswers.map(a=>a.idx); // store original idx order
+
+    // answers block
+    const answersDiv = document.createElement('div');
+    answersDiv.className = 'answers';
+
+    shuffledAnswers.forEach((ansObj, ansPos)=>{
+      const label = document.createElement('label');
+      label.className = 'ans';
+      label.dataset.origAnswerIdx = ansObj.idx; // 0..3 original index
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.name = `q_${item.originalIndex}`;
+      checkbox.value = ansObj.idx;
+      label.appendChild(checkbox);
+      const span = document.createElement('span');
+      span.textContent = ansObj.txt;
+      label.appendChild(span);
+      answersDiv.appendChild(label);
+    });
+
+    card.appendChild(answersDiv);
+
+    // optional meta area: show original question number
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const origLabel = document.createElement('div');
+    origLabel.textContent = `#${item.originalIndex+1}`;
+    meta.appendChild(origLabel);
+    card.appendChild(meta);
+
+    container.appendChild(card);
+  });
+
+  // clear previous result
+  document.getElementById('resultText').textContent = '';
+}
+
+/* show correct for one card */
+function showCorrectForCard(cardEl, origIndex){
+  const key = questions[origIndex].key; // string like 'SNNN'
+  const labels = [...cardEl.querySelectorAll('label.ans')];
+  // Determine which shuffled labels correspond to which original index
+  labels.forEach(label=>{
+    const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10); // 0..3
+    const isCorrect = key[origAnsIdx] === 'S';
+    const input = label.querySelector('input');
+    const checked = input.checked;
+    // Reset classes first
+    label.classList.remove('correct','incorrect');
+    if(isCorrect && checked) {
+      label.classList.add('correct');
+    } else if(isCorrect && !checked){
+      // correct but not selected -> mark blue (as requested)
+      label.classList.add('correct-unchecked'); // modrá
+    } else if(!isCorrect && checked){
+      // wrong selected -> red
+      label.classList.add('incorrect');
+    }
+    // else not correct and not selected -> keep default
+  });
+}
+
+/* show all correct answers globally */
+function showAllCorrect(){
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    showCorrectForCard(card, origIndex);
+  });
+}
+
+/* evaluate current shown questions */
+function evaluateAll(){
+  const cards = document.querySelectorAll('.card');
+  let correctCount = 0;
+  const wrongList = [];
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    const key = questions[origIndex].key; // e.g. 'SNNN'
+    const labels = [...card.querySelectorAll('label.ans')];
+    const selectedOrigIdx = labels.filter(lbl=> lbl.querySelector('input').checked ).map(lbl=> parseInt(lbl.dataset.origAnswerIdx,10));
+    // compute sets
+    const selSet = new Set(selectedOrigIdx);
+    const corrSet = new Set();
+    for(let i=0;i<4;i++) if(key[i]==='S') corrSet.add(i);
+    // Compare exact equality
+    let equal = (selSet.size === corrSet.size);
+    if(equal){
+      for(let v of selSet) if(!corrSet.has(v)){ equal=false; break; }
+    }
+    // mark colors for visual feedback
+    labels.forEach(label=>{
+      label.classList.remove('correct','incorrect');
+      const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10);
+      const isCorrect = key[origAnsIdx] === 'S';
+      const checked = label.querySelector('input').checked;
+      if(isCorrect && checked) label.classList.add('correct');
+      else if(isCorrect && !checked) label.classList.add('incorrect');
+      else if(!isCorrect && checked) label.classList.add('incorrect');
+    });
+
+    if(equal){
+      correctCount++;
+    } else {
+      wrongList.push(origIndex);
+    }
+  });
+
+  // store last wrong set for retry/filters
+  state.lastWrongSet = wrongList.slice();
+
+  // percent relative to number of displayed questions
+  const total = cards.length;
+  const percent = total === 0 ? 0 : ((correctCount/total)*100).toFixed(2);
+  document.getElementById('resultText').textContent = `Úspešnosť: ${percent}% (${correctCount}/${total} úplne správnych otázok)`;
+}
+
+/* Show only wrong questions (filter) */
+function showOnlyWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Nie sú uložené žiadne chybné otázky (vyhodnoť test najprv).');
+    return;
+  }
+
+  // uloženie všetkých označených odpovedí pred renderom
+  const savedAnswers = {};
+  document.querySelectorAll('.card').forEach(card=>{
+    const qIndex = parseInt(card.dataset.orig,10);
+    savedAnswers[qIndex] = [];
+    card.querySelectorAll('input[type="checkbox"]').forEach((chk, i)=>{
+      if(chk.checked) savedAnswers[qIndex].push(parseInt(chk.value,10));
+    });
+  });
+
+  state.filter = 'wrong';
+  renderQuestions();
+
+  // po rerendere obnov výbery
+  document.querySelectorAll('.card').forEach(card=>{
+    const qIndex = parseInt(card.dataset.orig,10);
+    if(savedAnswers[qIndex]){
+      card.querySelectorAll('input[type="checkbox"]').forEach(chk=>{
+        const val = parseInt(chk.value,10);
+        if(savedAnswers[qIndex].includes(val)) chk.checked = true;
+      });
+    }
+  });
+}
+
+/* Reset test to initial state (all questions, clear selections, clear coloring) */
+function resetTest(){
+  // reinitialize questions to default order and answers order
+  state.filter = 'all';
+  state.lastWrongSet = [];
+  // restore original questions order (as in questions array)
+  state.questions = questions.map((q,i)=>{
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex:i, qtext:q.text, answers };
+  });
+  // clear favorites stays preserved
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Retry only wrong questions (renders only wrong set but allows answering them) */
+function retryWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Žiadne chybné otázky pre opakovanie. Najprv vyhodnoť test.');
+    return;
+  }
+  // Build state.questions to include only wrong ones, preserving originalIndex
+  state.questions = state.lastWrongSet.map(idx => {
+    const q = questions[idx];
+    const answers = q.answers.map((txt, ai)=>({txt, idx:ai}));
+    return { originalIndex: idx, qtext: q.text, answers };
+  });
+  state.filter = 'all';
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Show only favorites */
+function showFavoritesOnly(){
+  state.filter = 'favorites';
+  renderQuestions();
+}
+
+/* Show all questions (clear filters) */
+function showAllQuestions(){
+  state.filter = 'all';
+  // restore full set in original order
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Shuffle questions (random order) and shuffle answers within each question */
+function shuffleQuestions(){
+  // shuffle questions array
+  const arr = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  const shuffled = shuffleArr(arr);
+  state.questions = shuffled;
+  state.filter = 'all';
+  renderQuestions();
+}
+
+/* Show Favorites modal/list (simple behavior: filter to favorites) */
+function showFavoritesList(){
+  // if no favorites, inform
+  if(state.favorites.size === 0){
+    alert('Nemáš označené žiadne obľúbené otázky.');
+    return;
+  }
+  state.filter = 'favorites';
+  // prepare state.questions as full list so filter works
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Show only wrong (button at bottom) identical to showOnlyWrong function but filters current display */
+function showOnlyWrongButton(){
+  showOnlyWrong();
+}
+
+/* Attach event listeners */
+document.getElementById('btnShowAll').addEventListener('click', showAllCorrect);
+document.getElementById('btnShuffle').addEventListener('click', ()=>{ shuffleQuestions(); });
+document.getElementById('btnFavorites').addEventListener('click', showFavoritesList);
+document.getElementById('btnShowAllQ').addEventListener('click', showAllQuestions);
+document.getElementById('btnShowWrongOnly').addEventListener('click', ()=>{ state.filter = 'wrong'; renderQuestions(); });
+document.getElementById('btnShowFavOnly').addEventListener('click', showFavoritesOnly);
+document.getElementById('btnEvaluate').addEventListener('click', evaluateAll);
+document.getElementById('btnShowWrong').addEventListener('click', showOnlyWrongButton);
+document.getElementById('btnRetryWrong').addEventListener('click', retryWrong);
+document.getElementById('btnReset').addEventListener('click', resetTest);
+
+/* Initialize on load */
+initQuestions();
+</script>
+</body>
+</html>

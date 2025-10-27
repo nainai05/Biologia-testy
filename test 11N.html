@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>11. Metódy v molekulovej genetike. Omiky</title>
+<style>
+  :root{
+	--card-bg: #D0FFD0;      
+	--accent: #4caf50;       
+    --good: #66D066;
+    --bad: #FF9999;
+	--correct-unchecked: #66D066;
+    --card-radius: 14px;
+  }
+  body{
+    margin:0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f0fff0;
+    color:#111;body{
+  background: 
+}
+    padding:30px 16px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{
+    width:100%;
+    max-width:1100px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  h1{
+    margin:0;
+    font-size:22px;
+  }
+  .top-controls{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  button{
+    background:var(--accent);
+    color:white;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  button.secondary{
+    background:#6c757d;
+  }
+  .center-controls{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:14px;
+  }
+  #quiz{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    align-items:center;
+  }
+  .card{
+    width:100%;
+    max-width:980px;
+    background:var(--card-bg);
+    border-radius:var(--card-radius);
+	border: 2px solid #4caf50;  /* žltý rámik */
+    padding:16px 18px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    display:block;
+    box-sizing:border-box;
+    position:relative;
+  }
+  .q-header{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .q-number{
+    font-weight:700;
+    min-width:34px;
+  }
+  .q-text{
+    font-weight:700;
+    flex:1;
+  }
+  .q-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .star{
+    font-size:20px;
+    cursor:pointer;
+    user-select:none;
+    color:rgba(0,0,0,0.25);
+  }
+  .star.active{ color: gold; text-shadow: 0 0 6px rgba(255,215,0,0.4); }
+  .answers{
+    margin-top:10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  label.ans{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    padding:8px;
+    border-radius:8px;
+  }
+  label.ans input{ transform:scale(1.05); }
+  .btn-small{
+    padding:6px 10px;
+    font-size:13px;
+    border-radius:8px;
+    background:#0b84ff;
+  }
+  .btn-show{
+    background:#0b84ff;
+    color:white;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:13px;
+  }
+  .meta{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    font-size:13px;
+    margin-top:10px;
+    color:#333;
+  }
+  .result{
+    text-align:center;
+    margin-top:18px;
+    font-weight:700;
+    font-size:16px;
+  }
+  .controls-bottom{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .hidden{ display:none; }
+  /* coloring for showCorrect */
+  .correct { background: var(--good) !important; }
+  .incorrect { background: var(--bad) !important; }
+  .correct-unchecked { background: var(--correct-unchecked) !important; }
+  /* small responsive */
+  @media (max-width:640px){
+    body { padding:14px; }
+    .card{ padding:12px; }
+    .q-number{ min-width:28px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>11. Metódy v molekulovej genetike. Omiky</h1>
+    <div class="top-controls">
+      <button id="btnFavorites">Obľúbené</button>
+      <button id="btnShuffle">Zamiešať otázky</button>
+      <button id="btnShowAll" title="Zobraziť všetky správne odpovede">Zobraziť všetky správne odpovede</button>
+    </div>
+  </header>
+
+  <div class="center-controls">
+    <span style="color:#555">Filtrovať zobrazenie:</span>
+    <button id="btnShowAllQ" class="secondary">Zobraziť všetky</button>
+    <button id="btnShowWrongOnly" class="secondary">Zobraziť len chybné</button>
+    <button id="btnShowFavOnly" class="secondary">Zobraziť len obľúbené</button>
+  </div>
+
+  <div id="quiz"></div>
+
+  <div class="controls-bottom">
+    <button id="btnEvaluate">Vyhodnotiť všetko</button>
+    <button id="btnShowWrong">Zobraziť len chybné otázky</button>
+    <button id="btnRetryWrong">Opakovať len chybné</button>
+    <button id="btnReset">Obnoviť test</button>
+  </div>
+
+  <div class="result" id="resultText"></div>
+</div>
+
+<script>
+const questions = [
+  { id: 1, text: "Restrikčný enzým štiepi DNA", answers: ["špecificky", "nešpecificky", "na ľubovoľnom mieste", "prirodzene v baktériách"], key: "SNNS" },
+  { id: 2, text: "Pohyb DNA v géle pri elektroforéze závisí od", answers: ["pH", "veľkosti molekuly", "gravitácie", "koncentrácie gélu"], key: "NSNS" },
+  { id: 3, text: "Typy sekvenovania sú", answers: ["automatické", "ručné", "novej generácie", "starej generácie"], key: "SNSN" },
+  { id: 4, text: "Po štiepení pomocou restrikčných enzýmov vznikajú konce", answers: ["lepivé v RNA", "tupé v DNA", "tupé v RNA", "lepivé v DNA"], key: "NSNS" },
+  { id: 5, text: "Na PCR reakciu potrebujeme", answers: ["Taq polymerázu", "rRNA", "veľa molekúl DNA", "dNTP"], key: "SNNS" },
+  { id: 6, text: "Mikropipety", answers: ["používajú sa na manipuláciu s mikromnožstvami", "nie sú presné", "používajú sa so špičkami", "môžu byť nastaviteľné"], key: "SNSS" },
+  { id: 7, text: "Aká je hlavná funkcia sekvenovania DNA", answers: ["amplifikácia fragmentov DNA", "určenie veľkosti fragmentov DNA", "určenie poradia nukleotidov v molekule DNA", "meranie úrovne expresie génov"], key: "NNSN" },
+  { id: 8, text: "Restrikčné endonukleázy umožňujú pri testovaní otcovstva", answers: ["určiť pohlavie dieťaťa", "identifikovať sekvencie DNA identické so sekvenciami v DNA biologického otca", "určiť krvnú skupinu dieťaťa", "zmerať výšku dieťaťa"], key: "NSNN" },
+  { id: 9, text: "Aký typ vzorky sa často používa v kriminalistike na určenie otcovstva", answers: ["krvné sérum", "ster z bukálnej sliznice", "svalové tkanivo", "mozgovomiechový mok"], key: "NSNN" },
+  { id: 10, text: "Aký archívny materiál sa využíva v molekulárnej diagnostike", answers: ["kryokonzervované bunky", "fixovaný vo formalíne a zaliaty v parafíne", "surové tkanivo", "lyofilizovaná DNA"], key: "NSNN" },
+  { id: 11, text: "Čo je cieľom homogenizácie tkaniva pri izolácii DNA", answers: ["zvýšiť viskozitu roztoku", "rozrušiť bunky a uvoľniť DNA", "aktivovať nukleázy", "pripraviť proteíny"], key: "NSNN" },
+  { id: 12, text: "Fyzikálne metódy homogenizácie sú", answers: ["ultrasonikácia", "opakované zmrazovanie a rozmrazovanie", "použitie detergentov", "trávenie proteázami"], key: "SSNN" },
+  { id: 13, text: "Ktorá metóda homogenizácie je chemická", answers: ["ultrazvuk", "hypotonizácia", "detergenty", "tekutý dusík"], key: "NNSN" },
+  { id: 14, text: "Aká je hlavná úloha centrifugácie po homogenizácii", answers: ["odstránenie RNA", "odstránenie inhibítorov PCR", "oddelenie pevných častíc", "rozpustenie DNA"], key: "NNSN" },
+  { id: 15, text: "Aké enzýmy sa pridávajú pri izolácii DNA na odstránenie RNA", answers: ["DNáza", "RNáza", "proteáza", "lyáza"], key: "NSNN" },
+  { id: 16, text: "Ktoré organické rozpúšťadlá sa používajú pri izolácii DNA", answers: ["fenol", "chloroform", "močovina", "acetón"], key: "SSSN" },
+  { id: 17, text: "Pomocou čoho sa z roztoku vyzráža DNA", answers: ["etanolu alebo izopropanolu", "acetónu", "kyseliny sírovej", "proteáz"], key: "SNNN" },
+  { id: 18, text: "Ako vyzerá kvalitná DNA po separácii gélovou elektroforézou a vizualizácii", answers: ["difúzne pruhy", "jeden hrubší pruh", "veľa krátkych fragmentov", "fluorescenčný gradient"], key: "NSNN" },
+  { id: 19, text: "Prečo majú nukleové kyseliny záporný náboj", answers: ["vďaka fosfátovým zvyškom", "vďaka ribóze", "vďaka vodíkovým väzbám", "vďaka dusíkatým bázam"], key: "SNNN" },
+  { id: 20, text: "Aký gél sa používa pri elektroforéze DNA", answers: ["polyakrylamidový", "agarózový", "celulózový", "polyuretánový"], key: "NSNN" },
+  { id: 21, text: "Čo je úlohou DNA markeru (ladder)", answers: ["zvýšiť intenzitu fluorescencie", "umožňuje určiť veľkosť fragmentov", "zabraňovať degradácii DNA", "zlepšiť migráciu"], key: "NSNN" },
+  { id: 22, text: "Ako sa označuje najčastejšia forma bodového polymorfizmu", answers: ["VNTR", "SNP", "STR", "CNV"], key: "NSNN" },
+  { id: 23, text: "Na akom princípe funguje Sangerovo sekvenovanie", answers: ["chemická modifikácia báz", "použitie dideoxynukleotidov", "použitie proteáz", "použitie RNázy"], key: "NSNN" },
+  { id: 24, text: "Čo je princípom elektroforézy", answers: ["migrácia molekúl v elektrickom poli podľa ich veľkosti a náboja", "delenie molekúl podľa hustoty v gradiente sacharózy", "transport DNA cez membránu fosforyláciou", "rozpad DNA pôsobením enzýmov"], key: "SNNN" },
+  { id: 25, text: "Aký gél sa najčastejšie používa na separáciu DNA", answers: ["polyakrylamid", "agaróza", "škrobový gél", "silikagél"], key: "NSNN" },
+  { id: 26, text: "Čo je SNP (single nucleotide polymorphism)", answers: ["bodová mutácia zmenená v každej bunke tela", "polymorfizmus v mitochondriálnej DNA", "zmena jedného nukleotidu v DNA", "tandemové opakovanie krátkeho motívu"], key: "NNSN" },
+  { id: 27, text: "Ktorý enzým sa používa v PCR na syntézu DNA pri vysokých teplotách", answers: ["DNA polymeráza III", "reverzná transkriptáza", "Taq polymeráza", "RNáza H"], key: "NNSN" },
+  { id: 28, text: "Čo znamená hodnota Ct v kvantitatívnej PCR", answers: ["koncentráciu templátu v mg/ml", "počet cyklov, po ktorých sa deteguje fluorescencia", "dĺžku amplifikovaného fragmentu", "teplotu denaturácie"], key: "NSNN" },
+  { id: 29, text: "Aký je hlavný rozdiel medzi Sangerovou metódou a NGS", answers: ["Sangerova metóda používa RNA templát", "NGS umožňuje paralelné sekvenovanie veľkého množstva fragmentov", "Sangerova metóda využíva fluorescenčne značené nukleotidy, NGS nie", "NGS má nižšiu presnosť ako Sangerova metóda"], key: "NSNN" },
+  { id: 30, text: "Na čo slúžia biočipy", answers: ["na amplifikáciu DNA", "na hybridizáciu analyzovanej DNA alebo RNA so sondami", "na sekvenovanie pomocou dideoxynukleotidov", "na vizualizáciu proteínov etídium bromidom"], key: "NSNN" },
+  { id: 31, text: "Čo umožňujú DNA mikročipy", answers: ["analýzu expresie génov", "sekvenovanie RNA", "produkciu proteínov", "syntézu primerov"], key: "SNNN" },
+  { id: 32, text: "Aký je hlavný princíp real–time PCR (kvantitatívnej PCR)", answers: ["sledovanie fluorescencie pri každom cykle PCR, ktorá stúpa úmerne s množstvom produktu", "použitie rádioaktívne značených nukleotidov na vizualizáciu PCR fragmentov", "amplifikácia RNA bez potreby reverznej transkripcie", "sekvenovanie PCR produktov počas ich syntézy"], key: "SNNN" },
+  { id: 33, text: "Čo skúma genomika", answers: ["funkciu proteínov", "kompletnú sadu DNA organizmu", "metabolické dráhy", "expresiu RNA"], key: "NSNN" },
+  { id: 34, text: "Ktorá technika sa často používa na sekvenovanie celého genómu", answers: ["Western blot", "hmotnostná spektrometria", "next–generation sequencing", "PCR"], key: "NNSN" },
+  { id: 35, text: "Ktorý pojem označuje všetky gény jedného organizmu", answers: ["proteóm", "genóm", "metabolóm", "transkriptóm"], key: "NSNN" },
+  { id: 36, text: "Ktorá technológia umožňuje detekciu genetických variantov", answers: ["GWAS (celogenómové asociačné štúdie)", "RNA – sekvenovanie", "ELISA", "prietoková cytometria"], key: "SNNN" },
+  { id: 37, text: "Transkriptomika skúma", answers: ["DNA sekvenciu", "RNA molekuly exprimované v bunkách", "metabolity v krvi", "vírusy"], key: "NSNN" },
+  { id: 38, text: "Ktorá technika je základom transkriptomických štúdií", answers: ["RNA – sekvenovanie", "CRISPR – Cas9", "ELISA", "prietoková cytometria"], key: "SNNN" },
+  { id: 39, text: "Ktorý typ RNA sa najčastejšie analyzuje pri transkriptomike", answers: ["rRNA", "mRNA", "tRNA", "miRNA"], key: "NSNN" },
+  { id: 40, text: "Ktorý pojem označuje všetky RNA molekuly bunky", answers: ["proteóm", "genóm", "transkriptóm", "metabolóm"], key: "NNSN" },
+  { id: 41, text: "Metabolomika skúma", answers: ["DNA variácie", "expresiu proteínov", "malé molekuly/metabolity v bunkách a tkanivách", "vírusov"], key: "NNSN" },
+  { id: 42, text: "Ktoré analytické metódy sa bežne používajú v metabolomike", answers: ["hmotnostná spektrometria a NMR", "Sangerovo sekvenovanie", "Northern blot", "imunohistochémia"], key: "SNNN" },
+  { id: 43, text: "Ktorý pojem označuje súhrn všetkých metabolitov bunky alebo organizmu", answers: ["genóm", "proteóm", "metabolóm", "transkriptóm"], key: "NNSN" },
+  { id: 44, text: "Ktorá výskumná oblasť spája metabolomiku s genomikou a transkriptomikou", answers: ["proteomika", "multi – omics", "viromika", "epigenomika"], key: "NSNN" },
+  { id: 45, text: "Viromika skúma", answers: ["celý genóm človeka", "vírusové populácie a ich genetickú diverzitu", "expresiu RNA v baktériách", "metabolity v krvi"], key: "NSNN" },
+  { id: 46, text: "Ktorá technika je kľúčová pre viromiku", answers: ["vírusová metagenomika", "ELISA", "Western blot", "prietoková cytometria"], key: "SNNN" },
+  { id: 47, text: "Ktorý pojem označuje všetky vírusy v určitom prostredí alebo hostiteľovi", answers: ["viróm", "viromik", "genóm", "proteóm"], key: "SNNN" },
+  { id: 48, text: "Ktorá oblasť viromiky skúma interakcie vírusov s hostiteľom", answers: ["host – virus interaktóm", "proteomika", "metabolomika", "genomika"], key: "SNNN" },
+  { id: 49, text: "Čo je cieľom funkčnej genomiky", answers: ["štúdium interakcií medzi génmi", "predikcia 3D štruktúry proteínov", "analýza metabolických dráh", "identifikácia vírusových populácií"], key: "SNNN" },
+  { id: 50, text: "Ktorá metóda sa používa na porovnanie genómov rôznych organizmov", answers: ["porovnávacia genomika", "RNA – sekvenovanie", "Western blot", "prietoková cytometria"], key: "SNNN" },
+  { id: 51, text: "Pojem proteóm označuje súbor všetkých", answers: ["proteínov bunky", "RNA", "génov", "metabolitov"], key: "SNNN" },
+  { id: 52, text: "Čo umožňuje proteomika navyše oproti genomike", answers: ["určiť, ktoré proteíny sú skutočne exprimované", "určiť sekvenciu DNA", "zistiť všetky metabolity", "vidieť dynamický obraz organizmu"], key: "SNNS" },
+  { id: 53, text: "Čo je charakteristické pre transkriptóm", answers: ["je dynamický a mení sa podľa podmienok", "je identický vo všetkých bunkách", "zahŕňa všetky DNA sekvencie", "obsahuje iba rRNA"], key: "SNNN" },
+  { id: 54, text: "Aký je hlavný rozdiel medzi proteómom a transkriptómom", answers: ["proteóm je stabilný, transkriptóm je dynamický", "transkriptóm odráža RNA, proteóm odráža proteíny", "troteóm sa netýka expresie génov", "transkriptóm zahŕňa metabolity"], key: "NSNN" },
+  { id: 55, text: "Aká technológia sa využíva na mapovanie expresie tisícov génov naraz", answers: ["DNA microarray", "ELISA", "Western blot", "PCR"], key: "SNNN" },
+  { id: 56, text: "Ktorá omika sa najviac spája s personalizovanou medicínou", answers: ["mikrobiomika", "genomika", "metabolomika", "viromika"], key: "NSSN" },
+  { id: 57, text: "Aký typ dát vzniká pri metabolomike", answers: ["nukleotidové sekvencie", "spektrálne profily", "proteínové mapy", "RNA čítania"], key: "NSNN" },
+  { id: 58, text: "Čo je cieľom viromiky", answers: ["študovať len vírusy s DNA genómom", "charakterizovať všetky vírusy v prostredí", "analyzovať vírusové proteíny", "detegovať metabolity hostiteľa"], key: "NSNN" },
+  { id: 59, text: "Ktorá oblasť skúma špecificky epigenetické zmeny v genóme", answers: ["epigenomika", "proteomika", "viromika", "metabolomika"], key: "SNNN" },
+  { id: 60, text: "Multi–omics prístup je dôležitý preto, že", answers: ["integruje viacero vrstiev biologických informácií", "nahrádza všetky experimentálne metódy", "zameriava sa len na RNA", "zahŕňa výlučne proteíny"], key: "SNNN" },
+  { id: 61, text: "Aká je hlavná výhoda NMR (nukleárnej magnetickej rezonancie) v metabolomike", answers: ["vysoká senzitivita", "neinvazívna analýza", "sekvenuje DNA", "kvantifikuje RNA"], key: "NSNN" },
+  { id: 62, text: "Ktoré oblasti skúma systémová biológia", answers: ["len metabolomiku", "komplexné signálne dráhy medzi génmi, proteínmi a metabolitmi", "len DNA replikáciu", "len viromiku"], key: "NSNN" },
+  { id: 63, text: "Čo skúma epigenomika", answers: ["sekvenciu DNA", "mutácie v génoch", "chemické modifikácie DNA a histónov ovplyvňujúce génovú expresiu", "len mitochondriálnu DNA"], key: "NNSN" },
+  { id: 64, text: "Ktorá disciplína analyzuje siete vzájomných interakcií medzi proteínmi", answers: ["lipidomika", "glykomika", "interaktomika", "farmakogenomika"], key: "NNSN" },
+  { id: 65, text: "Aký je hlavný predmet štúdia lipidomiky", answers: ["glykozylácia proteínov", "zloženie a funkcia lipidov v bunkách", "expresia mikroRNA", "tandemové repetície v DNA"], key: "NSNN" },
+  { id: 66, text: "Čo je cieľom glykomiky", answers: ["skúmanie štruktúry a funkcie sacharidov a glykánov", "analýza mutácií v rRNA", "meranie hladiny metabolitov", "štúdium patogénnych mikroorganizmov"], key: "SNNN" },
+  { id: 67, text: "Ktorá oblasť sa zameriava na zloženie a funkciu črevného mikrobiomu", answers: ["epigenomika", "mikrobiomika", "exozomika", "farmakogenomika"], key: "NSNN" },
+  { id: 68, text: "Čo skúma farmakogenomika", answers: ["genetické faktory ovplyvňujúce odpoveď na liečbu", "expresiu génov pri infekciách", "metabolické produkty buniek", "interakcie medzi proteínmi"], key: "SNNN" },
+  { id: 69, text: "Čo je predmetom exozomiky (extracelulárnej vezikulomiky)", answers: ["analýza histónových modifikácií", "obsah vezikúl nesúcich nukleové kyseliny, proteíny a lipidy", "sledovanie glykozylácie proteínov", "analýza extracelulárnych vezikúl ako biomarkerov"], key: "NSNS" },
+  { id: 70, text: "Aký typ molekúl je hlavným predmetom skúmania v glykomike", answers: ["lipidy", "sacharidy a glykanové štruktúry", "RNA transkripty", "fosfoproteíny"], key: "NSNN" },
+];
+
+
+const key = [
+"SNNS","NSNS","SNSN","NSNS","SNNS","SNSS","NNSN","NSNN","NSNN","NSNN",
+"NSNN","SSNN","NNSN","NNSN","NSNN","SSSN","SNNN","NSNN","SNNN","NSNN",
+"NSNN","NSNN","NSNN","SNNN","NSNN","NNSN","NNSN","NSNN","SNNN","NSNN",
+"NNSN","NSNN","SNNN","NSNN","NNSN","SNNN","NSNN","SNNN","NSNN","NNSN",
+"NNSN","SNNN","NNSN","NSNN","NSNN","SNNN","SNNN","SNNN","SNNN","SNNN",
+"SNNN","SNNN","SNNN","SNNN","SNNN","SNNS","SNNN","NSNN","SNNN","NSNN",
+"SNNN","NSSN","NSNN","NSNN","SNNN","SNNN","NSNN","NSNN","SNNN","NSNN",
+"NSNN","SNNN","NSNN","SNNN","SNNN","SNNN"
+];
+
+
+
+
+/* ------------------ State ------------------ */
+let state = {
+  questions: [], // will hold questions with original index and randomized answers
+  filter: 'all', // 'all', 'wrong', 'favorites'
+  favorites: new Set(),
+  lastWrongSet: [], // store wrong questions for retry
+};
+
+/* Initialize questions with originalIndex and random answer order */
+function initQuestions(){
+  state.questions = questions.map((q,i)=>{
+    const originalIndex = i; // 0-based
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex, qtext: q.text, answers };
+  });
+  renderQuestions();
+}
+
+/* Utility shuffle */
+function shuffleArr(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/* Render current state.questions according to filter */
+function renderQuestions(){
+  const container = document.getElementById('quiz');
+  container.innerHTML = '';
+  let toRender = state.questions.slice();
+
+  // apply filter
+  if(state.filter === 'favorites'){
+    toRender = toRender.filter(item => state.favorites.has(item.originalIndex));
+  } else if(state.filter === 'wrong'){
+    toRender = toRender.filter(item => state.lastWrongSet.includes(item.originalIndex));
+  }
+
+  if(toRender.length === 0){
+    const info = document.createElement('div');
+    info.style.textAlign='center';
+    info.style.color='#555';
+    info.style.margin='18px';
+    info.textContent = 'Žiadne otázky na zobrazenie.';
+    container.appendChild(info);
+    document.getElementById('resultText').textContent = '';
+    return;
+  }
+
+  toRender.forEach((item, displayIdx)=>{
+    // build card
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.orig = item.originalIndex;
+
+    // header
+    const header = document.createElement('div');
+    header.className = 'q-header';
+
+    const num = document.createElement('div');
+    num.className = 'q-number';
+    num.textContent = (displayIdx+1)+'.';
+
+    const text = document.createElement('div');
+    text.className = 'q-text';
+    text.textContent = item.qtext;
+
+    const actions = document.createElement('div');
+    actions.className = 'q-actions';
+
+    // star favorite
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.title = 'Označiť ako obľúbené';
+    star.innerHTML = state.favorites.has(item.originalIndex) ? '★' : '☆';
+    if(state.favorites.has(item.originalIndex)) star.classList.add('active');
+    star.addEventListener('click', ()=>{
+      if(state.favorites.has(item.originalIndex)){
+        state.favorites.delete(item.originalIndex);
+        star.classList.remove('active');
+        star.innerHTML = '☆';
+      } else {
+        state.favorites.add(item.originalIndex);
+        star.classList.add('active');
+        star.innerHTML = '★';
+      }
+    });
+
+    // show correct button
+    const btnShow = document.createElement('button');
+    btnShow.className = 'btn-small btn-show';
+    btnShow.textContent = 'Zobraziť správne';
+    btnShow.addEventListener('click', ()=> showCorrectForCard(card, item.originalIndex));
+
+    actions.appendChild(star);
+    actions.appendChild(btnShow);
+
+    header.appendChild(num);
+    header.appendChild(text);
+    header.appendChild(actions);
+
+    card.appendChild(header);
+
+    // randomize answer order for display (store mapping)
+    const randomized = item.answers.slice();
+    // If answers not yet shuffled for this render, shuffle them each render
+    const shuffledAnswers = shuffleArr(randomized);
+    card._shuffled = shuffledAnswers.map(a=>a.idx); // store original idx order
+
+    // answers block
+    const answersDiv = document.createElement('div');
+    answersDiv.className = 'answers';
+
+    shuffledAnswers.forEach((ansObj, ansPos)=>{
+      const label = document.createElement('label');
+      label.className = 'ans';
+      label.dataset.origAnswerIdx = ansObj.idx; // 0..3 original index
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.name = `q_${item.originalIndex}`;
+      checkbox.value = ansObj.idx;
+      label.appendChild(checkbox);
+      const span = document.createElement('span');
+      span.textContent = ansObj.txt;
+      label.appendChild(span);
+      answersDiv.appendChild(label);
+    });
+
+    card.appendChild(answersDiv);
+
+    // optional meta area: show original question number
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const origLabel = document.createElement('div');
+    origLabel.textContent = `#${item.originalIndex+1}`;
+    meta.appendChild(origLabel);
+    card.appendChild(meta);
+
+    container.appendChild(card);
+  });
+
+  // clear previous result
+  document.getElementById('resultText').textContent = '';
+}
+
+/* show correct for one card */
+function showCorrectForCard(cardEl, origIndex){
+  const key = questions[origIndex].key; // string like 'SNNN'
+  const labels = [...cardEl.querySelectorAll('label.ans')];
+  // Determine which shuffled labels correspond to which original index
+  labels.forEach(label=>{
+    const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10); // 0..3
+    const isCorrect = key[origAnsIdx] === 'S';
+    const input = label.querySelector('input');
+    const checked = input.checked;
+    // Reset classes first
+    label.classList.remove('correct','incorrect');
+    if(isCorrect && checked) {
+      label.classList.add('correct');
+    } else if(isCorrect && !checked){
+      // correct but not selected -> mark blue (as requested)
+      label.classList.add('correct-unchecked'); // modrá
+    } else if(!isCorrect && checked){
+      // wrong selected -> red
+      label.classList.add('incorrect');
+    }
+    // else not correct and not selected -> keep default
+  });
+}
+
+/* show all correct answers globally */
+function showAllCorrect(){
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    showCorrectForCard(card, origIndex);
+  });
+}
+
+/* evaluate current shown questions */
+function evaluateAll(){
+  const cards = document.querySelectorAll('.card');
+  let correctCount = 0;
+  const wrongList = [];
+  cards.forEach(card=>{
+    const origIndex = parseInt(card.dataset.orig,10);
+    const key = questions[origIndex].key; // e.g. 'SNNN'
+    const labels = [...card.querySelectorAll('label.ans')];
+    const selectedOrigIdx = labels.filter(lbl=> lbl.querySelector('input').checked ).map(lbl=> parseInt(lbl.dataset.origAnswerIdx,10));
+    // compute sets
+    const selSet = new Set(selectedOrigIdx);
+    const corrSet = new Set();
+    for(let i=0;i<4;i++) if(key[i]==='S') corrSet.add(i);
+    // Compare exact equality
+    let equal = (selSet.size === corrSet.size);
+    if(equal){
+      for(let v of selSet) if(!corrSet.has(v)){ equal=false; break; }
+    }
+    // mark colors for visual feedback
+    labels.forEach(label=>{
+      label.classList.remove('correct','incorrect');
+      const origAnsIdx = parseInt(label.dataset.origAnswerIdx,10);
+      const isCorrect = key[origAnsIdx] === 'S';
+      const checked = label.querySelector('input').checked;
+      if(isCorrect && checked) label.classList.add('correct');
+      else if(isCorrect && !checked) label.classList.add('incorrect');
+      else if(!isCorrect && checked) label.classList.add('incorrect');
+    });
+
+    if(equal){
+      correctCount++;
+    } else {
+      wrongList.push(origIndex);
+    }
+  });
+
+  // store last wrong set for retry/filters
+  state.lastWrongSet = wrongList.slice();
+
+  // percent relative to number of displayed questions
+  const total = cards.length;
+  const percent = total === 0 ? 0 : ((correctCount/total)*100).toFixed(2);
+  document.getElementById('resultText').textContent = `Úspešnosť: ${percent}% (${correctCount}/${total} úplne správnych otázok)`;
+}
+
+/* Show only wrong questions (filter) */
+function showOnlyWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Nie sú uložené žiadne chybné otázky (vyhodnoť test najprv).');
+    return;
+  }
+
+  // uloženie všetkých označených odpovedí pred renderom
+  const savedAnswers = {};
+  document.querySelectorAll('.card').forEach(card=>{
+    const qIndex = parseInt(card.dataset.orig,10);
+    savedAnswers[qIndex] = [];
+    card.querySelectorAll('input[type="checkbox"]').forEach((chk, i)=>{
+      if(chk.checked) savedAnswers[qIndex].push(parseInt(chk.value,10));
+    });
+  });
+
+  state.filter = 'wrong';
+  renderQuestions();
+
+  // po rerendere obnov výbery
+  document.querySelectorAll('.card').forEach(card=>{
+    const qIndex = parseInt(card.dataset.orig,10);
+    if(savedAnswers[qIndex]){
+      card.querySelectorAll('input[type="checkbox"]').forEach(chk=>{
+        const val = parseInt(chk.value,10);
+        if(savedAnswers[qIndex].includes(val)) chk.checked = true;
+      });
+    }
+  });
+}
+
+/* Reset test to initial state (all questions, clear selections, clear coloring) */
+function resetTest(){
+  // reinitialize questions to default order and answers order
+  state.filter = 'all';
+  state.lastWrongSet = [];
+  // restore original questions order (as in questions array)
+  state.questions = questions.map((q,i)=>{
+    const answers = q.answers.map((txt, idx)=>({txt, idx}));
+    return { originalIndex:i, qtext:q.text, answers };
+  });
+  // clear favorites stays preserved
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Retry only wrong questions (renders only wrong set but allows answering them) */
+function retryWrong(){
+  if(state.lastWrongSet.length === 0){
+    alert('Žiadne chybné otázky pre opakovanie. Najprv vyhodnoť test.');
+    return;
+  }
+  // Build state.questions to include only wrong ones, preserving originalIndex
+  state.questions = state.lastWrongSet.map(idx => {
+    const q = questions[idx];
+    const answers = q.answers.map((txt, ai)=>({txt, idx:ai}));
+    return { originalIndex: idx, qtext: q.text, answers };
+  });
+  state.filter = 'all';
+  renderQuestions();
+  document.getElementById('resultText').textContent = '';
+}
+
+/* Show only favorites */
+function showFavoritesOnly(){
+  state.filter = 'favorites';
+  renderQuestions();
+}
+
+/* Show all questions (clear filters) */
+function showAllQuestions(){
+  state.filter = 'all';
+  // restore full set in original order
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Shuffle questions (random order) and shuffle answers within each question */
+function shuffleQuestions(){
+  // shuffle questions array
+  const arr = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  const shuffled = shuffleArr(arr);
+  state.questions = shuffled;
+  state.filter = 'all';
+  renderQuestions();
+}
+
+/* Show Favorites modal/list (simple behavior: filter to favorites) */
+function showFavoritesList(){
+  // if no favorites, inform
+  if(state.favorites.size === 0){
+    alert('Nemáš označené žiadne obľúbené otázky.');
+    return;
+  }
+  state.filter = 'favorites';
+  // prepare state.questions as full list so filter works
+  state.questions = questions.map((q,i)=>({ originalIndex:i, qtext:q.text, answers: q.answers.map((txt, idx)=>({txt, idx})) }));
+  renderQuestions();
+}
+
+/* Show only wrong (button at bottom) identical to showOnlyWrong function but filters current display */
+function showOnlyWrongButton(){
+  showOnlyWrong();
+}
+
+/* Attach event listeners */
+document.getElementById('btnShowAll').addEventListener('click', showAllCorrect);
+document.getElementById('btnShuffle').addEventListener('click', ()=>{ shuffleQuestions(); });
+document.getElementById('btnFavorites').addEventListener('click', showFavoritesList);
+document.getElementById('btnShowAllQ').addEventListener('click', showAllQuestions);
+document.getElementById('btnShowWrongOnly').addEventListener('click', ()=>{ state.filter = 'wrong'; renderQuestions(); });
+document.getElementById('btnShowFavOnly').addEventListener('click', showFavoritesOnly);
+document.getElementById('btnEvaluate').addEventListener('click', evaluateAll);
+document.getElementById('btnShowWrong').addEventListener('click', showOnlyWrongButton);
+document.getElementById('btnRetryWrong').addEventListener('click', retryWrong);
+document.getElementById('btnReset').addEventListener('click', resetTest);
+
+/* Initialize on load */
+initQuestions();
+</script>
+</body>
+</html>
