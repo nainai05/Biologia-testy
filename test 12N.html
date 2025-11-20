@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>10. Proteosyntéza</title>
+<title>12. Formy vstupu a existencie cudzorodej DNA v bunke. Vektory. Rekombinačné techniky</title>
 <style>
   :root{
-	--card-bg: #FFE8F3;      
-	--accent: #FF8FBF;       
+	--card-bg: #FFE5CC;      
+	--accent: #FF9933;       
     --good: #c8f7d0;
     --bad: #FF9999;
 	--correct-unchecked: #c8f7d0;
@@ -16,7 +16,7 @@
   body{
     margin:0;
     font-family: "Segoe UI", Roboto, Arial, sans-serif;
-    background: #FFFCFD;
+    background: #FFFFFF;
     color:#111;body{
   background: 
 }
@@ -73,7 +73,7 @@
     max-width:980px;
     background:var(--card-bg);
     border-radius:var(--card-radius);
-	border: 2px solid #FF8FBF;  /* žltý rámik */
+	border: 2px solid #FF9933;  /* žltý rámik */
     padding:16px 18px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.06);
     display:block;
@@ -170,7 +170,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>10. Proteosyntéza</h1>
+    <h1>12. Formy vstupu a existencie cudzorodej DNA v bunke. Vektory. Rekombinačné techniky</h1>
     <div class="top-controls">
       <button id="btnFavorites">Obľúbené</button>
       <button id="btnShuffle">Zamiešať otázky</button>
@@ -199,94 +199,77 @@
 
 <script>
 const questions = [
-{ id: 1, text: "Štruktúrny eukaryotický gén obsahuje:", answers: ["kódujúce oblasti", "intróny", "STOP kodón", "ŠTART kvadruplet"], key: "SSSN" },
-{ id: 2, text: "RNA polymeráza I:", answers: ["transkribuje gény pre tRNA", "vyskytuje sa v jadierku", "vyskytuje sa iba u baktérií", "transkribuje gény pre 5SrRNA"], key: "NSNN" },
-{ id: 3, text: "Transkripčný faktor TFIID sa viaže na:", answers: ["TATA box", "CAAT box", "GC box", "NusA proteín"], key: "SNNN" },
-{ id: 4, text: "Prokaryotická mRNA je:", answers: ["megacistronická", "monocistronická", "acistronická", "polycistronická"], key: "NNNS" },
-{ id: 5, text: "Posttranskripčné modifikácie RNA sú:", answers: ["Shine–Dalgarnova úprava", "vystrihnutie intrónov", "čiapočka na 5 ́ konci", "čiapočka na 3 ́ konci"], key: "NSSN" },
-{ id: 6, text: "Ktoré z nasledujúcich tvrdení sú pri syntéze (transkripcii) RNA pravdivé?", answers: ["RNA polymeráza pridáva nukleotidy do 5' → 3' rastúceho vlákna DNA", "promótory sú rozpoznané sekvencie, ktoré signalizujú začiatok transkripcie", "templátové vlákno DNA sa číta v smere 3' → 5'", "obe vlákna DNA slúžia ako templáty súčasne"], key: "NSSN" },
-{ id: 7, text: "RNA polymeráza II syntetizuje:", answers: ["mRNA", "miRNA", "hnRNA", "tRNA"], key: "SSSN" },
-{ id: 8, text: "Aminokyseliny môžu byť kódované:", answers: ["vždy len jedným kodónom", "vždy len jedným tripletom", "viacerými tripletmi", "viacerými kodónmi"], key: "NNSS" },
-{ id: 9, text: "Modifikácia hnRNA zahŕňa:", answers: ["úpravu 5 ́ konca (čiapočka)", "úpravu 3 ́ konca (čiapočka)", "polyadenyláciu 3 ́ konca", "polyadenyláciu 5 ́ konca"], key: "SNSN" },
-{ id: 10, text: "Vlastnosti genetického kódu sú:", answers: ["univerzálny", "tripletový", "degenerovaný", "semikonzervatívny"], key: "SSSN" },
-{ id: 11, text: "Štartovacím kodónom je:", answers: ["GUA", "UAG", "UAC", "AUG"], key: "NNNS" },
-{ id: 12, text: "Syntéza polypeptidového reťazca u prokaryotických organizmov začína aminokyselinou:", answers: ["metionín", "N – formylmetionín", "arginín", "prolín"], key: "NSNN" },
-{ id: 13, text: "Ktoré z nasledujúcich zložiek sa počas syntézy RNA (transkripcie) podieľajú na iniciácii transkripcie?", answers: ["promótorová oblasť", "terminátorová sekvencia", "ribonukleotidtrifosfáty (rNTP)", "transkripčné faktory"], key: "SNSS" },
-{ id: 14, text: "Čo sa rozumie pod pojmom „genetický kód“?", answers: ["poradie nukleotidov určujúce štruktúru bielkoviny", "reťazec aminokyselín", "typ RNA v bunke", "sekvencia repetitívnej DNA"], key: "SNNN" },
-{ id: 15, text: "Aký enzým predlžuje konce DNA pri replikácii telomér?", answers: ["DNA pol ε", "telomeráza", "DNA ligáza", "PCNA"], key: "NSNN" },
-{ id: 16, text: "Čo sa deje s nukleozómami počas replikácie DNA?", answers: ["nukleozómy sa počas replikácie nemenia", "počas replikácie sa rozpadnú a znova poskladajú zo starých aj nových histónov", "históny sa úplne odstránia a nahradia iba novými", "DNA sa replikuje bez účasti histónov"], key: "NSNN" },
-{ id: 17, text: "Ktorý box sa nachádza v prokaryotickom promótore v polohe – 10?", answers: ["GACA", "TATAAT (Pribnow box)", "CAAT", "GC"], key: "NSNN" },
-{ id: 18, text: "Ktorý box sa nachádza v eukaryotickom promótore a viaže TFIID?", answers: ["TATA (Hognessov)", "CAAT", "GC", "Shine – Dalgarno"], key: "SNNN" },
-{ id: 19, text: "V eukaryotickej kódujúcej oblasti sa striedajú:", answers: ["promótory a enhancery", "exóny a intróny", "ORF a 5′UTR", "GC a CAAT boxy"], key: "NSNN" },
-{ id: 20, text: "Aká sekvencia signalizuje polyadenyláciu eukaryotickej mRNA?", answers: ["AATAAA", "AUG", "TTAGGG", "Shine – Dalgarno"], key: "SNNN" },
-{ id: 21, text: "Koľko typov RNA polymeráz majú eukaryoty?", answers: ["1", "2", "3", "5"], key: "NNSN" },
-{ id: 22, text: "Ktorá RNA polymeráza syntetizuje mRNA u eukaryotov?", answers: ["RNA pol I", "RNA pol II", "RNA pol III", "RNA pol IV"], key: "NSNN" },
-{ id: 23, text: "Ktorá sekvencia umožňuje väzbu mRNA na 16S rRNA u prokaryotov?", answers: ["Shine–Dalgarnova", "TATA box", "PolyA signál", "GC box"], key: "SNNN" },
-{ id: 24, text: "Ktoré faktory regulujú intenzitu transkripcie u eukaryotov?", answers: ["enhancery", "silencery", "σ – faktory", "nukleozómy"], key: "SSNN" },
-{ id: 25, text: "Mechanizmus regulácie proteosyntézy pomocou RNA sa nazýva:", answers: ["interferencia", "interupcia", "interakcia", "intermediarita"], key: "SNNN" },
-{ id: 26, text: "Ramená tRNA sú:", answers: ["akceptorové", "pseudouridínové", "náhodné", "kodónové"], key: "SSNN" },
-{ id: 27, text: "Proteosyntetický aparát je zložený z:", answers: ["mRNA", "konformačného ribozómu", "aminokyseliny", "tRNA"], key: "SNSS" },
-{ id: 28, text: "Translácia prebieha:", answers: ["v jadre", "v jadierku", "v cytoplazme", "na ribozómoch"], key: "NNSS" },
-{ id: 29, text: "Na ribozóme sú väzbové miesta:", answers: ["väzbové miesto pre mRNA", "P miesto", "A miesto", "výstupné miesto"], key: "SSSS" },
-{ id: 30, text: "Podjednotky eukaryotických ribozómov sú:", answers: ["50S a 30S", "40S a 60S", "60S a 30S", "30S a 70S"], key: "NSNN" },
-{ id: 31, text: "Ktorá sekvencia sa nachádza na 3′ konci tRNA?", answers: ["AUG", "UAA", "CCA", "TTAGGG"], key: "NNSN" },
-{ id: 32, text: "Aká je funkcia adenínu na 3′ konci tRNA?", answers: ["je tam z dôvodu stabilizácie slučky", "slúži ako väzobné miesto pre aminokyselinu", "slúži ako väzobné miesto pre ribozóm", "slúži ako väzobné miesto pre mRNA"], key: "NSNN" },
-{ id: 33, text: "Ktoré bázy patria medzi minoritné bázy tRNA?", answers: ["inozín", "dihydrouracil", "tymín", "metionín"], key: "SSSN" },
-{ id: 34, text: "Ktorý enzým syntetizuje prekurzorovú tRNA?", answers: ["RNA pol I", "RNA pol II", "RNA pol III", "DNA pol δ"], key: "NNSN" },
-{ id: 35, text: "Ktorý enzým odstraňuje intróny z pre–tRNA?", answers: ["RNáza H", "špecifické endonukleázy", "exonukleáza", "Pol δ"], key: "NSNN" },
-{ id: 36, text: "Koľko typov rRNA majú prokaryoty?", answers: ["2", "3", "4", "5"], key: "NSNN" },
-{ id: 37, text: "Ktoré podjednotky ribozómu majú eukaryoty?", answers: ["30S a 50S", "40S a 60S", "20S a 40S", "18S a 28S"], key: "NSNN" },
-{ id: 38, text: "Koľko typov rRNA majú eukaryoty?", answers: ["3", "4", "5", "6"], key: "NSNN" },
-{ id: 39, text: "Čo obsahuje 40S podjednotka ribozómu?", answers: ["18S rRNA", "28S rRNA", "5S rRNA", "5,8S rRNA"], key: "SNNN" },
-{ id: 40, text: "Čo obsahuje 60S podjednotka ribozómu?", answers: ["18S rRNA", "28S rRNA", "5,8S rRNA", "5S rRNA"], key: "NSSS" },
-{ id: 41, text: "Kde prebieha syntéza rRNA?", answers: ["v jadre", "v jadierku", "v cytoplazme", "v endoplazmatickom retikule"], key: "NSNN" },
-{ id: 42, text: "Ktorá RNA polymeráza prepisuje 45S pre – rRNA?", answers: ["RNA pol I", "RNA pol II", "RNA pol III", "DNA pol γ"], key: "SNNN" },
-{ id: 43, text: "Čo je hlavnou funkciou miRNA?", answers: ["katalýza peptidových väzieb", "regulácia génovej expresie", "splicing hnRNA", "transport aminokyselín"], key: "NSNN" },
-{ id: 44, text: "Akú štruktúru má siRNA?", answers: ["jednovláknovú", "dvojvláknovú", "kruhovú", "trojlístkovú"], key: "NSNN" },
-{ id: 45, text: "Aká je hlavná úloha snoRNA?", answers: ["prenos aminokyselín", "modifikácia rRNA", "regulácia mRNA", "translácia"], key: "NSNN" },
-{ id: 46, text: "Ktoré procesy sprostredkúva snoRNA?", answers: ["metylácia", "pseudouridylácia", "fosforylácia", "polyadenylácia"], key: "SSNN" },
-{ id: 47, text: "Čo je RNA interferencia (RNAi)?", answers: ["mechanizmus splicingu", "mechanizmus degradácie alebo inhibície mRNA prostredníctvom regulačných RNA", "mechanizmus syntézy proteínov", "mechanizmus syntézy tRNA"], key: "NSNN" },
-{ id: 48, text: "Ktorý enzým katalyzuje vznik peptidovej väzby počas elongácie?", answers: ["peptidyltransferáza", "DNA pol δ", "RNA pol II", "ligáza"], key: "SNNN" },
-{ id: 49, text: "Čo sú polyribozómy (polyzómy)?", answers: ["reťazce ribozómových proteínov", "viac ribozómov súčasne na jednej mRNA", "ribozómy pripojené na ER", "skupina ribozómov bez RNA"], key: "NSNN" },
-{ id: 50, text: "Čo je gén?", answers: ["úsek DNA alebo RNA nesúci informáciu pre syntézu proteínu alebo funkčnej RNA", "úsek DNA, ktorý vždy kóduje iba proteín", "najmenšia jednotka dedičnosti tvorí jeden nukleotid", "kompletná sekvencia DNA, ktorá sa replikuje"], key: "SNNN" },
-{ id: 51, text: "Aké typy génov poznáme podľa funkcie?", answers: ["štruktúrne gény", "regulačné gény", "lipidy kódujúce gény", "gény kódujúce len polysacharidy"], key: "SSNN" },
-{ id: 52, text: "Ktoré prvky obsahuje prokaryotický promótor?", answers: ["GACA box v polohe – 35", "TATA (Pribnowov) box v polohe – 10", "CAAT box", "GC box"], key: "SSNN" },
-{ id: 53, text: "Ktoré sekvencie sú typické pre eukaryotický promótor?", answers: ["GACA box", "CAAT box", "TATA box (Hognessov)", "Shine–Dalgarnova sekvencia"], key: "NSSN" },
-{ id: 54, text: "Čo sa nachádza v kódujúcej oblasti eukaryotických génov?", answers: ["len regulačné proteíny", "intróny", "iba stop kodóny", "exóny"], key: "NSNS" },
-{ id: 55, text: "Čo je regulačný gén?", answers: ["gén, ktorý kóduje induktory alebo represory ovplyvňujúce expresiu iných génov", "gén, ktorý sa vždy prepíše do tRNA", "gén bez funkcie", "gén, ktorý kóduje poly(A) polymerázu"], key: "SNNN" },
-{ id: 56, text: "Koľko kodónov existuje a koľko z nich kóduje aminokyseliny?", answers: ["64 kodónov, z toho 61 kóduje aminokyseliny", "64 kodónov, z toho 3 sú stop kodóny", "20 kodónov, z toho všetky kódujú aminokyseliny", "64 kodónov, z toho iba 20 má význam"], key: "SSNN" },
-{ id: 57, text: "Ktoré tvrdenia platia pre štart kodón?", answers: ["jeho sekvencia je UAA", "kóduje metionín", "nachádza sa iba u prokaryotov", "jeho sekvencia je AUG"], key: "NSNS" },
-{ id: 58, text: "Čo sú prióny?", answers: ["patologické proteíny schopné meniť konformáciu normálnych proteínov", "častice obsahujúce len RNA", "infekčné častice bez nukleových kyselín", "retrovírusy"], key: "SNSN" },
-{ id: 59, text: "Čo je transkripcia?", answers: ["syntéza RNA podľa templátu DNA", "syntéza DNA podľa RNA", "syntéza proteínu na ribozóme", "oprava poškodených úsekov DNA"], key: "NNNS" },
-{ id: 60, text: "Aký je rozdiel medzi mRNA u prokaryotov a eukaryotov?", answers: ["prokaryotická mRNA je často polycistronická", "eukaryotická mRNA je normocistronická", "prokaryotická mRNA vždy kóduje iba jeden proteín", "eukaryotická mRNA sa nikdy neupravuje"], key: "SNNN" },
-{ id: 61, text: "Čo sprostredkuje iniciáciu transkripcie u prokaryotov?", answers: ["sigma faktor", "NusA proteín", "rho faktor", "DNA ligáza"], key: "SNNN" },
-{ id: 62, text: "Čo je charakteristické pre elongáciu transkripcie u prokaryotov?", answers: ["RNA polymeráza postupuje rýchlosťou asi 60 nt/s", "sigma faktor zostáva stále naviazaný", "NusA proteín sa viaže na RNA polymerázu", "polymeráza sa pohybuje iba po vedúcom vlákne DNA"], key: "SNSN" },
-{ id: 63, text: "Čo je primárnym produktom transkripcie štruktúrnych génov u eukaryotov?", answers: ["pre–mRNA", "hotová mRNA", "tRNA", "hnRNA"], key: "SNNS" },
-{ id: 64, text: "Čo je promótor?", answers: ["regulačná oblasť génu umožňujúca naviazanie RNA polymerázy", "úsek DNA, ktorý vždy kóduje proteín", "časť ribozómu", "regulačná sekvencia obsahujúca boxy (napr. TATA, CAAT)"], key: "SNNS" },
-{ id: 65, text: "Ktoré kodóny patria medzi stop kodóny?", answers: ["UAA", "UAG", "UGG", "UGA"], key: "SSNS" },
-{ id: 66, text: "Ktoré tvrdenia sú správne o exónoch a intrónoch?", answers: ["exóny sú kódujúce úseky génu", "intróny sú nekódujúce úseky génu", "intróny kódujú proteíny", "exóny sa vystrihujú zo zrelého transkriptu"], key: "SSNN" },
-{ id: 67, text: "Aký je rozdiel medzi štruktúrnym a regulačným génom?", answers: ["štruktúrny gén kóduje proteín", "regulačný gén kóduje faktor ovplyvňujúci expresiu iných génov", "regulačný gén vždy kóduje tRNA", "štruktúrny gén neobsahuje promótor"], key: "SSNN" },
-{ id: 68, text: "Čo je Shine – Dalgarno sekvencia?", answers: ["úsek mRNA u prokaryotov, ktorý sa viaže na 16S rRNA", "úsek eukaryotického promótora", "štart kodón AUG", "časť poly(A) chvosta"], key: "SNNN" },
-{ id: 69, text: "Ktoré tvrdenia platia o štart kodóne?", answers: ["jeho sekvencia je AUG", "kóduje metionín", "nachádza sa v intróne", "je zároveň stop signál"], key: "SSNN" },
-{ id: 70, text: "Aké bázy sa čítajú v triplete kodónu?", answers: ["2 puríny a 1 pyrimidín", "trojica za sebou idúcich nukleotidov", "4 nukleotidy v rade", "vždy len adenín a uracil"], key: "NSNN" },
-{ id: 71, text: "Čo platí o intrónoch?", answers: ["sú to nekódujúce úseky génu", "odstraňujú sa splicingom", "sú to kodóny pre stop signály", "sú sekvencie, ktoré kódujú tRNA"], key: "SSNN" },
-{ id: 72, text: "Ktoré aminokyseliny sú kódované iba jedným kodónom?", answers: ["metionín", "leucín", "tryptofán", "serín"], key: "SNSN" },
-{ id: 73, text: "Čo sa nachádza v 3’ UTR oblasti génu?", answers: ["signály pre polyadenyláciu", "regulačné sekvencie ovplyvňujúce stabilitu mRNA", "štart kodón", "Shine–Dalgarnova sekvencia"], key: "SSNN" },
-{ id: 74, text: "Čo je GC box?", answers: ["sekvencia eukaryotického promótora", "časť poly(A) chvosta", "viaže sa naň transkripčný faktor SP1", "miesto, kde začína splicing"], key: "SNSN" },
-{ id: 75, text: "Ktoré tvrdenia sú správne o stop kodónoch?", answers: ["sú tri: UAA, UAG, UGA", "kódujú metionín", "nešpecifikujú žiadnu aminokyselinu", "určujú začiatok translácie"], key: "SNSN" },
-];
+{ id: 1, text: "Prirodzené spôsoby vstupu cudzej DNA do bunky sú:", answers: ["transformácia", "transkripcia", "transdukcia", "konjugácia"], key: "SNSS" },
+{ id: 2, text: "Medzi experimentálne techniky prenosu DNA do bunky patrí:", answers: ["elektroforéza", "mikroinjekcia", "lipofekcia", "fotosyntéza"], key: "NSSN" },
+{ id: 3, text: "Vírusové vektory používané v génovom inžinierstve môžu byť:", answers: ["retrovírusy", "chloroplasty", "adenovírusy", "mitochondrie"], key: "SNSN" },
+{ id: 4, text: "Cudzia DNA môže v bunke existovať ako:", answers: ["plazmidová forma", "mitochondriálna forma", "epizomálna forma", "ribozomálna forma"], key: "SNSN" },
+{ id: 5, text: "Integrovaná forma cudzej DNA je typická pre:", answers: ["retrovírusy", "plazmidy", "transpozóny", "liposómy"], key: "SNSN" },
+{ id: 6, text: "Plazmidové vektory:", answers: ["sú malé kruhové molekuly DNA schopné autonómnej replikácie", "sa prirodzene nachádzajú v jadre eukaryotických buniek", "môžu niesť selekčné markery a promótory", "nikdy sa nepoužívajú na produkciu proteínov"], key: "SNSN" },
+{ id: 7, text: "Vírusové vektory:", answers: ["retrovírusy sa integrujú do genómu hostiteľa", "adenovírusy prinášajú DNA bez integrácie", "adeno–asociované vírusy sú vysoko imunogénne", "všetky vírusové vektory sú vždy patogénne"], key: "SSNN" },
+{ id: 8, text: "Nevírusové vektory:", answers: ["zahŕňajú lipozómy a lipidové nanočastice", "sú menej bezpečné ako vírusové vektory", "môžu byť tvorené syntetickými polymérmi", "sa používajú len v rastlinnej biotechnológii"], key: "SNSN" },
+{ id: 9, text: "Bakteriálne vektory:", answers: ["využívajú oslabené patogény, ako Salmonella a Listeria", "neumožňujú prenos rekombinantnej DNA", "skúšajú sa pri vývoji vakcín", "dnes sú už úplne nahradené vírusovými vektormi"], key: "SNSN" },
+{ id: 10, text: "Rekombinačná DNA technológia:", answers: ["využíva reštrikčné endonukleázy a DNA ligázu", "umožňuje spojiť cudzí gén s vektorom", "je založená na transkripcii do mRNA", "neumožňuje selekciu klonov"], key: "SSNN" },
+{ id: 11, text: "Programovateľné nukleázy:", answers: ["ZFN, TALEN a CRISPR–Cas dokážu vytvoriť dvojvláknový zlom DNA", "výsledok editácie závisí od voľby opravnej dráhy HDR alebo NHEJ", "využívajú iba retrovírusy", "patria výlučne medzi bakteriálne enzýmy bez použitia v genetike"], key: "SSNN" },
+{ id: 12, text: "Base editory a prime editory:", answers: ["umožňujú meniť bázy alebo krátke úseky DNA bez dvojvláknových zlomov", "zvyšujú riziko off–target efektov", "predstavujú moderné varianty presného editovania", "vyžadujú vždy integráciu do chromozómu hostiteľa"], key: "SNSS" },
+{ id: 13, text: "Pri mutáciách spôsobujúcich stratu funkčnosti génu v génovej terapii sa najčastejšie:", answers: ["odstraňuje celý chromozóm", "dodáva funkčná kópia génu", "využíva RNAi", "edituje presná chyba v DNA"], key: "NSNS" },
+{ id: 14, text: "Cielená cytotoxicita v génovej terapii môže prebiehať:", answers: ["expresiou samovražedného génu", "expresiou génu pre rezistenciu na antibiotiká", "aktiváciou imunitného systému pomocou CAR–T buniek", "expresiou génu pre GFP"], key: "SNSN" },
+{ id: 15, text: "Vypnutie génu (knock–down) sa dosahuje:", answers: ["antisense oligonukleotidmi", "mechanizmom RNAi", "CRISPR–x/CRISPR–a systémom", "transkripciou génu na mRNA"], key: "SSNN" },
+{ id: 16, text: "CRISPR–Cas systém u baktérií:", answers: ["poskytuje adaptívnu imunitu voči bakteriofágom", "využíva krátke fragmenty vírusovej DNA uložené ako spacery", "degraduje RNA hostiteľskej bunky", "bol objavený iba v roku 2020"], key: "SSNN" },
+{ id: 17, text: "Najznámejší Cas proteín je Cas9, ktorý:", answers: ["umožňuje presné naštiepenie DNA", "degraduje proteíny", "funguje výhradne pri RNA vírusoch", "má varianty Cas12 a Cas13, zamerané na DNA a RNA"], key: "SNNS" },
+{ id: 18, text: "Princíp génovej terapie spočíva najmä v tom, že:", answers: ["sa do cieľových buniek vnesie funkčný gén", "sa trvalo umlčí všetky mutované gény v tele", "sa opraví mutácia alebo umlčí škodlivá alela", "sa nahrádza celé jadro bunky"], key: "SNSN" },
+{ id: 19, text: "Prvé regulačne schválené terapie zahŕňajú:", answers: ["Luxturna pre mutácie v RPE65", "Zolgensma pre spinálnu muskulárnu atrofiu", "penicilín", "cisplatina"], key: "SSNN" },
+{ id: 20, text: "Kľúčové požiadavky pre úspešnú génovú terapiu sú:", answers: ["presná molekulárna diagnóza", "výber vhodných cieľových buniek", "dodanie génu do cytoplazmatických inklúzií", "úplná eliminácia RNA hostiteľa"], key: "SSNN" },
+{ id: 21, text: "Ex vivo génová terapia:", answers: ["úprava buniek mimo tela a návrat pacientovi", "umožňuje selekciu a kontrolu buniek", "je praktickejšia pre tkanivá, ktoré nemožno odoberať", "prebieha priamo v tele pacienta"], key: "SSNN" },
+{ id: 22, text: "Medzi limity génovej terapie patrí:", answers: ["imunogénnosť vektorov", "riziko inzerčnej mutagenézy", "dlhodobý účinok pri integrujúcich systémoch", "schopnosť riešiť všetky polygénové ochorenia"], key: "SSNN" },
+{ id: 23, text: "CRISPR/Cas je:", answers: ["imunitný systém eukaryot", "adaptívny imunitný systém prokaryot", "imunitný systém vírusov", "nachádza sa v mitochondriách alebo chloroplastoch"], key: "NSNN" },
+{ id: 24, text: "CRISPR/Cas:", answers: ["je typ plazmidu", "je systém obrany proti cudzej DNA u baktérií", "je obranný systém vírusov", "rozstrihá DNA nešpecificky"], key: "NSNN" },
+{ id: 25, text: "Možnosti využitia CRISPR/Cas v medicíne:", answers: ["protinádorová terapia", "liečba monogénových ochorení", "liečba vírusových infekcií", "riešenie rezistencie na antibiotiká"], key: "SSSS" },
+{ id: 26, text: "Anti–CRISPR (Acr) proteíny:", answers: ["blokujú väzbové miesta DNA", "blokujú štiepenie DNA", "enzymaticky deaktivujú CRISPR/Cas", "sú prenášané plazmidmi"], key: "SSSN" },
+{ id: 27, text: "Crisprové antibiotiká:", answers: ["nemôžu byť cielené na plazmidy rezistencie", "majú širokospektrálny účinok", "môžu byť zamerané proti bakteriálnemu genómu", "inhibujú syntézu bunkovej steny"], key: "NNSN" },
+{ id: 28, text: "Génová terapia:", answers: ["je somatická alebo zárodočná", "je u ľudí zakázaná", "môže byť in vivo alebo ex vivo", "používa genetický materiál na liečbu chorôb"], key: "SNSS" },
+{ id: 29, text: "Somatická génová terapia:", answers: ["používa vírusové vektory na transdukciu", "používa vírusové vektory na transfekciu", "používa plazmidy na transfekciu", "používa plazmidy na transdukciu"], key: "SNSN" },
+{ id: 30, text: "RNA terapia:", answers: ["používa DNA molekuly", "používa antisense oligonukleotidy", "môže zaviesť mRNA na obnovu chýbajúceho enzýmu", "nepoužíva aptaméry"], key: "NSSN" },
+{ id: 31, text: "Vektor v génovej terapii:", answers: ["je systém prenosu génu", "je vždy integrovaný", "môže byť odvodený z vírusu", "môže sa integrovať podľa typu"], key: "SNSS" },
+{ id: 32, text: "Plazmidom môže byť podmienená:", answers: ["rezistencia", "replikácia bakteriálneho genómu", "produkcia toxínov", "degradácia organických látok"], key: "SNSS" },
+{ id: 33, text: "Plazmidom môže byť podmienená:", answers: ["tvorba restrikčných enzýmov", "tvorba jadrovej membrány", "schopnosť symbiózy", "syntéza membránových organel"], key: "SNSN" },
+{ id: 34, text: "Prenos plazmidu:", answers: ["delenie na horiz. a vertikálny", "horizontálny aj medzi rodmi", "vertikálny aj medzi rodmi", "prebieha aj počas amitózy"], key: "SSNS" },
+{ id: 35, text: "Horizontálny prenos plazmidu:", answers: ["deje sa počas amitózy", "len medzi rovnakými rodmi", "prenáša rezistenciu medzi rodmi", "prebieha konjugáciou"], key: "NNSS" },
+{ id: 36, text: "Choroby vhodné na génovú terapiu:", answers: ["Downov syndróm", "malignity", "SCID", "Duchennova dystrofia"], key: "NSSS" },
+{ id: 37, text: "Klonovanie sa využíva pri príprave:", answers: ["enzýmov", "hormónov", "vakcín", "krvných faktorov"], key: "SSSS" },
+{ id: 38, text: "Kozmidy sú vektory získané spojením:", answers: ["vírusov a ľudskej DNA", "plazmidov a fágov", "fágov a proteínov", "YAC a kvasiniek"], key: "NSNN" },
+{ id: 39, text: "Kozmidy sú:", answers: ["antibiotiká", "vektory", "klonovacie miesta", "enzýmy"], key: "NSNN" },
+{ id: 40, text: "Podľa funkcie delíme vektory na:", answers: ["klonovacie", "expresné", "lokalizované", "multifunkčné"], key: "SSNN" },
+{ id: 41, text: "Retrovírusové vektory môžu infikovať:", answers: ["nedeliace sa rakovinové bunky", "len deliace", "nedeliace a deliace", "len nedeliace"], key: "NSNN" },
+{ id: 42, text: "Rekombinantná DNA:", answers: ["nedá sa vyrobiť umelo", "skr. rDNA", "obsahuje sekvencie, ktoré sa spolu nevyskytujú", "nemôže vzniknúť v prírode"], key: "NSSN" },
+{ id: 43, text: "Technológia rekombinantnej DNA:", answers: ["súbor metód", "nie je tvorba DNA", "môže meniť DNA v organizmoch", "zahŕňa klonovanie"], key: "SNSS" },
+{ id: 44, text: "Technológia rDNA je:", answers: ["užitočná na produkciu proteínov", "zakázaná", "zbytočná", "využívaná v génovej terapii"], key: "SNNS" },
+{ id: 45, text: "Cudzorodá DNA môže vstúpiť do baktérie pomocou:", answers: ["transdukcie", "sexsekcie", "malformácie", "transformácie"], key: "SNNS" },
+{ id: 46, text: "Cudzorodá DNA môže vstúpiť do baktérie pomocou:", answers: ["transdukcie", "fortifikácie", "konjugácie", "malformácie"], key: "SNSN" },
+{ id: 47, text: "Vstup cudzej DNA do eukaryotickej bunky:", answers: ["transpozónmi", "fortifikáciou", "elekciou", "transdukciou"], key: "SNNS" },
+{ id: 48, text: "Bakteriálna rezistencia môže byť spôsobená:", answers: ["hyperpláziou", "génom rezistencie", "plazmidom", "transpozónom"], key: "NSSS" },
+{ id: 49, text: "Plazmid:", answers: ["je kruhová dvojvláknová DNA", "lineárna RNA", "môže priniesť výhodu", "nachádza sa len v eukaryách"], key: "SNSN" },
+{ id: 50, text: "Replikácia plazmidu:", answers: ["závisí od chromozómu", "je nezávislá", "prebieha rolling circle", "prebieha rolling stone"], key: "NSSN" },
+{ id: 51, text: "Plazmid – vlastnosti:", answers: ["slúži ako vektor", "je lineárna RNA", "nesie rezistenciu", "nachádza sa v jadre"], key: "SNSN" },
+{ id: 52, text: "Transpozóny:", answers: ["vznikajú iba umelo", "môžu sa pohybovať v genóme", "nie sú prítomné vo všetkých genómoch", "sú mutagény"], key: "NSNS" },
+{ id: 53, text: "Transpozóny:", answers: ["sú prítomné v každom genóme", "vznikajú iba umelo", "prenášajú gény rezistencie", "sú mutagény"], key: "SNSS" },
+{ id: 54, text: "Aplikácie rDNA:", answers: ["medicína", "biotechnológia", "výskum", "životné prostredie"], key: "SSSS" },
+{ id: 55, text: "Konjugácia:", answers: ["prenos DNA medzi baktériami", "prebieha pilusom", "prenos medzi eukaryotmi", "recipient vytvára pilus"], key: "SSNN" },
+{ id: 56, text: "Mechanizmy prenosu DNA medzi baktériami:", answers: ["transformácia", "transdukcia", "konjugácia", "translokácia"], key: "SSSN" },
+{ id: 57, text: "Laboratórne metódy prenosu DNA do bunky:", answers: ["replikácia", "elektroporácia", "lipofekcia", "mikroinjekcia"], key: "NSSS" },
+{ id: 58, text: "Formy cudzej DNA v bunke:", answers: ["plazmidová forma zabraňuje replikácii", "epizomálna forma sa replikuje koordinovane s genómom", "integrovaná forma je začlenenie do chromozómu", "transientná forma je trvalá"], key: "NSSN" },
+{ id: 59, text: "Typy vektorov používané v génovom inžinierstve:", answers: ["plazmidové", "vírusové (stafylokoky, streptokoky)", "lipidové nanočastice", "ribozómy"], key: "SNSN" },
+{ id: 60, text: "Ktoré tvrdenia o CRISPR–Cas systéme sú správne?", answers: ["poskytuje baktériám adaptívnu imunitu proti adenovírusom", "využíva krátke úseky vírusovej DNA uložené v CRISPR lokuse", "proteín Cas9 umožňuje presný rez DNA", "pôvodne ide o mechanizmus translácie"], key: "NSSN" },
+]
+
 
 const key = [
-"SSSN","NSNN","SNNN","NNNS","NSSN","NSSN","SSSN","NNSS","SNSN","SSSN",
-"NNNS","NSNN","SNSS","SNNN","NSNN","NSNN","NSNN","SNNN","NSNN","SNNN",
-"NNSN","NSNN","SNNN","SSNN","SNNN","SSNN","SNSS","NNSS","SSSS","NSNN",
-"NNSN","NSNN","NSNN","NSNN","NSNN","NSNN","SNNN","NSSS","NSNN","SNNN",
-"NSNN","NSNN","NSNN","SSNN","NSNN","SNNN","NSNN","SNNN","SSNN","SSNN",
-"NSSN","NSNS","SNNN","SSNN","NSNS","SNSN","NNNS","SNNN","SNNN","SNSN",
-"SNNS","SNNS","SSNS","SSNN","SSNN","SNNN","SSNN","NSNN","SSNN","SNSN",
-"SSNN","SNSN","SNSN"
+"SNSS","NSSN","SNSN","SNSN","SNSN","SNSN","SSNN","SNSN","SNSN","SSNN",
+"SSNN","SNSS","NSNS","SNSN","SSNN","SSNN","SNNS","SNSN","SSNN","SSNN",
+"SSNN","SSNN","NSNN","NSNN","SSSS","SSSN","NNSN","SNSS","SNSN","NSSN",
+"SNSS","SNSS","SNSN","SSNS","NNSS","NSSS","SSSS","NSNN","NSNN","SSNN",
+"NSNN","NSSN","SNSS","SNNS","SNNS","SNSN","SNNS","NSSS","SNSN","NSSN",
+"SNSN","NSNS","SNSS","SSSS","SSNN","SSSN","NSSS","NSSN","SNSN","NSSN"
 ];
-
 
 
 /* ------------------ State ------------------ */

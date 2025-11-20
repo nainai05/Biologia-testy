@@ -6,8 +6,8 @@
 <title>11. Metódy v molekulovej genetike. Omiky</title>
 <style>
   :root{
-	--card-bg: #D0FFD0;      
-	--accent: #4caf50;       
+	--card-bg: #f0fff0;      
+	--accent: #66D066;       
     --good: #66D066;
     --bad: #FF9999;
 	--correct-unchecked: #66D066;
@@ -16,7 +16,7 @@
   body{
     margin:0;
     font-family: "Segoe UI", Roboto, Arial, sans-serif;
-    background: #f0fff0;
+    background: #f8fff8;
     color:#111;body{
   background: 
 }
@@ -73,7 +73,7 @@
     max-width:980px;
     background:var(--card-bg);
     border-radius:var(--card-radius);
-	border: 2px solid #4caf50;  /* žltý rámik */
+	border: 2px solid #D0FFD0;  /* žltý rámik */
     padding:16px 18px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.06);
     display:block;
@@ -199,76 +199,66 @@
 
 <script>
 const questions = [
-  { id: 1, text: "Restrikčný enzým štiepi DNA", answers: ["špecificky", "nešpecificky", "na ľubovoľnom mieste", "prirodzene v baktériách"], key: "SNNS" },
-  { id: 2, text: "Pohyb DNA v géle pri elektroforéze závisí od", answers: ["pH", "veľkosti molekuly", "gravitácie", "koncentrácie gélu"], key: "NSNS" },
-  { id: 3, text: "Typy sekvenovania sú", answers: ["automatické", "ručné", "novej generácie", "starej generácie"], key: "SNSN" },
-  { id: 4, text: "Po štiepení pomocou restrikčných enzýmov vznikajú konce", answers: ["lepivé v RNA", "tupé v DNA", "tupé v RNA", "lepivé v DNA"], key: "NSNS" },
-  { id: 5, text: "Na PCR reakciu potrebujeme", answers: ["Taq polymerázu", "rRNA", "veľa molekúl DNA", "dNTP"], key: "SNNS" },
-  { id: 6, text: "Mikropipety", answers: ["používajú sa na manipuláciu s mikromnožstvami", "nie sú presné", "používajú sa so špičkami", "môžu byť nastaviteľné"], key: "SNSS" },
-  { id: 7, text: "Aká je hlavná funkcia sekvenovania DNA", answers: ["amplifikácia fragmentov DNA", "určenie veľkosti fragmentov DNA", "určenie poradia nukleotidov v molekule DNA", "meranie úrovne expresie génov"], key: "NNSN" },
-  { id: 8, text: "Restrikčné endonukleázy umožňujú pri testovaní otcovstva", answers: ["určiť pohlavie dieťaťa", "identifikovať sekvencie DNA identické so sekvenciami v DNA biologického otca", "určiť krvnú skupinu dieťaťa", "zmerať výšku dieťaťa"], key: "NSNN" },
-  { id: 9, text: "Aký typ vzorky sa často používa v kriminalistike na určenie otcovstva", answers: ["krvné sérum", "ster z bukálnej sliznice", "svalové tkanivo", "mozgovomiechový mok"], key: "NSNN" },
-  { id: 10, text: "Aký archívny materiál sa využíva v molekulárnej diagnostike", answers: ["kryokonzervované bunky", "fixovaný vo formalíne a zaliaty v parafíne", "surové tkanivo", "lyofilizovaná DNA"], key: "NSNN" },
-  { id: 11, text: "Čo je cieľom homogenizácie tkaniva pri izolácii DNA", answers: ["zvýšiť viskozitu roztoku", "rozrušiť bunky a uvoľniť DNA", "aktivovať nukleázy", "pripraviť proteíny"], key: "NSNN" },
-  { id: 12, text: "Fyzikálne metódy homogenizácie sú", answers: ["ultrasonikácia", "opakované zmrazovanie a rozmrazovanie", "použitie detergentov", "trávenie proteázami"], key: "SSNN" },
-  { id: 13, text: "Ktorá metóda homogenizácie je chemická", answers: ["ultrazvuk", "hypotonizácia", "detergenty", "tekutý dusík"], key: "NNSN" },
-  { id: 14, text: "Aká je hlavná úloha centrifugácie po homogenizácii", answers: ["odstránenie RNA", "odstránenie inhibítorov PCR", "oddelenie pevných častíc", "rozpustenie DNA"], key: "NNSN" },
-  { id: 15, text: "Aké enzýmy sa pridávajú pri izolácii DNA na odstránenie RNA", answers: ["DNáza", "RNáza", "proteáza", "lyáza"], key: "NSNN" },
-  { id: 16, text: "Ktoré organické rozpúšťadlá sa používajú pri izolácii DNA", answers: ["fenol", "chloroform", "močovina", "acetón"], key: "SSSN" },
-  { id: 17, text: "Pomocou čoho sa z roztoku vyzráža DNA", answers: ["etanolu alebo izopropanolu", "acetónu", "kyseliny sírovej", "proteáz"], key: "SNNN" },
-  { id: 18, text: "Ako vyzerá kvalitná DNA po separácii gélovou elektroforézou a vizualizácii", answers: ["difúzne pruhy", "jeden hrubší pruh", "veľa krátkych fragmentov", "fluorescenčný gradient"], key: "NSNN" },
-  { id: 19, text: "Prečo majú nukleové kyseliny záporný náboj", answers: ["vďaka fosfátovým zvyškom", "vďaka ribóze", "vďaka vodíkovým väzbám", "vďaka dusíkatým bázam"], key: "SNNN" },
-  { id: 20, text: "Aký gél sa používa pri elektroforéze DNA", answers: ["polyakrylamidový", "agarózový", "celulózový", "polyuretánový"], key: "NSNN" },
-  { id: 21, text: "Čo je úlohou DNA markeru (ladder)", answers: ["zvýšiť intenzitu fluorescencie", "umožňuje určiť veľkosť fragmentov", "zabraňovať degradácii DNA", "zlepšiť migráciu"], key: "NSNN" },
-  { id: 22, text: "Ako sa označuje najčastejšia forma bodového polymorfizmu", answers: ["VNTR", "SNP", "STR", "CNV"], key: "NSNN" },
-  { id: 23, text: "Na akom princípe funguje Sangerovo sekvenovanie", answers: ["chemická modifikácia báz", "použitie dideoxynukleotidov", "použitie proteáz", "použitie RNázy"], key: "NSNN" },
-  { id: 24, text: "Čo je princípom elektroforézy", answers: ["migrácia molekúl v elektrickom poli podľa ich veľkosti a náboja", "delenie molekúl podľa hustoty v gradiente sacharózy", "transport DNA cez membránu fosforyláciou", "rozpad DNA pôsobením enzýmov"], key: "SNNN" },
-  { id: 25, text: "Aký gél sa najčastejšie používa na separáciu DNA", answers: ["polyakrylamid", "agaróza", "škrobový gél", "silikagél"], key: "NSNN" },
-  { id: 26, text: "Čo je SNP (single nucleotide polymorphism)", answers: ["bodová mutácia zmenená v každej bunke tela", "polymorfizmus v mitochondriálnej DNA", "zmena jedného nukleotidu v DNA", "tandemové opakovanie krátkeho motívu"], key: "NNSN" },
-  { id: 27, text: "Ktorý enzým sa používa v PCR na syntézu DNA pri vysokých teplotách", answers: ["DNA polymeráza III", "reverzná transkriptáza", "Taq polymeráza", "RNáza H"], key: "NNSN" },
-  { id: 28, text: "Čo znamená hodnota Ct v kvantitatívnej PCR", answers: ["koncentráciu templátu v mg/ml", "počet cyklov, po ktorých sa deteguje fluorescencia", "dĺžku amplifikovaného fragmentu", "teplotu denaturácie"], key: "NSNN" },
-  { id: 29, text: "Aký je hlavný rozdiel medzi Sangerovou metódou a NGS", answers: ["Sangerova metóda používa RNA templát", "NGS umožňuje paralelné sekvenovanie veľkého množstva fragmentov", "Sangerova metóda využíva fluorescenčne značené nukleotidy, NGS nie", "NGS má nižšiu presnosť ako Sangerova metóda"], key: "NSNN" },
-  { id: 30, text: "Na čo slúžia biočipy", answers: ["na amplifikáciu DNA", "na hybridizáciu analyzovanej DNA alebo RNA so sondami", "na sekvenovanie pomocou dideoxynukleotidov", "na vizualizáciu proteínov etídium bromidom"], key: "NSNN" },
-  { id: 31, text: "Čo umožňujú DNA mikročipy", answers: ["analýzu expresie génov", "sekvenovanie RNA", "produkciu proteínov", "syntézu primerov"], key: "SNNN" },
-  { id: 32, text: "Aký je hlavný princíp real–time PCR (kvantitatívnej PCR)", answers: ["sledovanie fluorescencie pri každom cykle PCR, ktorá stúpa úmerne s množstvom produktu", "použitie rádioaktívne značených nukleotidov na vizualizáciu PCR fragmentov", "amplifikácia RNA bez potreby reverznej transkripcie", "sekvenovanie PCR produktov počas ich syntézy"], key: "SNNN" },
-  { id: 33, text: "Čo skúma genomika", answers: ["funkciu proteínov", "kompletnú sadu DNA organizmu", "metabolické dráhy", "expresiu RNA"], key: "NSNN" },
-  { id: 34, text: "Ktorá technika sa často používa na sekvenovanie celého genómu", answers: ["Western blot", "hmotnostná spektrometria", "next–generation sequencing", "PCR"], key: "NNSN" },
-  { id: 35, text: "Ktorý pojem označuje všetky gény jedného organizmu", answers: ["proteóm", "genóm", "metabolóm", "transkriptóm"], key: "NSNN" },
-  { id: 36, text: "Ktorá technológia umožňuje detekciu genetických variantov", answers: ["GWAS (celogenómové asociačné štúdie)", "RNA – sekvenovanie", "ELISA", "prietoková cytometria"], key: "SNNN" },
-  { id: 37, text: "Transkriptomika skúma", answers: ["DNA sekvenciu", "RNA molekuly exprimované v bunkách", "metabolity v krvi", "vírusy"], key: "NSNN" },
-  { id: 38, text: "Ktorá technika je základom transkriptomických štúdií", answers: ["RNA – sekvenovanie", "CRISPR – Cas9", "ELISA", "prietoková cytometria"], key: "SNNN" },
-  { id: 39, text: "Ktorý typ RNA sa najčastejšie analyzuje pri transkriptomike", answers: ["rRNA", "mRNA", "tRNA", "miRNA"], key: "NSNN" },
-  { id: 40, text: "Ktorý pojem označuje všetky RNA molekuly bunky", answers: ["proteóm", "genóm", "transkriptóm", "metabolóm"], key: "NNSN" },
-  { id: 41, text: "Metabolomika skúma", answers: ["DNA variácie", "expresiu proteínov", "malé molekuly/metabolity v bunkách a tkanivách", "vírusov"], key: "NNSN" },
-  { id: 42, text: "Ktoré analytické metódy sa bežne používajú v metabolomike", answers: ["hmotnostná spektrometria a NMR", "Sangerovo sekvenovanie", "Northern blot", "imunohistochémia"], key: "SNNN" },
-  { id: 43, text: "Ktorý pojem označuje súhrn všetkých metabolitov bunky alebo organizmu", answers: ["genóm", "proteóm", "metabolóm", "transkriptóm"], key: "NNSN" },
-  { id: 44, text: "Ktorá výskumná oblasť spája metabolomiku s genomikou a transkriptomikou", answers: ["proteomika", "multi – omics", "viromika", "epigenomika"], key: "NSNN" },
-  { id: 45, text: "Viromika skúma", answers: ["celý genóm človeka", "vírusové populácie a ich genetickú diverzitu", "expresiu RNA v baktériách", "metabolity v krvi"], key: "NSNN" },
-  { id: 46, text: "Ktorá technika je kľúčová pre viromiku", answers: ["vírusová metagenomika", "ELISA", "Western blot", "prietoková cytometria"], key: "SNNN" },
-  { id: 47, text: "Ktorý pojem označuje všetky vírusy v určitom prostredí alebo hostiteľovi", answers: ["viróm", "viromik", "genóm", "proteóm"], key: "SNNN" },
-  { id: 48, text: "Ktorá oblasť viromiky skúma interakcie vírusov s hostiteľom", answers: ["host – virus interaktóm", "proteomika", "metabolomika", "genomika"], key: "SNNN" },
-  { id: 49, text: "Čo je cieľom funkčnej genomiky", answers: ["štúdium interakcií medzi génmi", "predikcia 3D štruktúry proteínov", "analýza metabolických dráh", "identifikácia vírusových populácií"], key: "SNNN" },
-  { id: 50, text: "Ktorá metóda sa používa na porovnanie genómov rôznych organizmov", answers: ["porovnávacia genomika", "RNA – sekvenovanie", "Western blot", "prietoková cytometria"], key: "SNNN" },
-  { id: 51, text: "Pojem proteóm označuje súbor všetkých", answers: ["proteínov bunky", "RNA", "génov", "metabolitov"], key: "SNNN" },
-  { id: 52, text: "Čo umožňuje proteomika navyše oproti genomike", answers: ["určiť, ktoré proteíny sú skutočne exprimované", "určiť sekvenciu DNA", "zistiť všetky metabolity", "vidieť dynamický obraz organizmu"], key: "SNNS" },
-  { id: 53, text: "Čo je charakteristické pre transkriptóm", answers: ["je dynamický a mení sa podľa podmienok", "je identický vo všetkých bunkách", "zahŕňa všetky DNA sekvencie", "obsahuje iba rRNA"], key: "SNNN" },
-  { id: 54, text: "Aký je hlavný rozdiel medzi proteómom a transkriptómom", answers: ["proteóm je stabilný, transkriptóm je dynamický", "transkriptóm odráža RNA, proteóm odráža proteíny", "troteóm sa netýka expresie génov", "transkriptóm zahŕňa metabolity"], key: "NSNN" },
-  { id: 55, text: "Aká technológia sa využíva na mapovanie expresie tisícov génov naraz", answers: ["DNA microarray", "ELISA", "Western blot", "PCR"], key: "SNNN" },
-  { id: 56, text: "Ktorá omika sa najviac spája s personalizovanou medicínou", answers: ["mikrobiomika", "genomika", "metabolomika", "viromika"], key: "NSSN" },
-  { id: 57, text: "Aký typ dát vzniká pri metabolomike", answers: ["nukleotidové sekvencie", "spektrálne profily", "proteínové mapy", "RNA čítania"], key: "NSNN" },
-  { id: 58, text: "Čo je cieľom viromiky", answers: ["študovať len vírusy s DNA genómom", "charakterizovať všetky vírusy v prostredí", "analyzovať vírusové proteíny", "detegovať metabolity hostiteľa"], key: "NSNN" },
-  { id: 59, text: "Ktorá oblasť skúma špecificky epigenetické zmeny v genóme", answers: ["epigenomika", "proteomika", "viromika", "metabolomika"], key: "SNNN" },
-  { id: 60, text: "Multi–omics prístup je dôležitý preto, že", answers: ["integruje viacero vrstiev biologických informácií", "nahrádza všetky experimentálne metódy", "zameriava sa len na RNA", "zahŕňa výlučne proteíny"], key: "SNNN" },
-  { id: 61, text: "Aká je hlavná výhoda NMR (nukleárnej magnetickej rezonancie) v metabolomike", answers: ["vysoká senzitivita", "neinvazívna analýza", "sekvenuje DNA", "kvantifikuje RNA"], key: "NSNN" },
-  { id: 62, text: "Ktoré oblasti skúma systémová biológia", answers: ["len metabolomiku", "komplexné signálne dráhy medzi génmi, proteínmi a metabolitmi", "len DNA replikáciu", "len viromiku"], key: "NSNN" },
-  { id: 63, text: "Čo skúma epigenomika", answers: ["sekvenciu DNA", "mutácie v génoch", "chemické modifikácie DNA a histónov ovplyvňujúce génovú expresiu", "len mitochondriálnu DNA"], key: "NNSN" },
-  { id: 64, text: "Ktorá disciplína analyzuje siete vzájomných interakcií medzi proteínmi", answers: ["lipidomika", "glykomika", "interaktomika", "farmakogenomika"], key: "NNSN" },
-  { id: 65, text: "Aký je hlavný predmet štúdia lipidomiky", answers: ["glykozylácia proteínov", "zloženie a funkcia lipidov v bunkách", "expresia mikroRNA", "tandemové repetície v DNA"], key: "NSNN" },
-  { id: 66, text: "Čo je cieľom glykomiky", answers: ["skúmanie štruktúry a funkcie sacharidov a glykánov", "analýza mutácií v rRNA", "meranie hladiny metabolitov", "štúdium patogénnych mikroorganizmov"], key: "SNNN" },
-  { id: 67, text: "Ktorá oblasť sa zameriava na zloženie a funkciu črevného mikrobiomu", answers: ["epigenomika", "mikrobiomika", "exozomika", "farmakogenomika"], key: "NSNN" },
-  { id: 68, text: "Čo skúma farmakogenomika", answers: ["genetické faktory ovplyvňujúce odpoveď na liečbu", "expresiu génov pri infekciách", "metabolické produkty buniek", "interakcie medzi proteínmi"], key: "SNNN" },
-  { id: 69, text: "Čo je predmetom exozomiky (extracelulárnej vezikulomiky)", answers: ["analýza histónových modifikácií", "obsah vezikúl nesúcich nukleové kyseliny, proteíny a lipidy", "sledovanie glykozylácie proteínov", "analýza extracelulárnych vezikúl ako biomarkerov"], key: "NSNS" },
-  { id: 70, text: "Aký typ molekúl je hlavným predmetom skúmania v glykomike", answers: ["lipidy", "sacharidy a glykanové štruktúry", "RNA transkripty", "fosfoproteíny"], key: "NSNN" },
+	{ id: 1, text: "Prirodzené spôsoby vstupu cudzej DNA do bunky sú:", answers: ["transformácia", "transkripcia", "transdukcia", "konjugácia"], key: "SNSS" },
+	{ id: 2, text: "Medzi experimentálne techniky prenosu DNA do bunky patrí:", answers: ["elektroforéza", "mikroinjekcia", "lipofekcia", "fotosyntéza"], key: "NSSN" },
+	{ id: 3, text: "Vírusové vektory používané v génovom inžinierstve môžu byť:", answers: ["retrovírusy", "chloroplasty", "adenovírusy", "mitochondrie"], key: "SNSN" },
+	{ id: 4, text: "Cudzia DNA môže v bunke existovať ako:", answers: ["plazmidová forma", "mitochondriálna forma", "epizomálna forma", "ribozomálna forma"], key: "SNSN" },
+	{ id: 5, text: "Integrovaná forma cudzej DNA je typická pre:", answers: ["retrovírusy", "plazmidy", "transpozóny", "liposómy"], key: "SNSN" },
+	{ id: 6, text: "Plazmidové vektory:", answers: ["sú malé kruhové molekuly DNA schopné autonómnej replikácie", "sa prirodzene nachádzajú v jadre eukaryotických buniek", "môžu niesť selekčné markery a promótory", "nikdy sa nepoužívajú na produkciu proteínov"], key: "SNSN" },
+	{ id: 7, text: "Vírusové vektory:", answers: ["retrovírusy sa integrujú do genómu hostiteľa", "adenovírusy prinášajú DNA bez integrácie", "adeno–asociované vírusy sú vysoko imunogénne", "všetky vírusové vektory sú vždy patogénne"], key: "SSNN" },
+	{ id: 8, text: "Nevírusové vektory:", answers: ["zahŕňajú lipozómy a lipidové nanočastice", "sú menej bezpečné ako vírusové vektory", "môžu byť tvorené syntetickými polymérmi", "sa používajú len v rastlinnej biotechnológii"], key: "SNSN" },
+	{ id: 9, text: "Bakteriálne vektory:", answers: ["využívajú oslabené patogény, ako Salmonella a Listeria", "neumožňujú prenos rekombinantnej DNA", "skúšajú sa pri vývoji vakcín", "dnes sú už úplne nahradené vírusovými vektormi"], key: "SNSN" },
+	{ id: 10, text: "Rekombinačná DNA technológia:", answers: ["využíva reštrikčné endonukleázy a DNA ligázu", "umožňuje spojiť cudzí gén s vektorom", "je založená na transkripcii do mRNA", "neumožňuje selekciu klonov"], key: "SSNN" },
+	{ id: 11, text: "Programovateľné nukleázy:", answers: ["ZFN, TALEN a CRISPR–Cas dokážu vytvoriť dvojvláknový zlom DNA", "výsledok editácie závisí od voľby opravnej dráhy HDR alebo NHEJ", "využívajú iba retrovírusy", "patria výlučne medzi bakteriálne enzýmy bez použitia v genetike"], key: "SSNN" },
+	{ id: 12, text: "Base editory a prime editory:", answers: ["umožňujú meniť bázy alebo krátke úseky DNA bez dvojvláknových zlomov", "zvyšujú riziko off–target efektov", "predstavujú moderné varianty presného editovania", "vyžadujú vždy integráciu do chromozómu hostiteľa"], key: "SNSS" },
+	{ id: 13, text: "Pri mutáciách spôsobujúcich stratu funkčnosti génu v génovej terapii sa najčastejšie:", answers: ["odstraňuje celý chromozóm", "dodáva funkčná kópia génu", "využíva RNAi", "edituje presná chyba v DNA"], key: "NSNS" },
+	{ id: 14, text: "Cielená cytotoxicita v génovej terapii môže prebiehať:", answers: ["expresiou samovražedného génu", "expresiou génu pre rezistenciu na antibiotiká", "aktiváciou imunitného systému pomocou CAR–T buniek", "expresiou génu pre GFP"], key: "SNSN" },
+	{ id: 15, text: "Vypnutie génu (knock–down) sa dosahuje:", answers: ["antisense oligonukleotidmi", "mechanizmom RNAi", "CRISPR–x/CRISPR–a systémom", "transkripciou génu na mRNA"], key: "SSNN" },
+	{ id: 16, text: "CRISPR–Cas systém u baktérií:", answers: ["poskytuje adaptívnu imunitu voči bakteriofágom", "využíva krátke fragmenty vírusovej DNA uložené ako spacery", "degraduje RNA hostiteľskej bunky", "bol objavený iba v roku 2020"], key: "SSNN" },
+	{ id: 17, text: "Najznámejší Cas proteín je Cas9, ktorý:", answers: ["umožňuje presné naštiepenie DNA", "degraduje proteíny", "funguje výhradne pri RNA vírusoch", "má varianty Cas12 a Cas13, zamerané na DNA a RNA"], key: "SNNS" },
+	{ id: 18, text: "Princíp génovej terapie spočíva najmä v tom, že:", answers: ["sa do cieľových buniek vnesie funkčný gén", "sa trvalo umlčí všetky mutované gény v tele", "sa opraví mutácia alebo umlčí škodlivá alela", "sa nahrádza celé jadro bunky"], key: "SNSN" },
+	{ id: 19, text: "Prvé regulačne schválené terapie zahŕňajú:", answers: ["Luxturna pre mutácie v RPE65", "Zolgensma pre spinálnu muskulárnu atrofiu", "penicilín", "cisplatina"], key: "SSNN" },
+	{ id: 20, text: "Kľúčové požiadavky pre úspešnú génovú terapiu sú:", answers: ["presná molekulárna diagnóza", "výber vhodných cieľových buniek", "dodanie génu do cytoplazmatických inklúzií", "úplná eliminácia RNA hostiteľa"], key: "SSNN" },
+	{ id: 21, text: "Ex vivo génová terapia:", answers: ["úprava buniek mimo tela a návrat pacientovi", "umožňuje selekciu a kontrolu buniek", "je praktickejšia pre tkanivá, ktoré nemožno odoberať", "prebieha priamo v tele pacienta"], key: "SSNN" },
+	{ id: 22, text: "Medzi limity génovej terapie patrí:", answers: ["imunogénnosť vektorov", "riziko inzerčnej mutagenézy", "dlhodobý účinok pri integrujúcich systémoch", "schopnosť riešiť všetky polygénové ochorenia"], key: "SSNN" },
+	{ id: 23, text: "CRISPR/Cas je:", answers: ["imunitný systém eukaryot", "adaptívny imunitný systém prokaryot", "imunitný systém vírusov", "nachádza sa v mitochondriách alebo chloroplastoch"], key: "NSNN" },
+	{ id: 24, text: "CRISPR/Cas:", answers: ["je typ plazmidu", "je systém obrany proti cudzej DNA u baktérií", "je obranný systém vírusov", "rozstrihá DNA nešpecificky"], key: "NSNN" },
+	{ id: 25, text: "Možnosti využitia CRISPR/Cas v medicíne:", answers: ["protinádorová terapia", "liečba monogénových ochorení", "liečba vírusových infekcií", "riešenie rezistencie na antibiotiká"], key: "SSSS" },
+	{ id: 26, text: "Anti–CRISPR (Acr) proteíny:", answers: ["blokujú väzbové miesta DNA", "blokujú štiepenie DNA", "enzymaticky deaktivujú CRISPR/Cas", "sú prenášané plazmidmi"], key: "SSSN" },
+	{ id: 27, text: "Crisprové antibiotiká:", answers: ["nemôžu byť cielené na plazmidy rezistencie", "majú širokospektrálny účinok", "môžu byť zamerané proti bakteriálnemu genómu", "inhibujú syntézu bunkovej steny"], key: "NNSN" },
+	{ id: 28, text: "Génová terapia:", answers: ["je somatická alebo zárodočná", "je u ľudí zakázaná", "môže byť in vivo alebo ex vivo", "používa genetický materiál na liečbu chorôb"], key: "SNSS" },
+	{ id: 29, text: "Somatická génová terapia:", answers: ["používa vírusové vektory na transdukciu", "používa vírusové vektory na transfekciu", "používa plazmidy na transfekciu", "používa plazmidy na transdukciu"], key: "SNSN" },
+	{ id: 30, text: "RNA terapia:", answers: ["používa DNA molekuly", "používa antisense oligonukleotidy", "môže zaviesť mRNA na obnovu chýbajúceho enzýmu", "nepoužíva aptaméry"], key: "NSSN" },
+	{ id: 31, text: "Vektor v génovej terapii:", answers: ["je systém prenosu génu", "je vždy integrovaný", "môže byť odvodený z vírusu", "môže sa integrovať podľa typu"], key: "SNSS" },
+	{ id: 32, text: "Plazmidom môže byť podmienená:", answers: ["rezistencia", "replikácia bakteriálneho genómu", "produkcia toxínov", "degradácia organických látok"], key: "SNSS" },
+	{ id: 33, text: "Plazmidom môže byť podmienená:", answers: ["tvorba restrikčných enzýmov", "tvorba jadrovej membrány", "schopnosť symbiózy", "syntéza membránových organel"], key: "SNSN" },
+	{ id: 34, text: "Prenos plazmidu:", answers: ["delenie na horiz. a vertikálny", "horizontálny aj medzi rodmi", "vertikálny aj medzi rodmi", "prebieha aj počas amitózy"], key: "SSNS" },
+	{ id: 35, text: "Horizontálny prenos plazmidu:", answers: ["deje sa počas amitózy", "len medzi rovnakými rodmi", "prenáša rezistenciu medzi rodmi", "prebieha konjugáciou"], key: "NNSS" },
+	{ id: 36, text: "Choroby vhodné na génovú terapiu:", answers: ["Downov syndróm", "malignity", "SCID", "Duchennova dystrofia"], key: "NSSS" },
+	{ id: 37, text: "Klonovanie sa využíva pri príprave:", answers: ["enzýmov", "hormónov", "vakcín", "krvných faktorov"], key: "SSSS" },
+	{ id: 38, text: "Kozmidy sú vektory získané spojením:", answers: ["vírusov a ľudskej DNA", "plazmidov a fágov", "fágov a proteínov", "YAC a kvasiniek"], key: "NSNN" },
+	{ id: 39, text: "Kozmidy sú:", answers: ["antibiotiká", "vektory", "klonovacie miesta", "enzýmy"], key: "NSNN" },
+	{ id: 40, text: "Podľa funkcie delíme vektory na:", answers: ["klonovacie", "expresné", "lokalizované", "multifunkčné"], key: "SSNN" },
+	{ id: 41, text: "Retrovírusové vektory môžu infikovať:", answers: ["nedeliace sa rakovinové bunky", "len deliace", "nedeliace a deliace", "len nedeliace"], key: "NSNN" },
+	{ id: 42, text: "Rekombinantná DNA:", answers: ["nedá sa vyrobiť umelo", "skr. rDNA", "obsahuje sekvencie, ktoré sa spolu nevyskytujú", "nemôže vzniknúť v prírode"], key: "NSSN" },
+	{ id: 43, text: "Technológia rekombinantnej DNA:", answers: ["súbor metód", "nie je tvorba DNA", "môže meniť DNA v organizmoch", "zahŕňa klonovanie"], key: "SNSS" },
+	{ id: 44, text: "Technológia rDNA je:", answers: ["užitočná na produkciu proteínov", "zakázaná", "zbytočná", "využívaná v génovej terapii"], key: "SNNS" },
+	{ id: 45, text: "Cudzorodá DNA môže vstúpiť do baktérie pomocou:", answers: ["transdukcie", "sexsekcie", "malformácie", "transformácie"], key: "SNNS" },
+	{ id: 46, text: "Cudzorodá DNA môže vstúpiť do baktérie pomocou:", answers: ["transdukcie", "fortifikácie", "konjugácie", "malformácie"], key: "SNSN" },
+	{ id: 47, text: "Vstup cudzej DNA do eukaryotickej bunky:", answers: ["transpozónmi", "fortifikáciou", "elekciou", "transdukciou"], key: "SNNS" },
+	{ id: 48, text: "Bakteriálna rezistencia môže byť spôsobená:", answers: ["hyperpláziou", "génom rezistencie", "plazmidom", "transpozónom"], key: "NSSS" },
+	{ id: 49, text: "Plazmid:", answers: ["je kruhová dvojvláknová DNA", "lineárna RNA", "môže priniesť výhodu", "nachádza sa len v eukaryách"], key: "SNSN" },
+	{ id: 50, text: "Replikácia plazmidu:", answers: ["závisí od chromozómu", "je nezávislá", "prebieha rolling circle", "prebieha rolling stone"], key: "NSSN" },
+	{ id: 51, text: "Plazmid – vlastnosti:", answers: ["slúži ako vektor", "je lineárna RNA", "nesie rezistenciu", "nachádza sa v jadre"], key: "SNSN" },
+	{ id: 52, text: "Transpozóny:", answers: ["vznikajú iba umelo", "môžu sa pohybovať v genóme", "nie sú prítomné vo všetkých genómoch", "sú mutagény"], key: "NSNS" },
+	{ id: 53, text: "Transpozóny:", answers: ["sú prítomné v každom genóme", "vznikajú iba umelo", "prenášajú gény rezistencie", "sú mutagény"], key: "SNSS" },
+	{ id: 54, text: "Aplikácie rDNA:", answers: ["medicína", "biotechnológia", "výskum", "životné prostredie"], key: "SSSS" },
+	{ id: 55, text: "Konjugácia:", answers: ["prenos DNA medzi baktériami", "prebieha pilusom", "prenos medzi eukaryotmi", "recipient vytvára pilus"], key: "SSNN" },
+	{ id: 56, text: "Mechanizmy prenosu DNA medzi baktériami:", answers: ["transformácia", "transdukcia", "konjugácia", "translokácia"], key: "SSSN" },
+	{ id: 57, text: "Laboratórne metódy prenosu DNA do bunky:", answers: ["replikácia", "elektroporácia", "lipofekcia", "mikroinjekcia"], key: "NSSS" },
+	{ id: 58, text: "Formy cudzej DNA v bunke:", answers: ["plazmidová forma zabraňuje replikácii", "epizomálna forma sa replikuje koordinovane s genómom", "integrovaná forma je začlenenie do chromozómu", "transientná forma je trvalá"], key: "NSSN" },
+	{ id: 59, text: "Typy vektorov používané v génovom inžinierstve:", answers: ["plazmidové", "vírusové (stafylokoky, streptokoky)", "lipidové nanočastice", "ribozómy"], key: "SNSN" },
+	{ id: 60, text: "Ktoré tvrdenia o CRISPR–Cas systéme sú správne?", answers: ["poskytuje baktériám adaptívnu imunitu proti adenovírusom", "využíva krátke úseky vírusovej DNA uložené v CRISPR lokuse", "proteín Cas9 umožňuje presný rez DNA", "pôvodne ide o mechanizmus translácie"], key: "NSSN" },
 ];
 
 
